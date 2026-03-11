@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Prompt-Bibliothek</title>
-  <link rel="stylesheet" href="static/styles.css" />
+  <title>KI Stammtisch · Prompt-Bibliothek</title>
+  <link rel="stylesheet" href="admin/styles.css" />
 </head>
 <body>
   <main class="container">
     <header class="topbar">
-      <div class="brand">Prompt-Bibliothek</div>
-      <a href="/admin" class="badge">Admin-Verwaltung</a>
+      <div class="brand">KI Stammtisch · Prompt-Bibliothek</div>
+      <a href="admin/admin.html" class="badge">Admin-Verwaltung</a>
     </header>
 
     <section class="hero card">
@@ -28,6 +28,7 @@
           <option value="abkuerzung">Sortierung: Abkürzung</option>
         </select>
       </div>
+      <p id="status" class="muted"></p>
       <div class="table-wrap">
         <table>
           <thead>
@@ -43,7 +44,7 @@
       </div>
     </section>
   </main>
-  <script src="static/shared.js"></script>
-  <script src="static/public.js"></script>
+  <script src="admin/shared.js"></script>
+  <script src="admin/public.js"></script>
 </body>
 </html>
