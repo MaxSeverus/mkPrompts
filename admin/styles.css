@@ -99,11 +99,13 @@ table { width: 100%; border-collapse: collapse; min-width: 700px; }
 th, td { padding: .8rem; border-bottom: 1px solid rgba(183, 192, 230, .2); text-align: left; vertical-align: top; }
 .prompt { line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
 .param { color: var(--accent); font-weight: 650; background: rgba(103, 232, 249, .12); padding: .02rem .35rem; border-radius: .35rem; }
-.actions { display: flex; gap: .4rem; }
+.actions { display: flex; gap: .4rem; flex-wrap: wrap; }
 .form-grid { display: grid; grid-template-columns: 120px 220px 1fr; gap: .75rem; margin-bottom: .75rem; }
 .form-grid.single { grid-template-columns: 1fr; }
 .muted { color: var(--muted); }
 .hidden { display: none !important; }
+.space-bottom { margin-bottom: 1rem; }
+.space-bottom-small { margin-bottom: .8rem; }
 
 @media (max-width: 900px) {
   .controls, .form-grid { grid-template-columns: 1fr; }

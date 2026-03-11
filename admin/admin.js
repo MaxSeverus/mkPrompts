@@ -17,18 +17,13 @@ const highlightsInput = document.getElementById('highlightsInput');
 const saveSiteBtn = document.getElementById('saveSiteBtn');
 const importFileInput = document.getElementById('importFile');
 const importBtn = document.getElementById('importBtn');
+const statusEl = document.getElementById('adminStatus');
 
 let editingId = null;
 let prompts = [];
 
-async function checkStatus() {
-  const res = await fetch('api/admin/status');
-  const data = await res.json();
-  setAuthenticated(data.authenticated);
-  if (data.authenticated) {
-    loadAdminPrompts();
-    loadSiteContentAdmin();
-  }
+function setStatus(text) {
+  statusEl.textContent = text || '';
 }
 
 function setAuthenticated(isAuth) {
@@ -36,8 +31,17 @@ function setAuthenticated(isAuth) {
   adminPanel.classList.toggle('hidden', !isAuth);
 }
 
+async function checkStatus() {
+  const res = await fetch(apiUrl('/api/admin/status'));
+  const data = await res.json();
+  setAuthenticated(data.authenticated);
+  if (data.authenticated) {
+    await Promise.all([loadAdminPrompts(), loadSiteContentAdmin()]);
+  }
+}
+
 loginBtn.addEventListener('click', async () => {
-  const res = await fetch('api/admin/login', {
+  const res = await fetch(apiUrl('/api/admin/login'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ password: passwordInput.value })
@@ -49,13 +53,13 @@ loginBtn.addEventListener('click', async () => {
   loginError.textContent = '';
   passwordInput.value = '';
   setAuthenticated(true);
-  loadAdminPrompts();
-  loadSiteContentAdmin();
+  await Promise.all([loadAdminPrompts(), loadSiteContentAdmin()]);
 });
 
 logoutBtn.addEventListener('click', async () => {
-  await fetch('api/admin/logout', { method: 'POST' });
+  await fetch(apiUrl('/api/admin/logout'), { method: 'POST' });
   setAuthenticated(false);
+  setStatus('Abgemeldet.');
 });
 
 importBtn.addEventListener('click', async () => {
@@ -68,7 +72,7 @@ importBtn.addEventListener('click', async () => {
   const formData = new FormData();
   formData.append('file', file);
 
-  const res = await fetch('api/admin/import', {
+  const res = await fetch(apiUrl('/api/admin/import'), {
     method: 'POST',
     body: formData,
   });
@@ -79,9 +83,9 @@ importBtn.addEventListener('click', async () => {
     return;
   }
 
-  alert(`${data.imported} Einträge importiert.`);
   importFileInput.value = '';
-  loadAdminPrompts();
+  setStatus(`${data.imported} Einträge importiert.`);
+  await loadAdminPrompts();
 });
 
 saveSiteBtn.addEventListener('click', async () => {
@@ -101,7 +105,7 @@ saveSiteBtn.addEventListener('click', async () => {
     highlights,
   };
 
-  const res = await fetch('api/admin/site-content', {
+  const res = await fetch(apiUrl('/api/admin/site-content'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -112,11 +116,11 @@ saveSiteBtn.addEventListener('click', async () => {
     return;
   }
 
-  alert('Seitentexte gespeichert.');
+  setStatus('Seitentexte gespeichert.');
 });
 
 async function loadSiteContentAdmin() {
-  const res = await fetch('api/admin/site-content');
+  const res = await fetch(apiUrl('/api/admin/site-content'));
   if (!res.ok) return;
   const data = await res.json();
 
@@ -148,7 +152,7 @@ saveBtn.addEventListener('click', async () => {
     return;
   }
 
-  const endpoint = editingId ? `api/admin/prompts/${editingId}` : 'api/admin/prompts';
+  const endpoint = editingId ? apiUrl(`/api/admin/prompts/${editingId}`) : apiUrl('/api/admin/prompts');
   const method = editingId ? 'PUT' : 'POST';
 
   const res = await fetch(endpoint, {
@@ -163,7 +167,8 @@ saveBtn.addEventListener('click', async () => {
   }
 
   clearForm();
-  loadAdminPrompts();
+  await loadAdminPrompts();
+  setStatus('Prompt gespeichert und Liste aktualisiert.');
 });
 
 function renderAdminRows() {
@@ -197,16 +202,33 @@ function renderAdminRows() {
   rows.querySelectorAll('[data-delete]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       if (!confirm('Eintrag wirklich löschen?')) return;
-      const res = await fetch(`api/admin/prompts/${btn.dataset.delete}`, { method: 'DELETE' });
-      if (res.ok) loadAdminPrompts();
+      const res = await fetch(apiUrl(`/api/admin/prompts/${btn.dataset.delete}`), { method: 'DELETE' });
+      if (res.ok) {
+        await loadAdminPrompts();
+        setStatus('Prompt gelöscht.');
+      }
     });
   });
 }
 
 async function loadAdminPrompts() {
-  const res = await fetch('api/admin/prompts');
+  const res = await fetch(apiUrl('/api/admin/prompts'));
+  if (!res.ok) {
+    if (res.status === 401) {
+      setAuthenticated(false);
+      setStatus('Bitte zuerst anmelden.');
+      return;
+    }
+    throw new Error('Prompts konnten nicht geladen werden.');
+  }
   prompts = await res.json();
   renderAdminRows();
 }
 
-checkStatus();
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    await checkStatus();
+  } catch (err) {
+    setStatus(err.message || 'Fehler beim Laden des Admin-Bereichs.');
+  }
+});
