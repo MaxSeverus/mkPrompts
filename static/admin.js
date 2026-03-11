@@ -10,6 +10,11 @@ const cancelEditBtn = document.getElementById('cancelEditBtn');
 const nrInput = document.getElementById('nr');
 const abkInput = document.getElementById('abk');
 const promptInput = document.getElementById('promptText');
+const heroTitleInput = document.getElementById('heroTitleInput');
+const heroBadgeInput = document.getElementById('heroBadgeInput');
+const heroSubtitleInput = document.getElementById('heroSubtitleInput');
+const highlightsInput = document.getElementById('highlightsInput');
+const saveSiteBtn = document.getElementById('saveSiteBtn');
 
 let editingId = null;
 let prompts = [];
@@ -18,7 +23,10 @@ async function checkStatus() {
   const res = await fetch('api/admin/status');
   const data = await res.json();
   setAuthenticated(data.authenticated);
-  if (data.authenticated) loadAdminPrompts();
+  if (data.authenticated) {
+    loadAdminPrompts();
+    loadSiteContentAdmin();
+  }
 }
 
 function setAuthenticated(isAuth) {
@@ -40,12 +48,55 @@ loginBtn.addEventListener('click', async () => {
   passwordInput.value = '';
   setAuthenticated(true);
   loadAdminPrompts();
+  loadSiteContentAdmin();
 });
 
 logoutBtn.addEventListener('click', async () => {
   await fetch('api/admin/logout', { method: 'POST' });
   setAuthenticated(false);
 });
+
+saveSiteBtn.addEventListener('click', async () => {
+  let highlights = [];
+  try {
+    highlights = JSON.parse(highlightsInput.value || '[]');
+    if (!Array.isArray(highlights)) throw new Error('invalid');
+  } catch {
+    alert('Highlights müssen gültiges JSON-Array sein.');
+    return;
+  }
+
+  const payload = {
+    hero_title: heroTitleInput.value,
+    hero_badge: heroBadgeInput.value,
+    hero_subtitle: heroSubtitleInput.value,
+    highlights,
+  };
+
+  const res = await fetch('api/admin/site-content', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    alert('Seitentexte konnten nicht gespeichert werden.');
+    return;
+  }
+
+  alert('Seitentexte gespeichert.');
+});
+
+async function loadSiteContentAdmin() {
+  const res = await fetch('api/admin/site-content');
+  if (!res.ok) return;
+  const data = await res.json();
+
+  heroTitleInput.value = data.hero_title || '';
+  heroBadgeInput.value = data.hero_badge || '';
+  heroSubtitleInput.value = data.hero_subtitle || '';
+  highlightsInput.value = JSON.stringify(data.highlights || [], null, 2);
+}
 
 function clearForm() {
   editingId = null;
