@@ -4,7 +4,7 @@ Eine moderne Web-Anwendung zur Verwaltung und öffentlichen Anzeige von KI-Promp
 
 - **Öffentlichem Bereich** (`/`) mit Suche, Sortierung und Copy-to-Clipboard (Startseite über `index.html` im Projekt-Root).
 - **Geschütztem Admin-Bereich** (`/admin`) mit Login und vollständigem CRUD.
-- **Persistenter Speicherung** per SQLite (`data/prompts.db`).
+- **Persistenter Speicherung** per SQLite (`data/prompts.db`) inkl. eigener Tabelle für Seiteninhalte (`site_content`).
 
 ## Projektstruktur
 
@@ -49,3 +49,8 @@ python3 app.py
 5. Audit-Log für Änderungen im Admin-Bereich.
 6. Testsuite (API + UI) und CI-Pipeline.
 7. Deployment-Setup (Docker, Reverse Proxy, HTTPS, Backups).
+
+
+## Zusatzdatei
+
+- `db.ini` – Beispiel-Konfigurationssnippet (PHP) für DB-Zugangsdaten und JSON-Helper.

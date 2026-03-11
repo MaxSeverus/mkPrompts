@@ -27,6 +27,17 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "mkprompts-demo-2026")
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "dev-secret-change-me")
 WP_LOGIN_URL = os.environ.get("WP_LOGIN_URL", "wp-login.php")
 
+DEFAULT_SITE_CONTENT = {
+    "hero_title": "KI Prompt Hub",
+    "hero_subtitle": "Eine moderne JavaScript-Seite mit kuratierter Prompt-Bibliothek und live Datenbank-Anbindung.",
+    "hero_badge": "Datenbank-gestützt",
+    "highlights": [
+        {"title": "Schnelle Suche", "text": "Durchsuche alle Prompts in Millisekunden und kopiere sie direkt."},
+        {"title": "Saubere Struktur", "text": "Sortierung nach Nummer oder Kürzel für einen klaren Workflow."},
+        {"title": "Zentral gepflegt", "text": "Alle Inhalte werden über Datenbanktabellen verwaltet."},
+    ],
+}
+
 
 def init_db() -> None:
     conn = sqlite3.connect(DB_PATH)
@@ -39,6 +50,15 @@ def init_db() -> None:
             abkuerzung TEXT NOT NULL,
             prompt TEXT NOT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS site_content (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            content_json TEXT NOT NULL,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
         """
@@ -56,6 +76,12 @@ def init_db() -> None:
             "INSERT INTO prompts (nr, abkuerzung, prompt) VALUES (:nr, :abkuerzung, :prompt)",
             initial_data,
         )
+    cur.execute("SELECT COUNT(*) FROM site_content")
+    if cur.fetchone()[0] == 0:
+        cur.execute(
+            "INSERT INTO site_content (id, content_json, updated_at) VALUES (1, ?, CURRENT_TIMESTAMP)",
+            (json.dumps(DEFAULT_SITE_CONTENT, ensure_ascii=False),),
+        )
     conn.commit()
     conn.close()
 
@@ -64,6 +90,17 @@ def get_conn() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def get_site_content(conn: sqlite3.Connection) -> dict[str, Any]:
+    row = conn.execute("SELECT content_json FROM site_content WHERE id = 1").fetchone()
+    if not row:
+        return DEFAULT_SITE_CONTENT
+    try:
+        data = json.loads(row["content_json"])
+    except json.JSONDecodeError:
+        return DEFAULT_SITE_CONTENT
+    return data if isinstance(data, dict) else DEFAULT_SITE_CONTENT
 
 
 def sign_value(value: str) -> str:
@@ -157,6 +194,23 @@ class AppHandler(BaseHTTPRequestHandler):
             self._send_json({"authenticated": self._is_admin()})
             return
 
+        if parsed.path == "/api/site-content":
+            conn = get_conn()
+            content = get_site_content(conn)
+            conn.close()
+            self._send_json(content)
+            return
+
+        if parsed.path == "/api/admin/site-content":
+            if not self._is_admin():
+                self._forbidden()
+                return
+            conn = get_conn()
+            content = get_site_content(conn)
+            conn.close()
+            self._send_json(content)
+            return
+
         if parsed.path == "/admin":
             self.send_response(302)
             self.send_header("Location", WP_LOGIN_URL)
@@ -218,6 +272,36 @@ class AppHandler(BaseHTTPRequestHandler):
             inserted = conn.execute("SELECT id, nr, abkuerzung, prompt FROM prompts WHERE id = ?", (cur.lastrowid,)).fetchone()
             conn.close()
             self._send_json(dict(inserted), 201)
+            return
+
+        if self.path == "/api/admin/site-content":
+            if not self._is_admin():
+                self._forbidden()
+                return
+            payload = self._parse_json()
+            if not isinstance(payload, dict):
+                self._send_json({"error": "Ungültige Daten."}, 400)
+                return
+            merged = {
+                "hero_title": str(payload.get("hero_title", DEFAULT_SITE_CONTENT["hero_title"])).strip() or DEFAULT_SITE_CONTENT["hero_title"],
+                "hero_subtitle": str(payload.get("hero_subtitle", DEFAULT_SITE_CONTENT["hero_subtitle"])).strip()
+                or DEFAULT_SITE_CONTENT["hero_subtitle"],
+                "hero_badge": str(payload.get("hero_badge", DEFAULT_SITE_CONTENT["hero_badge"])).strip() or DEFAULT_SITE_CONTENT["hero_badge"],
+                "highlights": payload.get("highlights", DEFAULT_SITE_CONTENT["highlights"]),
+            }
+            if not isinstance(merged["highlights"], list):
+                merged["highlights"] = DEFAULT_SITE_CONTENT["highlights"]
+
+            conn = get_conn()
+            conn.execute(
+                """UPDATE site_content
+                   SET content_json = ?, updated_at = CURRENT_TIMESTAMP
+                   WHERE id = 1""",
+                (json.dumps(merged, ensure_ascii=False),),
+            )
+            conn.commit()
+            conn.close()
+            self._send_json(merged)
             return
 
         self.send_error(HTTPStatus.NOT_FOUND)

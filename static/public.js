@@ -1,7 +1,29 @@
 const rowsEl = document.getElementById('promptRows');
 const searchEl = document.getElementById('search');
 const sortEl = document.getElementById('sort');
+const heroTitleEl = document.getElementById('heroTitle');
+const heroSubtitleEl = document.getElementById('heroSubtitle');
+const heroBadgeEl = document.getElementById('heroBadge');
+const highlightsEl = document.getElementById('highlights');
+
 let allPrompts = [];
+
+async function loadSiteContent() {
+  const res = await fetch('api/site-content');
+  const data = await res.json();
+
+  heroTitleEl.textContent = data.hero_title || 'Prompt-Bibliothek';
+  heroSubtitleEl.textContent = data.hero_subtitle || '';
+  heroBadgeEl.textContent = data.hero_badge || '';
+
+  const highlights = Array.isArray(data.highlights) ? data.highlights : [];
+  highlightsEl.innerHTML = highlights.map((item) => `
+    <article class="highlight-card">
+      <h3>${escapeHtml(item.title || '')}</h3>
+      <p>${escapeHtml(item.text || '')}</p>
+    </article>
+  `).join('');
+}
 
 async function loadPrompts() {
   const sort = sortEl.value;
@@ -38,4 +60,5 @@ function renderRows() {
 
 searchEl.addEventListener('input', renderRows);
 sortEl.addEventListener('change', loadPrompts);
-loadPrompts();
+
+Promise.all([loadSiteContent(), loadPrompts()]);

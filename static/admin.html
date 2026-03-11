@@ -23,28 +23,42 @@
       <p id="loginError" class="muted"></p>
     </section>
 
-    <section id="adminPanel" class="card hidden">
-      <div class="topbar">
+    <section id="adminPanel" class="hidden">
+      <section class="card" style="margin-bottom: 1rem;">
+        <div class="topbar">
+          <h2>Seitentexte verwalten</h2>
+          <button id="logoutBtn" class="ghost">Abmelden</button>
+        </div>
+        <div class="form-grid single">
+          <input id="heroTitleInput" placeholder="Hero Titel" />
+          <input id="heroBadgeInput" placeholder="Badge" />
+          <textarea id="heroSubtitleInput" placeholder="Hero Untertitel"></textarea>
+          <textarea id="highlightsInput" placeholder='Highlights als JSON: [{"title":"...","text":"..."}]'></textarea>
+        </div>
+        <div class="actions">
+          <button id="saveSiteBtn">Seitentexte speichern</button>
+        </div>
+      </section>
+
+      <section class="card">
         <h2>Prompts verwalten</h2>
-        <button id="logoutBtn" class="ghost">Abmelden</button>
-      </div>
+        <div class="form-grid">
+          <input id="nr" type="number" placeholder="Nr" />
+          <input id="abk" placeholder="Abkürzung" />
+          <textarea id="promptText" placeholder="Prompt"></textarea>
+        </div>
+        <div class="actions" style="margin-bottom:.8rem;">
+          <button id="saveBtn">Speichern</button>
+          <button id="cancelEditBtn" class="ghost hidden">Bearbeiten abbrechen</button>
+        </div>
 
-      <div class="form-grid">
-        <input id="nr" type="number" placeholder="Nr" />
-        <input id="abk" placeholder="Abkürzung" />
-        <textarea id="promptText" placeholder="Prompt"></textarea>
-      </div>
-      <div class="actions" style="margin-bottom:.8rem;">
-        <button id="saveBtn">Speichern</button>
-        <button id="cancelEditBtn" class="ghost hidden">Bearbeiten abbrechen</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Nr</th><th>Abkürzung</th><th>Prompt</th><th>Aktionen</th></tr></thead>
-          <tbody id="adminRows"></tbody>
-        </table>
-      </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nr</th><th>Abkürzung</th><th>Prompt</th><th>Aktionen</th></tr></thead>
+            <tbody id="adminRows"></tbody>
+          </table>
+        </div>
+      </section>
     </section>
   </main>
   <script src="/shared.js"></script>
