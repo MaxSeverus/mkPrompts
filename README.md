@@ -1,3 +1,1 @@
-# Project Title
-
-A brief description of your project.
+Hier entsteht etwas neues ...
