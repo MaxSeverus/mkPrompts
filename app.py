@@ -17,6 +17,7 @@ from typing import Any
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
+ROOT_INDEX = BASE_DIR / "index.html"
 DB_PATH = BASE_DIR / "data" / "prompts.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
@@ -24,6 +25,7 @@ HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = int(os.environ.get("PORT", "8000"))
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "mkprompts-demo-2026")
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "dev-secret-change-me")
+WP_LOGIN_URL = os.environ.get("WP_LOGIN_URL", "wp-login.php")
 
 
 def init_db() -> None:
@@ -94,8 +96,17 @@ class AppHandler(BaseHTTPRequestHandler):
 
     def _read_static(self, path: str) -> tuple[bytes, str] | None:
         cleaned = path.lstrip("/") or "index.html"
-        target = (STATIC_DIR / cleaned).resolve()
-        if not str(target).startswith(str(STATIC_DIR)) or not target.exists() or target.is_dir():
+        if cleaned == "index.html":
+            target = ROOT_INDEX.resolve()
+            base = BASE_DIR.resolve()
+        elif cleaned.startswith("static/"):
+            target = (BASE_DIR / cleaned).resolve()
+            base = BASE_DIR.resolve()
+        else:
+            target = (STATIC_DIR / cleaned).resolve()
+            base = STATIC_DIR.resolve()
+
+        if not str(target).startswith(str(base)) or not target.exists() or target.is_dir():
             return None
         ctype = "text/plain; charset=utf-8"
         if target.suffix == ".html":
@@ -147,7 +158,10 @@ class AppHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/admin":
-            parsed = parsed._replace(path="/admin.html")
+            self.send_response(302)
+            self.send_header("Location", WP_LOGIN_URL)
+            self.end_headers()
+            return
 
         if parsed.path == "/":
             parsed = parsed._replace(path="/index.html")
