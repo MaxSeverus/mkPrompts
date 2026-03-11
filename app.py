@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any
 
 BASE_DIR = Path(__file__).resolve().parent
-STATIC_DIR = BASE_DIR / "static"
+STATIC_DIR = BASE_DIR / "admin"
 ROOT_INDEX = BASE_DIR / "index.html"
 DB_PATH = BASE_DIR / "data" / "prompts.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -177,6 +177,9 @@ def parse_php_prompts(file_bytes: bytes) -> list[dict[str, Any]]:
     return [r for r in rows if r["abkuerzung"] and r["prompt"]]
 
 
+init_db()
+
+
 class AppHandler(BaseHTTPRequestHandler):
     def _parse_json(self) -> dict[str, Any]:
         content_length = int(self.headers.get("Content-Length", 0))
@@ -196,8 +199,9 @@ class AppHandler(BaseHTTPRequestHandler):
         if cleaned == "index.html":
             target = ROOT_INDEX.resolve()
             base = BASE_DIR.resolve()
-        elif cleaned.startswith("static/"):
-            target = (BASE_DIR / cleaned).resolve()
+        elif cleaned.startswith("admin/") or cleaned.startswith("static/"):
+            normalized = cleaned.replace("static/", "admin/", 1)
+            target = (BASE_DIR / normalized).resolve()
             base = BASE_DIR.resolve()
         else:
             target = (STATIC_DIR / cleaned).resolve()
@@ -271,8 +275,8 @@ class AppHandler(BaseHTTPRequestHandler):
             self._send_json(content)
             return
 
-        if parsed.path in {"/admin", "/admin/"}:
-            parsed = parsed._replace(path="/admin.html")
+        if parsed.path in {"/admin", "/admin/", "/prompt-admin", "/prompt-admin/"}:
+            parsed = parsed._replace(path="/admin/admin.html")
 
         if parsed.path == "/":
             parsed = parsed._replace(path="/index.html")
@@ -454,7 +458,6 @@ class AppHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    init_db()
     server = ThreadingHTTPServer((HOST, PORT), AppHandler)
     print(f"Server läuft auf http://{HOST}:{PORT}")
     server.serve_forever()
