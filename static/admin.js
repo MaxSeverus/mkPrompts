@@ -15,7 +15,7 @@ let editingId = null;
 let prompts = [];
 
 async function checkStatus() {
-  const res = await fetch('/api/admin/status');
+  const res = await fetch('api/admin/status');
   const data = await res.json();
   setAuthenticated(data.authenticated);
   if (data.authenticated) loadAdminPrompts();
@@ -27,7 +27,7 @@ function setAuthenticated(isAuth) {
 }
 
 loginBtn.addEventListener('click', async () => {
-  const res = await fetch('/api/admin/login', {
+  const res = await fetch('api/admin/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ password: passwordInput.value })
@@ -43,7 +43,7 @@ loginBtn.addEventListener('click', async () => {
 });
 
 logoutBtn.addEventListener('click', async () => {
-  await fetch('/api/admin/logout', { method: 'POST' });
+  await fetch('api/admin/logout', { method: 'POST' });
   setAuthenticated(false);
 });
 
@@ -69,7 +69,7 @@ saveBtn.addEventListener('click', async () => {
     return;
   }
 
-  const endpoint = editingId ? `/api/admin/prompts/${editingId}` : '/api/admin/prompts';
+  const endpoint = editingId ? `api/admin/prompts/${editingId}` : 'api/admin/prompts';
   const method = editingId ? 'PUT' : 'POST';
 
   const res = await fetch(endpoint, {
@@ -118,14 +118,14 @@ function renderAdminRows() {
   rows.querySelectorAll('[data-delete]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       if (!confirm('Eintrag wirklich löschen?')) return;
-      const res = await fetch(`/api/admin/prompts/${btn.dataset.delete}`, { method: 'DELETE' });
+      const res = await fetch(`api/admin/prompts/${btn.dataset.delete}`, { method: 'DELETE' });
       if (res.ok) loadAdminPrompts();
     });
   });
 }
 
 async function loadAdminPrompts() {
-  const res = await fetch('/api/admin/prompts');
+  const res = await fetch('api/admin/prompts');
   prompts = await res.json();
   renderAdminRows();
 }

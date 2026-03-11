@@ -2,14 +2,14 @@
 
 Eine moderne Web-Anwendung zur Verwaltung und öffentlichen Anzeige von KI-Prompts mit:
 
-- **Öffentlichem Bereich** (`/`) mit Suche, Sortierung und Copy-to-Clipboard.
+- **Öffentlichem Bereich** (`/`) mit Suche, Sortierung und Copy-to-Clipboard (Startseite über `index.html` im Projekt-Root).
 - **Geschütztem Admin-Bereich** (`/admin`) mit Login und vollständigem CRUD.
 - **Persistenter Speicherung** per SQLite (`data/prompts.db`).
 
 ## Projektstruktur
 
 - `app.py` – Python-HTTP-Server inkl. REST-API, Passwortschutz, Session-Cookie und Datenbanklogik.
-- `static/index.html` – Öffentliche Ansicht.
+- `index.html` – Öffentliche Ansicht (direkt unter `/mkprompts/`).
 - `static/admin.html` – Admin-Ansicht (Login + Verwaltung).
 - `static/styles.css` – Modernes responsives Styling.
 - `static/shared.js` – Gemeinsame Hilfsfunktionen (Escaping + Parameter-Highlighting).
