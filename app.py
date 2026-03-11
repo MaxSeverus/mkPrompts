@@ -8,7 +8,11 @@ import json
 import os
 import secrets
 import sqlite3
+import csv
+import io
+import re
 import urllib.parse
+import cgi
 from http import HTTPStatus
 from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -25,7 +29,6 @@ HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = int(os.environ.get("PORT", "8000"))
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "mkprompts-demo-2026")
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "dev-secret-change-me")
-WP_LOGIN_URL = os.environ.get("WP_LOGIN_URL", "wp-login.php")
 
 DEFAULT_SITE_CONTENT = {
     "hero_title": "KI Prompt Hub",
@@ -63,19 +66,6 @@ def init_db() -> None:
         )
         """
     )
-    cur.execute("SELECT COUNT(*) FROM prompts")
-    if cur.fetchone()[0] == 0:
-        initial_data = [
-            {
-                "nr": 1,
-                "abkuerzung": "LISTE",
-                "prompt": "[HIER DIE VOLLSTÄNDIGE LISTE DER BESTEHENDEN PROMPTS 1:1 EINFÜGEN]",
-            }
-        ]
-        cur.executemany(
-            "INSERT INTO prompts (nr, abkuerzung, prompt) VALUES (:nr, :abkuerzung, :prompt)",
-            initial_data,
-        )
     cur.execute("SELECT COUNT(*) FROM site_content")
     if cur.fetchone()[0] == 0:
         cur.execute(
@@ -115,6 +105,51 @@ def is_valid_signed_value(signed: str) -> bool:
         return False
     expected = hmac.new(SESSION_SECRET.encode(), value.encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(signature, expected)
+
+
+def parse_csv_prompts(file_bytes: bytes) -> list[dict[str, Any]]:
+    text = file_bytes.decode("utf-8-sig", errors="replace")
+    rows: list[dict[str, Any]] = []
+    reader = csv.DictReader(io.StringIO(text), delimiter=",")
+    if reader.fieldnames and {"nr", "abkuerzung", "prompt"}.issubset({h.strip().lower() for h in reader.fieldnames}):
+        for row in reader:
+            mapped = {k.strip().lower(): (v or "") for k, v in row.items()}
+            rows.append(
+                {
+                    "nr": int(str(mapped.get("nr", "")).strip()),
+                    "abkuerzung": str(mapped.get("abkuerzung", "")).strip(),
+                    "prompt": str(mapped.get("prompt", "")).strip(),
+                }
+            )
+        return [r for r in rows if r["abkuerzung"] and r["prompt"]]
+
+    reader_plain = csv.reader(io.StringIO(text), delimiter=",")
+    for line in reader_plain:
+        if len(line) < 3:
+            continue
+        rows.append({"nr": int(str(line[0]).strip()), "abkuerzung": str(line[1]).strip(), "prompt": str(line[2]).strip()})
+    return [r for r in rows if r["abkuerzung"] and r["prompt"]]
+
+
+def parse_php_prompts(file_bytes: bytes) -> list[dict[str, Any]]:
+    text = file_bytes.decode("utf-8", errors="replace")
+    chunks = re.findall(r"(?:array\s*\(|\[)(.*?)(?:\)|\])", text, flags=re.S)
+    rows: list[dict[str, Any]] = []
+    for chunk in chunks:
+        nr_match = re.search(r"['\"]nr['\"]\s*=>\s*(\d+)", chunk)
+        abk_match = re.search(r"['\"]abkuerzung['\"]\s*=>\s*['\"](.*?)['\"]", chunk, flags=re.S)
+        prompt_match = re.search(r"['\"]prompt['\"]\s*=>\s*['\"](.*?)['\"]", chunk, flags=re.S)
+        if not (nr_match and abk_match and prompt_match):
+            continue
+        prompt = prompt_match.group(1).replace("\\n", "\n").strip()
+        rows.append(
+            {
+                "nr": int(nr_match.group(1)),
+                "abkuerzung": abk_match.group(1).strip(),
+                "prompt": prompt,
+            }
+        )
+    return [r for r in rows if r["abkuerzung"] and r["prompt"]]
 
 
 class AppHandler(BaseHTTPRequestHandler):
@@ -212,10 +247,7 @@ class AppHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/admin":
-            self.send_response(302)
-            self.send_header("Location", WP_LOGIN_URL)
-            self.end_headers()
-            return
+            parsed = parsed._replace(path="/admin.html")
 
         if parsed.path == "/":
             parsed = parsed._replace(path="/index.html")
@@ -272,6 +304,57 @@ class AppHandler(BaseHTTPRequestHandler):
             inserted = conn.execute("SELECT id, nr, abkuerzung, prompt FROM prompts WHERE id = ?", (cur.lastrowid,)).fetchone()
             conn.close()
             self._send_json(dict(inserted), 201)
+            return
+
+        if self.path == "/api/admin/import":
+            if not self._is_admin():
+                self._forbidden()
+                return
+
+            form = cgi.FieldStorage(
+                fp=self.rfile,
+                headers=self.headers,
+                environ={
+                    "REQUEST_METHOD": "POST",
+                    "CONTENT_TYPE": self.headers.get("Content-Type", ""),
+                    "CONTENT_LENGTH": self.headers.get("Content-Length", "0"),
+                },
+            )
+            if "file" not in form:
+                self._send_json({"error": "Keine Datei empfangen."}, 400)
+                return
+            file_item = form["file"]
+            if not getattr(file_item, "filename", ""):
+                self._send_json({"error": "Keine Datei empfangen."}, 400)
+                return
+
+            filename = file_item.filename.lower()
+            file_data = file_item.file.read()
+
+            try:
+                if filename.endswith(".csv"):
+                    imported = parse_csv_prompts(file_data)
+                elif filename.endswith(".php"):
+                    imported = parse_php_prompts(file_data)
+                else:
+                    self._send_json({"error": "Nur CSV- oder PHP-Dateien sind erlaubt."}, 400)
+                    return
+            except (ValueError, TypeError):
+                self._send_json({"error": "Datei konnte nicht verarbeitet werden."}, 400)
+                return
+
+            if not imported:
+                self._send_json({"error": "Keine gültigen Prompt-Einträge gefunden."}, 400)
+                return
+
+            conn = get_conn()
+            conn.executemany(
+                "INSERT INTO prompts (nr, abkuerzung, prompt, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
+                [(item["nr"], item["abkuerzung"], item["prompt"]) for item in imported],
+            )
+            conn.commit()
+            conn.close()
+            self._send_json({"success": True, "imported": len(imported)})
             return
 
         if self.path == "/api/admin/site-content":

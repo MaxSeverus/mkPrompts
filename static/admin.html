@@ -41,6 +41,15 @@
       </section>
 
       <section class="card">
+        <h2>Prompts importieren</h2>
+        <p class="muted">CSV mit Spalten <code>nr,abkuerzung,prompt</code> oder PHP-Datei hochladen.</p>
+        <div class="controls">
+          <input id="importFile" type="file" accept=".csv,.php" />
+          <button id="importBtn">Datei importieren</button>
+        </div>
+      </section>
+
+      <section class="card">
         <h2>Prompts verwalten</h2>
         <div class="form-grid">
           <input id="nr" type="number" placeholder="Nr" />

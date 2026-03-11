@@ -15,6 +15,8 @@ const heroBadgeInput = document.getElementById('heroBadgeInput');
 const heroSubtitleInput = document.getElementById('heroSubtitleInput');
 const highlightsInput = document.getElementById('highlightsInput');
 const saveSiteBtn = document.getElementById('saveSiteBtn');
+const importFileInput = document.getElementById('importFile');
+const importBtn = document.getElementById('importBtn');
 
 let editingId = null;
 let prompts = [];
@@ -54,6 +56,32 @@ loginBtn.addEventListener('click', async () => {
 logoutBtn.addEventListener('click', async () => {
   await fetch('api/admin/logout', { method: 'POST' });
   setAuthenticated(false);
+});
+
+importBtn.addEventListener('click', async () => {
+  const file = importFileInput.files?.[0];
+  if (!file) {
+    alert('Bitte zuerst eine CSV- oder PHP-Datei auswählen.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch('api/admin/import', {
+    method: 'POST',
+    body: formData,
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    alert(data.error || 'Import fehlgeschlagen.');
+    return;
+  }
+
+  alert(`${data.imported} Einträge importiert.`);
+  importFileInput.value = '';
+  loadAdminPrompts();
 });
 
 saveSiteBtn.addEventListener('click', async () => {
