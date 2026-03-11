@@ -41,6 +41,24 @@ DEFAULT_SITE_CONTENT = {
     ],
 }
 
+DEFAULT_PROMPTS = [
+    {
+        "nr": 10,
+        "abkuerzung": "MAIL",
+        "prompt": "Schreibe eine professionelle E-Mail an [Empfänger] mit dem Ziel [Ziel]. Ton: [Ton], Länge: [kurz/mittel/lang].",
+    },
+    {
+        "nr": 20,
+        "abkuerzung": "SUMMARY",
+        "prompt": "Fasse den folgenden Text in 5 prägnanten Bulletpoints zusammen und nenne anschließend 3 konkrete nächste Schritte:\n\n[Text einfügen]",
+    },
+    {
+        "nr": 30,
+        "abkuerzung": "IDEAS",
+        "prompt": "Erzeuge 10 kreative Ideen für [Thema/Zielgruppe]. Gib zu jeder Idee eine kurze Begründung und einen möglichen ersten Umsetzungsschritt.",
+    },
+]
+
 
 def init_db() -> None:
     conn = sqlite3.connect(DB_PATH)
@@ -71,6 +89,13 @@ def init_db() -> None:
         cur.execute(
             "INSERT INTO site_content (id, content_json, updated_at) VALUES (1, ?, CURRENT_TIMESTAMP)",
             (json.dumps(DEFAULT_SITE_CONTENT, ensure_ascii=False),),
+        )
+
+    cur.execute("SELECT COUNT(*) FROM prompts")
+    if cur.fetchone()[0] == 0:
+        cur.executemany(
+            "INSERT INTO prompts (nr, abkuerzung, prompt, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
+            [(item["nr"], item["abkuerzung"], item["prompt"]) for item in DEFAULT_PROMPTS],
         )
     conn.commit()
     conn.close()
@@ -246,7 +271,7 @@ class AppHandler(BaseHTTPRequestHandler):
             self._send_json(content)
             return
 
-        if parsed.path == "/admin":
+        if parsed.path in {"/admin", "/admin/"}:
             parsed = parsed._replace(path="/admin.html")
 
         if parsed.path == "/":
