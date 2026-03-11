@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prompt-Bibliothek</title>
+  <link rel="stylesheet" href="static/styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="topbar">
+      <div class="brand">Prompt-Bibliothek</div>
+      <a href="wp-login.php" class="badge">Admin-Verwaltung</a>
+    </header>
+
+    <div class="notice"><strong>Geschützte Inhalte – nur für Teilnehmer:innen</strong><br>Die Prompts sind nur für den vereinbarten internen Teilnehmerkreis vorgesehen.</div>
+
+    <section class="card">
+      <div class="controls">
+        <input id="search" placeholder="Suchen nach Nr, Abkürzung oder Prompt ..." />
+        <select id="sort">
+          <option value="nr">Sortierung: Nr</option>
+          <option value="abkuerzung">Sortierung: Abkürzung</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nr</th>
+              <th>Abkürzung</th>
+              <th>Prompt</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="promptRows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script src="static/shared.js"></script>
+  <script src="static/public.js"></script>
+</body>
+</html>

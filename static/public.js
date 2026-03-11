@@ -5,7 +5,7 @@ let allPrompts = [];
 
 async function loadPrompts() {
   const sort = sortEl.value;
-  const res = await fetch(`/api/prompts?sort=${sort}`);
+  const res = await fetch(`api/prompts?sort=${sort}`);
   allPrompts = await res.json();
   renderRows();
 }
