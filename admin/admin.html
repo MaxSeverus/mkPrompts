@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Prompt-Bibliothek Admin</title>
-  <link rel="stylesheet" href="/styles.css" />
+  <title>KI Stammtisch · Prompt-Admin</title>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <main class="container">
     <header class="topbar">
       <div class="brand">Admin · Prompt-Bibliothek</div>
-      <a href="/" class="badge">Öffentliche Ansicht</a>
+      <a href="../index.html" class="badge">Öffentliche Ansicht</a>
     </header>
 
     <section id="loginCard" class="card">
@@ -24,7 +24,7 @@
     </section>
 
     <section id="adminPanel" class="hidden">
-      <section class="card" style="margin-bottom: 1rem;">
+      <section class="card space-bottom">
         <div class="topbar">
           <h2>Seitentexte verwalten</h2>
           <button id="logoutBtn" class="ghost">Abmelden</button>
@@ -40,7 +40,7 @@
         </div>
       </section>
 
-      <section class="card">
+      <section class="card space-bottom">
         <h2>Prompts importieren</h2>
         <p class="muted">CSV mit Spalten <code>nr,abkuerzung,prompt</code> oder PHP-Datei hochladen.</p>
         <div class="controls">
@@ -56,10 +56,11 @@
           <input id="abk" placeholder="Abkürzung" />
           <textarea id="promptText" placeholder="Prompt"></textarea>
         </div>
-        <div class="actions" style="margin-bottom:.8rem;">
+        <div class="actions space-bottom-small">
           <button id="saveBtn">Speichern</button>
           <button id="cancelEditBtn" class="ghost hidden">Bearbeiten abbrechen</button>
         </div>
+        <p id="adminStatus" class="muted"></p>
 
         <div class="table-wrap">
           <table>
@@ -70,7 +71,7 @@
       </section>
     </section>
   </main>
-  <script src="/shared.js"></script>
-  <script src="/admin.js"></script>
+  <script src="./shared.js"></script>
+  <script src="./admin.js"></script>
 </body>
 </html>

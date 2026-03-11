@@ -5,11 +5,17 @@ const heroTitleEl = document.getElementById('heroTitle');
 const heroSubtitleEl = document.getElementById('heroSubtitle');
 const heroBadgeEl = document.getElementById('heroBadge');
 const highlightsEl = document.getElementById('highlights');
+const statusEl = document.getElementById('status');
 
 let allPrompts = [];
 
+function setStatus(text) {
+  if (statusEl) statusEl.textContent = text;
+}
+
 async function loadSiteContent() {
-  const res = await fetch('api/site-content');
+  const res = await fetch(apiUrl('/api/site-content'));
+  if (!res.ok) throw new Error('Seitentexte konnten nicht geladen werden.');
   const data = await res.json();
 
   heroTitleEl.textContent = data.hero_title || 'Prompt-Bibliothek';
@@ -26,8 +32,10 @@ async function loadSiteContent() {
 }
 
 async function loadPrompts() {
+  setStatus('Lade Prompts ...');
   const sort = sortEl.value;
-  const res = await fetch(`api/prompts?sort=${sort}`);
+  const res = await fetch(apiUrl(`/api/prompts?sort=${encodeURIComponent(sort)}`));
+  if (!res.ok) throw new Error('Prompts konnten nicht geladen werden.');
   allPrompts = await res.json();
   renderRows();
 }
@@ -56,9 +64,17 @@ function renderRows() {
       setTimeout(() => (btn.textContent = 'Kopieren'), 1000);
     });
   });
+
+  setStatus(`${filtered.length} von ${allPrompts.length} Prompts angezeigt.`);
 }
 
 searchEl.addEventListener('input', renderRows);
 sortEl.addEventListener('change', loadPrompts);
 
-Promise.all([loadSiteContent(), loadPrompts()]);
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    await Promise.all([loadSiteContent(), loadPrompts()]);
+  } catch (err) {
+    setStatus(err.message || 'Fehler beim Laden.');
+  }
+});
