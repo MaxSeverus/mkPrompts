@@ -1,56 +1,18 @@
-# mkPrompts – Moderne Prompt-Bibliothek
+# mkPrompts
 
-Eine moderne Web-Anwendung zur Verwaltung und öffentlichen Anzeige von KI-Prompts mit:
+## Project Overview
+mkPrompts is a web-based application designed for prompt generation, offering an intuitive interface for users to create and manage prompts effectively.
 
-- **Öffentlichem Bereich** (`/`) mit Suche, Sortierung und Copy-to-Clipboard (Startseite über `index.html` im Projekt-Root).
-- **Geschütztem Admin-Bereich** (`/admin/admin.html`, Alias: `/prompt-admin` und `/admin`) mit Login und vollständigem CRUD.
-- **Persistenter Speicherung** per SQLite (`data/prompts.db`) inkl. eigener Tabelle für Seiteninhalte (`site_content`).
+## Features
+- User-friendly prompt creation and management.
+- Admin panel for overseeing prompts and user interactions.
+- Responsive design suitable for various devices.
 
-## Projektstruktur
-
-- `app.py` – Python-HTTP-Server inkl. REST-API, Passwortschutz, Session-Cookie und Datenbanklogik.
-- `index.html` – Öffentliche Ansicht (direkt unter `/mkprompts/`).
-- `admin/admin.html` – Admin-Ansicht (Login + Verwaltung).
-- `admin/styles.css` – Modernes responsives Styling.
-- `admin/shared.js` – Gemeinsame Hilfsfunktionen (Escaping + Parameter-Highlighting).
-- `admin/public.js` – Frontend-Logik für die öffentliche Tabelle.
-- `admin/admin.js` – Frontend-Logik für den Admin-Bereich.
-- `data/prompts.db` – SQLite-Datenbank (wird beim Start automatisch angelegt).
-
-## Start lokal
-
-```bash
-python3 app.py
+## Installation
+Clone the repository:
+```
+git clone https://github.com/MaxSeverus/mkPrompts.git
 ```
 
-Danach erreichbar unter: `http://localhost:8000`
-
-### Optionale Umgebungsvariablen
-
-```bash
-export ADMIN_PASSWORD="dein-passwort"
-export SESSION_SECRET="lange-zufallszeichenkette"
-export PORT=8000
-python3 app.py
-```
-
-## Hinweise
-
-- Initialdaten sind aktuell mit dem vom Auftrag gelieferten Platzhalter vorbelegt:
-  - `[HIER DIE VOLLSTÄNDIGE LISTE DER BESTEHENDEN PROMPTS 1:1 EINFÜGEN]`
-- Sobald die vollständige Prompt-Liste vorliegt, kann sie direkt per Admin-Maske oder DB-Seed ersetzt werden.
-
-## Nächste sinnvolle Ausbaustufen
-
-1. Rollen-/Benutzerverwaltung statt Single-Passwort.
-2. Versionierung und Historie je Prompt.
-3. Tags/Kategorien + Filterchips.
-4. CSV/JSON Import & Export.
-5. Audit-Log für Änderungen im Admin-Bereich.
-6. Testsuite (API + UI) und CI-Pipeline.
-7. Deployment-Setup (Docker, Reverse Proxy, HTTPS, Backups).
-
-
-## Zusatzdatei
-
-- `db.ini` – Beispiel-Konfigurationssnippet (PHP) für DB-Zugangsdaten und JSON-Helper.
+## Usage
+Open the `index.html` in your browser to start using the application.
