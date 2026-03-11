@@ -29,6 +29,7 @@ HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = int(os.environ.get("PORT", "8000"))
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "mkprompts-demo-2026")
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "dev-secret-change-me")
+APP_BASE_PATH = "/" + os.environ.get("APP_BASE_PATH", "mkprompts").strip("/") if os.environ.get("APP_BASE_PATH", "mkprompts").strip("/") else ""
 
 DEFAULT_SITE_CONTENT = {
     "hero_title": "KI Prompt Hub",
@@ -181,6 +182,16 @@ init_db()
 
 
 class AppHandler(BaseHTTPRequestHandler):
+    def _normalize_path(self, path: str) -> str:
+        candidates = [APP_BASE_PATH] if APP_BASE_PATH else []
+        candidates.append("/mkprompts")
+        for prefix in candidates:
+            if path == prefix:
+                return "/"
+            if path.startswith(prefix + "/"):
+                return path[len(prefix):] or "/"
+        return path
+
     def _parse_json(self) -> dict[str, Any]:
         content_length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(content_length) if content_length else b"{}"
@@ -234,7 +245,8 @@ class AppHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:  # noqa: N802
         parsed = urllib.parse.urlparse(self.path)
-        if parsed.path == "/api/prompts":
+        normalized_path = self._normalize_path(parsed.path)
+        if normalized_path == "/api/prompts":
             query = urllib.parse.parse_qs(parsed.query)
             sort = query.get("sort", ["nr"])[0]
             order_by = "nr ASC, abkuerzung ASC" if sort == "nr" else "abkuerzung COLLATE NOCASE ASC, nr ASC"
@@ -244,7 +256,7 @@ class AppHandler(BaseHTTPRequestHandler):
             self._send_json([dict(row) for row in rows])
             return
 
-        if parsed.path == "/api/admin/prompts":
+        if normalized_path == "/api/admin/prompts":
             if not self._is_admin():
                 self._forbidden()
                 return
@@ -254,18 +266,18 @@ class AppHandler(BaseHTTPRequestHandler):
             self._send_json([dict(row) for row in rows])
             return
 
-        if parsed.path == "/api/admin/status":
+        if normalized_path == "/api/admin/status":
             self._send_json({"authenticated": self._is_admin()})
             return
 
-        if parsed.path == "/api/site-content":
+        if normalized_path == "/api/site-content":
             conn = get_conn()
             content = get_site_content(conn)
             conn.close()
             self._send_json(content)
             return
 
-        if parsed.path == "/api/admin/site-content":
+        if normalized_path == "/api/admin/site-content":
             if not self._is_admin():
                 self._forbidden()
                 return
@@ -275,13 +287,13 @@ class AppHandler(BaseHTTPRequestHandler):
             self._send_json(content)
             return
 
-        if parsed.path in {"/admin", "/admin/", "/prompt-admin", "/prompt-admin/"}:
-            parsed = parsed._replace(path="/admin/admin.html")
+        if normalized_path in {"/admin", "/admin/", "/prompt-admin", "/prompt-admin/"}:
+            normalized_path = "/admin/admin.html"
 
-        if parsed.path == "/":
-            parsed = parsed._replace(path="/index.html")
+        if normalized_path == "/":
+            normalized_path = "/index.html"
 
-        static_result = self._read_static(parsed.path)
+        static_result = self._read_static(normalized_path)
         if not static_result:
             self.send_error(HTTPStatus.NOT_FOUND)
             return
@@ -293,7 +305,10 @@ class AppHandler(BaseHTTPRequestHandler):
         self.wfile.write(content)
 
     def do_POST(self) -> None:  # noqa: N802
-        if self.path == "/api/admin/login":
+        parsed = urllib.parse.urlparse(self.path)
+        normalized_path = self._normalize_path(parsed.path)
+
+        if normalized_path == "/api/admin/login":
             payload = self._parse_json()
             submitted = payload.get("password", "")
             if hmac.compare_digest(submitted, ADMIN_PASSWORD):
@@ -308,7 +323,7 @@ class AppHandler(BaseHTTPRequestHandler):
                 self._send_json({"success": False, "error": "Passwort ungültig."}, 401)
             return
 
-        if self.path == "/api/admin/logout":
+        if normalized_path == "/api/admin/logout":
             data = json.dumps({"success": True}).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -318,7 +333,7 @@ class AppHandler(BaseHTTPRequestHandler):
             self.wfile.write(data)
             return
 
-        if self.path == "/api/admin/prompts":
+        if normalized_path == "/api/admin/prompts":
             if not self._is_admin():
                 self._forbidden()
                 return
@@ -335,7 +350,7 @@ class AppHandler(BaseHTTPRequestHandler):
             self._send_json(dict(inserted), 201)
             return
 
-        if self.path == "/api/admin/import":
+        if normalized_path == "/api/admin/import":
             if not self._is_admin():
                 self._forbidden()
                 return
@@ -386,7 +401,7 @@ class AppHandler(BaseHTTPRequestHandler):
             self._send_json({"success": True, "imported": len(imported)})
             return
 
-        if self.path == "/api/admin/site-content":
+        if normalized_path == "/api/admin/site-content":
             if not self._is_admin():
                 self._forbidden()
                 return
@@ -419,13 +434,15 @@ class AppHandler(BaseHTTPRequestHandler):
         self.send_error(HTTPStatus.NOT_FOUND)
 
     def do_PUT(self) -> None:  # noqa: N802
-        if not self.path.startswith("/api/admin/prompts/"):
+        parsed = urllib.parse.urlparse(self.path)
+        normalized_path = self._normalize_path(parsed.path)
+        if not normalized_path.startswith("/api/admin/prompts/"):
             self.send_error(HTTPStatus.NOT_FOUND)
             return
         if not self._is_admin():
             self._forbidden()
             return
-        prompt_id = int(self.path.rsplit("/", 1)[1])
+        prompt_id = int(normalized_path.rsplit("/", 1)[1])
         payload = self._parse_json()
         conn = get_conn()
         conn.execute(
@@ -443,13 +460,15 @@ class AppHandler(BaseHTTPRequestHandler):
         self._send_json(dict(row))
 
     def do_DELETE(self) -> None:  # noqa: N802
-        if not self.path.startswith("/api/admin/prompts/"):
+        parsed = urllib.parse.urlparse(self.path)
+        normalized_path = self._normalize_path(parsed.path)
+        if not normalized_path.startswith("/api/admin/prompts/"):
             self.send_error(HTTPStatus.NOT_FOUND)
             return
         if not self._is_admin():
             self._forbidden()
             return
-        prompt_id = int(self.path.rsplit("/", 1)[1])
+        prompt_id = int(normalized_path.rsplit("/", 1)[1])
         conn = get_conn()
         conn.execute("DELETE FROM prompts WHERE id = ?", (prompt_id,))
         conn.commit()
