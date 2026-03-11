@@ -183,35 +183,14 @@ init_db()
 
 class AppHandler(BaseHTTPRequestHandler):
     def _normalize_path(self, path: str) -> str:
-        normalized = path
         candidates = [APP_BASE_PATH] if APP_BASE_PATH else []
         candidates.append("/mkprompts")
         for prefix in candidates:
-            if normalized == prefix:
+            if path == prefix:
                 return "/"
-            if normalized.startswith(prefix + "/"):
-                normalized = normalized[len(prefix):] or "/"
-                break
-
-        if normalized.startswith("/") and (
-            normalized.startswith("/api/")
-            or normalized.startswith("/admin/")
-            or normalized.startswith("/static/")
-            or normalized in {"/api", "/admin", "/prompt-admin", "/prompt-admin/", "/", "/index.html"}
-        ):
-            return normalized
-
-        for marker in ("/api/", "/admin/", "/static/"):
-            idx = normalized.find(marker)
-            if idx > 0:
-                return normalized[idx:]
-
-        for marker in ("/api", "/admin", "/prompt-admin", "/prompt-admin/", "/index.html"):
-            idx = normalized.find(marker)
-            if idx > 0 and normalized[idx:] in {marker, marker + "/"}:
-                return normalized[idx:]
-
-        return normalized
+            if path.startswith(prefix + "/"):
+                return path[len(prefix):] or "/"
+        return path
 
     def _parse_json(self) -> dict[str, Any]:
         content_length = int(self.headers.get("Content-Length", 0))
