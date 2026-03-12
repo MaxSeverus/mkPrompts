@@ -54,6 +54,11 @@
             <small>Der Import ersetzt bestehende Einträge mit gleicher Nr oder Abkürzung.</small>
           </div>
         </form>
+        <hr>
+        <div class="row gap-12 align-center">
+          <button type="button" id="csvExportButton" class="secondary">CSV exportieren</button>
+          <small>Exportiert alle vorhandenen Prompts als CSV-Datei.</small>
+        </div>
       </div>
 
       <div class="card overflow-x">
