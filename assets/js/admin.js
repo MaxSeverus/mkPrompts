@@ -7,6 +7,7 @@ const resetButton = document.getElementById('resetButton');
 const logoutButton = document.getElementById('logoutButton');
 const csvUploadForm = document.getElementById('csvUploadForm');
 const csvFileInput = document.getElementById('csvFileInput');
+const csvExportButton = document.getElementById('csvExportButton');
 const toast = document.getElementById('toast');
 
 const formFields = {
@@ -25,6 +26,40 @@ function showToast(message) {
 function resetForm() {
   formFields.id.value = '';
   promptForm.reset();
+}
+
+
+function escapeCsvValue(value) {
+  const normalized = String(value ?? '').replace(/"/g, '""');
+  return `"${normalized}"`;
+}
+
+function toCsv(rows) {
+  const header = ['nr', 'abbreviation', 'prompt'];
+  const lines = [header.join(',')];
+
+  rows.forEach((row) => {
+    lines.push([
+      escapeCsvValue(row.nr),
+      escapeCsvValue(row.abbreviation),
+      escapeCsvValue(row.prompt),
+    ].join(','));
+  });
+
+  return `${lines.join('\n')}\n`;
+}
+
+function downloadCsv(content) {
+  const blob = new Blob([`\uFEFF${content}`], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const date = new Date().toISOString().slice(0, 10);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `prompts-export-${date}.csv`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }
 
 async function checkSession() {
@@ -172,5 +207,26 @@ if (csvUploadForm) {
   });
 }
 
+
+
+if (csvExportButton) {
+  csvExportButton.addEventListener('click', async () => {
+    const res = await fetch('../api/admin_prompts.php');
+    if (!res.ok) {
+      showToast('Export fehlgeschlagen.');
+      return;
+    }
+
+    const payload = await res.json().catch(() => ({ ok: false, data: [] }));
+    if (!payload.ok || !Array.isArray(payload.data)) {
+      showToast('Export fehlgeschlagen.');
+      return;
+    }
+
+    const csv = toCsv(payload.data);
+    downloadCsv(csv);
+    showToast(`CSV exportiert (${payload.data.length} Einträge).`);
+  });
+}
 
 checkSession();
