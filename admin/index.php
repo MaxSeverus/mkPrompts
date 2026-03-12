@@ -44,6 +44,18 @@
         </form>
       </div>
 
+      <div class="card">
+        <h2>CSV-Upload</h2>
+        <p>CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong> und <strong>prompt</strong> hochladen.</p>
+        <form id="csvUploadForm" class="stack gap-12">
+          <input type="file" id="csvFileInput" accept=",.csv,text/csv" required>
+          <div class="row gap-12">
+            <button type="submit">CSV importieren</button>
+            <small>Der Import ersetzt bestehende Einträge mit gleicher Nr oder Abkürzung.</small>
+          </div>
+        </form>
+      </div>
+
       <div class="card overflow-x">
         <table>
           <thead>
