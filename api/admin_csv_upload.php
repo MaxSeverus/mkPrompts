@@ -56,7 +56,7 @@ $pdo = db();
 $inserted = 0;
 $updated = 0;
 
-$selectStmt = $pdo->prepare('SELECT id FROM prompts WHERE content_type = :type AND (nr = :nr OR abbreviation = :abbreviation) LIMIT 1');
+$selectStmt = $pdo->prepare('SELECT id FROM prompts WHERE content_type = :type AND nr = :nr AND abbreviation = :abbreviation LIMIT 1');
 $insertStmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, content_type, updated_at) VALUES (:nr, :abbreviation, :prompt, :type, CURRENT_TIMESTAMP)');
 $updateStmt = $pdo->prepare('UPDATE prompts SET nr = :nr, abbreviation = :abbreviation, prompt = :prompt, updated_at = CURRENT_TIMESTAMP WHERE id = :id AND content_type = :type');
 
