@@ -53,6 +53,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="assertive"></div>
-  <script src="assets/js/admin.js"></script>
+  <script src="../assets/js/admin.js"></script>
 </body>
 </html>
