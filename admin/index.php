@@ -12,6 +12,9 @@
       <p class="badge">Admin-Bereich</p>
       <h1>Prompt-Verwaltung</h1>
       <p>Prompts hinzufügen, bearbeiten und löschen.</p>
+      <div class="switch-link-row">
+        <a class="button-link" href="../">Zum Benutzerbereich</a>
+      </div>
     </header>
 
     <section id="loginCard" class="card max-500">
