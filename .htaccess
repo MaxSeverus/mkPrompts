@@ -1,0 +1,4 @@
+DirectoryIndex index.php
+
+RewriteEngine On
+RewriteRule ^admin$ /admin/ [R=301,L]
