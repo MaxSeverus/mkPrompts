@@ -8,6 +8,12 @@ const logoutButton = document.getElementById('logoutButton');
 const csvUploadForm = document.getElementById('csvUploadForm');
 const csvFileInput = document.getElementById('csvFileInput');
 const csvExportButton = document.getElementById('csvExportButton');
+const viewSwitch = document.getElementById('viewSwitch');
+const editorTitle = document.getElementById('editorTitle');
+const contentLabel = document.getElementById('contentLabel');
+const tableContentHeading = document.getElementById('tableContentHeading');
+const csvTitle = document.getElementById('csvTitle');
+const csvHint = document.getElementById('csvHint');
 const toast = document.getElementById('toast');
 
 const formFields = {
@@ -17,17 +23,48 @@ const formFields = {
   prompt: document.getElementById('promptInput'),
 };
 
+let currentView = 'prompt';
+
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 1800);
 }
 
+function getViewMeta() {
+  return currentView === 'exercise'
+    ? {
+      singular: 'Übung',
+      plural: 'Übungen',
+      filePrefix: 'uebungen',
+    }
+    : {
+      singular: 'Prompt',
+      plural: 'Prompts',
+      filePrefix: 'prompts',
+    };
+}
+
+function updateViewTexts() {
+  const meta = getViewMeta();
+  editorTitle.textContent = `${meta.singular} speichern`;
+  contentLabel.textContent = meta.singular;
+  tableContentHeading.textContent = meta.singular;
+  csvTitle.textContent = `CSV-Upload (${meta.plural})`;
+  csvHint.textContent = 'Der Import ersetzt bestehende Einträge mit gleicher Nr oder Abkürzung.';
+
+  const buttons = viewSwitch?.querySelectorAll('button[data-view]') || [];
+  buttons.forEach((button) => {
+    const isActive = button.dataset.view === currentView;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+}
+
 function resetForm() {
   formFields.id.value = '';
   promptForm.reset();
 }
-
 
 function escapeCsvValue(value) {
   const normalized = String(value ?? '').replace(/"/g, '""');
@@ -53,9 +90,10 @@ function downloadCsv(content) {
   const blob = new Blob([`\uFEFF${content}`], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const date = new Date().toISOString().slice(0, 10);
+  const meta = getViewMeta();
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = `prompts-export-${date}.csv`;
+  anchor.download = `${meta.filePrefix}-export-${date}.csv`;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
@@ -68,12 +106,14 @@ async function checkSession() {
   if (data.isAdmin) {
     loginCard.classList.add('hidden');
     adminPanel.classList.remove('hidden');
+    updateViewTexts();
     await loadPrompts();
   }
 }
 
 async function loadPrompts() {
-  const res = await fetch('../api/admin_prompts.php');
+  const params = new URLSearchParams({ type: currentView });
+  const res = await fetch(`../api/admin_prompts.php?${params.toString()}`);
   if (res.status === 401) return;
 
   const payload = await res.json();
@@ -112,6 +152,7 @@ loginForm.addEventListener('submit', async (event) => {
 
   loginCard.classList.add('hidden');
   adminPanel.classList.remove('hidden');
+  updateViewTexts();
   showToast('Erfolgreich angemeldet.');
   await loadPrompts();
 });
@@ -124,6 +165,7 @@ promptForm.addEventListener('submit', async (event) => {
     nr: formFields.nr.value.trim().slice(0, 15),
     abbreviation: formFields.abbreviation.value.trim(),
     prompt: formFields.prompt.value.trim(),
+    type: currentView,
   };
 
   const method = payload.id ? 'PUT' : 'POST';
@@ -138,7 +180,7 @@ promptForm.addEventListener('submit', async (event) => {
     return;
   }
 
-  showToast('Prompt gespeichert.');
+  showToast(`${getViewMeta().singular} gespeichert.`);
   resetForm();
   await loadPrompts();
 });
@@ -161,13 +203,25 @@ adminTableBody.addEventListener('click', async (event) => {
   const res = await fetch('../api/admin_prompts.php', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: entry.id }),
+    body: JSON.stringify({ id: entry.id, type: currentView }),
   });
 
   if (res.ok) {
-    showToast('Prompt gelöscht.');
+    showToast(`${getViewMeta().singular} gelöscht.`);
     await loadPrompts();
   }
+});
+
+viewSwitch?.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-view]');
+  if (!button || button.dataset.view === currentView) {
+    return;
+  }
+
+  currentView = button.dataset.view;
+  updateViewTexts();
+  resetForm();
+  await loadPrompts();
 });
 
 resetButton.addEventListener('click', resetForm);
@@ -175,7 +229,6 @@ logoutButton.addEventListener('click', async () => {
   await fetch('../api/admin_logout.php', { method: 'POST' });
   location.reload();
 });
-
 
 if (csvUploadForm) {
   csvUploadForm.addEventListener('submit', async (event) => {
@@ -188,6 +241,7 @@ if (csvUploadForm) {
 
     const formData = new FormData();
     formData.append('csv', csvFileInput.files[0]);
+    formData.append('type', currentView);
 
     const res = await fetch('../api/admin_csv_upload.php', {
       method: 'POST',
@@ -207,11 +261,10 @@ if (csvUploadForm) {
   });
 }
 
-
-
 if (csvExportButton) {
   csvExportButton.addEventListener('click', async () => {
-    const res = await fetch('../api/admin_prompts.php');
+    const params = new URLSearchParams({ type: currentView });
+    const res = await fetch(`../api/admin_prompts.php?${params.toString()}`);
     if (!res.ok) {
       showToast('Export fehlgeschlagen.');
       return;
@@ -229,4 +282,5 @@ if (csvExportButton) {
   });
 }
 
+updateViewTexts();
 checkSession();

@@ -23,9 +23,16 @@
     </section>
 
     <section class="toolbar">
+      <label class="field full">
+        <span>Bereich</span>
+        <div class="view-switch" id="viewSwitch" role="tablist" aria-label="Inhalte auswählen">
+          <button type="button" class="secondary is-active" data-view="prompt" role="tab" aria-selected="true">Prompts</button>
+          <button type="button" class="secondary" data-view="exercise" role="tab" aria-selected="false">Übungen</button>
+        </div>
+      </label>
       <label class="field">
         <span>Suche</span>
-        <input id="searchInput" type="search" placeholder="Nr, Abkürzung oder Prompt durchsuchen">
+        <input id="searchInput" type="search" placeholder="Nr, Abkürzung oder Inhalt durchsuchen">
       </label>
       <label class="field">
         <span>Sortieren nach</span>

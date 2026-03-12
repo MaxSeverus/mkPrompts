@@ -2,9 +2,11 @@ const promptList = document.getElementById('promptList');
 const searchInput = document.getElementById('searchInput');
 const sortSelect = document.getElementById('sortSelect');
 const dirButton = document.getElementById('dirButton');
+const viewSwitch = document.getElementById('viewSwitch');
 const toast = document.getElementById('toast');
 
 let dir = 'asc';
+let currentView = 'prompt';
 
 function showToast(message) {
   toast.textContent = message;
@@ -16,11 +18,21 @@ function highlightPlaceholders(text) {
   return text.replace(/\[([^\]]+)\]/g, '<span class="placeholder">[$1]</span>');
 }
 
+function updateSwitchButtons() {
+  const buttons = viewSwitch?.querySelectorAll('button[data-view]') || [];
+  buttons.forEach((button) => {
+    const isActive = button.dataset.view === currentView;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+}
+
 async function loadPrompts() {
   const params = new URLSearchParams({
     q: searchInput.value,
     sort: sortSelect.value,
     dir,
+    type: currentView,
   });
 
   const API_BASE = './api';
@@ -50,7 +62,18 @@ promptList.addEventListener('click', async (event) => {
   if (!button) return;
   const prompt = decodeURIComponent(button.dataset.prompt);
   await navigator.clipboard.writeText(prompt);
-  showToast('Prompt kopiert.');
+  showToast(currentView === 'exercise' ? 'Übung kopiert.' : 'Prompt kopiert.');
+});
+
+viewSwitch?.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-view]');
+  if (!button || button.dataset.view === currentView) {
+    return;
+  }
+
+  currentView = button.dataset.view;
+  updateSwitchButtons();
+  await loadPrompts();
 });
 
 searchInput.addEventListener('input', loadPrompts);
@@ -61,4 +84,5 @@ dirButton.addEventListener('click', () => {
   loadPrompts();
 });
 
+updateSwitchButtons();
 loadPrompts();
