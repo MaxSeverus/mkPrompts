@@ -36,8 +36,10 @@ async function loadPrompts() {
         <span><strong>Nr:</strong> ${entry.nr}</span>
         <span><strong>Abkürzung:</strong> ${entry.abbreviation}</span>
       </div>
-      <p class="prompt-text">${highlightPlaceholders(entry.prompt)}</p>
-      <button data-prompt="${encodeURIComponent(entry.prompt)}">Prompt kopieren</button>
+      <div class="prompt-row">
+        <p class="prompt-text">${highlightPlaceholders(entry.prompt)}</p>
+        <button class="copy-button" data-prompt="${encodeURIComponent(entry.prompt)}">kopieren</button>
+      </div>
     `;
     promptList.appendChild(card);
   });
