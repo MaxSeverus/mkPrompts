@@ -32,7 +32,11 @@ input, select, textarea { width: 100%; background: #fff; }
 button { background: var(--primary); color: #fff; border: 0; cursor: pointer; font-weight: 600; }
 button:hover { background: var(--primary-dark); }
 button.secondary { background: #edf1ff; color: var(--text); border: 1px solid var(--border); }
+.button-link { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; background: #edf1ff; color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px; font-weight: 600; }
+.button-link:hover { background: #dde5ff; }
+.switch-link-row { margin-top: 16px; }
 .prompt-grid { display: grid; gap: 12px; }
+
 .prompt-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; box-shadow: 0 6px 18px rgba(54, 73, 117, 0.08); }
 .prompt-meta { display: flex; gap: 10px; margin-bottom: 10px; color: var(--muted); font-size: .9rem; }
 .prompt-text { margin: 0 0 12px; line-height: 1.5; white-space: pre-wrap; }
