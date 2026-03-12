@@ -70,6 +70,13 @@
         </div>
       </div>
 
+      <div id="adminNrFilterSection" class="card hidden">
+        <div class="row gap-12 align-center wrap">
+          <strong>Datenschnitt Nr:</strong>
+          <div id="adminNrFilterButtons" class="slicer-buttons"></div>
+        </div>
+      </div>
+
       <div class="card overflow-x">
         <table>
           <thead>

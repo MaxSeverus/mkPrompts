@@ -44,6 +44,13 @@
       <button id="dirButton" class="secondary">Aufsteigend</button>
     </section>
 
+    <section id="nrFilterSection" class="card hidden">
+      <div class="row gap-12 align-center wrap">
+        <strong>Datenschnitt Nr:</strong>
+        <div id="nrFilterButtons" class="slicer-buttons"></div>
+      </div>
+    </section>
+
     <section>
       <div id="promptList" class="prompt-grid" aria-live="polite"></div>
     </section>
