@@ -5,6 +5,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/../src/db.php';
 require_once __DIR__ . '/../src/http.php';
 
+function resolveContentType(mixed $value): string
+{
+    return strtolower((string) $value) === 'exercise' ? 'exercise' : 'prompt';
+}
+
 requireAdminAuth();
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -15,6 +20,7 @@ if (!isset($_FILES['csv']) || !is_array($_FILES['csv'])) {
     jsonResponse(['ok' => false, 'message' => 'Keine CSV-Datei übermittelt.'], 400);
 }
 
+$type = resolveContentType($_POST['type'] ?? 'prompt');
 $file = $_FILES['csv'];
 if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
     jsonResponse(['ok' => false, 'message' => 'Datei-Upload fehlgeschlagen.'], 400);
@@ -50,9 +56,9 @@ $pdo = db();
 $inserted = 0;
 $updated = 0;
 
-$selectStmt = $pdo->prepare('SELECT id FROM prompts WHERE nr = :nr OR abbreviation = :abbreviation LIMIT 1');
-$insertStmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, updated_at) VALUES (:nr, :abbreviation, :prompt, CURRENT_TIMESTAMP)');
-$updateStmt = $pdo->prepare('UPDATE prompts SET nr = :nr, abbreviation = :abbreviation, prompt = :prompt, updated_at = CURRENT_TIMESTAMP WHERE id = :id');
+$selectStmt = $pdo->prepare('SELECT id FROM prompts WHERE content_type = :type AND (nr = :nr OR abbreviation = :abbreviation) LIMIT 1');
+$insertStmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, content_type, updated_at) VALUES (:nr, :abbreviation, :prompt, :type, CURRENT_TIMESTAMP)');
+$updateStmt = $pdo->prepare('UPDATE prompts SET nr = :nr, abbreviation = :abbreviation, prompt = :prompt, updated_at = CURRENT_TIMESTAMP WHERE id = :id AND content_type = :type');
 
 $pdo->beginTransaction();
 
@@ -67,6 +73,7 @@ try {
         }
 
         $selectStmt->execute([
+            'type' => $type,
             'nr' => $nrValue,
             'abbreviation' => $abbrValue,
         ]);
@@ -77,6 +84,7 @@ try {
                 'nr' => $nrValue,
                 'abbreviation' => $abbrValue,
                 'prompt' => $promptValue,
+                'type' => $type,
             ]);
             $inserted++;
             continue;
@@ -87,6 +95,7 @@ try {
             'nr' => $nrValue,
             'abbreviation' => $abbrValue,
             'prompt' => $promptValue,
+            'type' => $type,
         ]);
         $updated++;
     }
