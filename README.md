@@ -58,7 +58,7 @@ mkPrompts/
 - `SQLITE_PATH=./data/prompts.sqlite`
 
 ### all-inkl / produktiv
-- In `.env` auf `DB_DRIVER=mysql` wechseln und Zugangsdaten eintragen.
+- In `.env` auf `DB_DRIVER=mariadb` (oder `mysql`) wechseln und Zugangsdaten eintragen.
 - Tabelle wird beim ersten Aufruf automatisch angelegt.
 - Zugangsdaten bleiben außerhalb des Codes in der `.env`.
 

@@ -12,8 +12,9 @@ function db(): PDO
     }
 
     $config = appConfig();
+    $driver = strtolower($config['db_driver']);
 
-    if ($config['db_driver'] === 'mysql') {
+    if (in_array($driver, ['mysql', 'mariadb'], true)) {
         $dsn = sprintf(
             'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
             $config['db_host'],
@@ -32,14 +33,14 @@ function db(): PDO
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-    initializeDatabase($pdo, $config['db_driver']);
+    initializeDatabase($pdo, $driver);
 
     return $pdo;
 }
 
 function initializeDatabase(PDO $pdo, string $driver): void
 {
-    $idColumn = $driver === 'mysql'
+    $idColumn = in_array($driver, ['mysql', 'mariadb'], true)
         ? 'INT AUTO_INCREMENT PRIMARY KEY'
         : 'INTEGER PRIMARY KEY AUTOINCREMENT';
 
