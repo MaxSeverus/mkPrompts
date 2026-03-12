@@ -4,9 +4,12 @@ const sortSelect = document.getElementById('sortSelect');
 const dirButton = document.getElementById('dirButton');
 const viewSwitch = document.getElementById('viewSwitch');
 const toast = document.getElementById('toast');
+const nrFilterSection = document.getElementById('nrFilterSection');
+const nrFilterButtons = document.getElementById('nrFilterButtons');
 
 let dir = 'asc';
 let currentView = 'prompt';
+let selectedNr = '';
 
 function showToast(message) {
   toast.textContent = message;
@@ -27,6 +30,44 @@ function updateSwitchButtons() {
   });
 }
 
+function renderNrFilterButtons(entries) {
+  if (!nrFilterSection || !nrFilterButtons) return;
+
+  const nrValues = [...new Set(entries
+    .map((entry) => String(entry.nr ?? '').trim())
+    .filter((value) => value !== ''))]
+    .sort((a, b) => a.localeCompare(b, 'de', { numeric: true, sensitivity: 'base' }));
+
+  if (selectedNr && !nrValues.includes(selectedNr)) {
+    selectedNr = '';
+  }
+
+  nrFilterButtons.innerHTML = '';
+
+  if (!nrValues.length) {
+    nrFilterSection.classList.add('hidden');
+    return;
+  }
+
+  nrFilterSection.classList.remove('hidden');
+
+  const allButton = document.createElement('button');
+  allButton.type = 'button';
+  allButton.className = `secondary ${selectedNr === '' ? 'is-active' : ''}`.trim();
+  allButton.textContent = 'Alle';
+  allButton.dataset.nr = '';
+  nrFilterButtons.appendChild(allButton);
+
+  nrValues.forEach((nr) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `secondary ${selectedNr === nr ? 'is-active' : ''}`.trim();
+    button.textContent = nr;
+    button.dataset.nr = nr;
+    nrFilterButtons.appendChild(button);
+  });
+}
+
 async function loadPrompts() {
   const params = new URLSearchParams({
     q: searchInput.value,
@@ -38,9 +79,17 @@ async function loadPrompts() {
   const API_BASE = './api';
   const res = await fetch(`${API_BASE}/prompts.php?${params.toString()}`);
   const payload = await res.json();
+  const entries = Array.isArray(payload.data) ? payload.data : [];
+
+  renderNrFilterButtons(entries);
+
+  const filteredEntries = selectedNr
+    ? entries.filter((entry) => String(entry.nr ?? '').trim() === selectedNr)
+    : entries;
+
   promptList.innerHTML = '';
 
-  payload.data.forEach((entry) => {
+  filteredEntries.forEach((entry) => {
     const card = document.createElement('article');
     card.className = 'prompt-card';
     card.innerHTML = `
@@ -65,6 +114,13 @@ promptList.addEventListener('click', async (event) => {
   showToast(currentView === 'exercise' ? 'Übung kopiert.' : 'Prompt kopiert.');
 });
 
+nrFilterButtons?.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-nr]');
+  if (!button) return;
+  selectedNr = button.dataset.nr || '';
+  await loadPrompts();
+});
+
 viewSwitch?.addEventListener('click', async (event) => {
   const button = event.target.closest('button[data-view]');
   if (!button || button.dataset.view === currentView) {
@@ -72,6 +128,7 @@ viewSwitch?.addEventListener('click', async (event) => {
   }
 
   currentView = button.dataset.view;
+  selectedNr = '';
   updateSwitchButtons();
   await loadPrompts();
 });

@@ -15,6 +15,8 @@ const tableContentHeading = document.getElementById('tableContentHeading');
 const csvTitle = document.getElementById('csvTitle');
 const csvHint = document.getElementById('csvHint');
 const toast = document.getElementById('toast');
+const adminNrFilterSection = document.getElementById('adminNrFilterSection');
+const adminNrFilterButtons = document.getElementById('adminNrFilterButtons');
 
 const formFields = {
   id: document.getElementById('promptId'),
@@ -24,6 +26,7 @@ const formFields = {
 };
 
 let currentView = 'prompt';
+let selectedNr = '';
 
 function showToast(message) {
   toast.textContent = message;
@@ -100,6 +103,63 @@ function downloadCsv(content) {
   URL.revokeObjectURL(url);
 }
 
+function renderNrFilterButtons(entries) {
+  if (!adminNrFilterSection || !adminNrFilterButtons) return;
+
+  const nrValues = [...new Set(entries
+    .map((entry) => String(entry.nr ?? '').trim())
+    .filter((value) => value !== ''))]
+    .sort((a, b) => a.localeCompare(b, 'de', { numeric: true, sensitivity: 'base' }));
+
+  if (selectedNr && !nrValues.includes(selectedNr)) {
+    selectedNr = '';
+  }
+
+  adminNrFilterButtons.innerHTML = '';
+
+  if (!nrValues.length) {
+    adminNrFilterSection.classList.add('hidden');
+    return;
+  }
+
+  adminNrFilterSection.classList.remove('hidden');
+
+  const allButton = document.createElement('button');
+  allButton.type = 'button';
+  allButton.className = `secondary ${selectedNr === '' ? 'is-active' : ''}`.trim();
+  allButton.textContent = 'Alle';
+  allButton.dataset.nr = '';
+  adminNrFilterButtons.appendChild(allButton);
+
+  nrValues.forEach((nr) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `secondary ${selectedNr === nr ? 'is-active' : ''}`.trim();
+    button.textContent = nr;
+    button.dataset.nr = nr;
+    adminNrFilterButtons.appendChild(button);
+  });
+}
+
+function renderTable(entries) {
+  adminTableBody.innerHTML = '';
+
+  entries.forEach((entry) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${entry.nr}</td>
+      <td>${entry.abbreviation}</td>
+      <td>${entry.prompt}</td>
+      <td>
+        <button class="secondary" data-action="edit" data-id="${entry.id}">Bearbeiten</button>
+        <button data-action="delete" data-id="${entry.id}">Löschen</button>
+      </td>
+    `;
+    tr.dataset.entry = JSON.stringify(entry);
+    adminTableBody.appendChild(tr);
+  });
+}
+
 async function checkSession() {
   const res = await fetch('../api/admin_session.php');
   const data = await res.json();
@@ -117,22 +177,15 @@ async function loadPrompts() {
   if (res.status === 401) return;
 
   const payload = await res.json();
-  adminTableBody.innerHTML = '';
+  const entries = Array.isArray(payload.data) ? payload.data : [];
 
-  payload.data.forEach((entry) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${entry.nr}</td>
-      <td>${entry.abbreviation}</td>
-      <td>${entry.prompt}</td>
-      <td>
-        <button class="secondary" data-action="edit" data-id="${entry.id}">Bearbeiten</button>
-        <button data-action="delete" data-id="${entry.id}">Löschen</button>
-      </td>
-    `;
-    tr.dataset.entry = JSON.stringify(entry);
-    adminTableBody.appendChild(tr);
-  });
+  renderNrFilterButtons(entries);
+
+  const filteredEntries = selectedNr
+    ? entries.filter((entry) => String(entry.nr ?? '').trim() === selectedNr)
+    : entries;
+
+  renderTable(filteredEntries);
 }
 
 loginForm.addEventListener('submit', async (event) => {
@@ -212,6 +265,13 @@ adminTableBody.addEventListener('click', async (event) => {
   }
 });
 
+adminNrFilterButtons?.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-nr]');
+  if (!button) return;
+  selectedNr = button.dataset.nr || '';
+  await loadPrompts();
+});
+
 viewSwitch?.addEventListener('click', async (event) => {
   const button = event.target.closest('button[data-view]');
   if (!button || button.dataset.view === currentView) {
@@ -219,6 +279,7 @@ viewSwitch?.addEventListener('click', async (event) => {
   }
 
   currentView = button.dataset.view;
+  selectedNr = '';
   updateViewTexts();
   resetForm();
   await loadPrompts();
