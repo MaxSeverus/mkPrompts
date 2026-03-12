@@ -23,7 +23,8 @@ async function loadPrompts() {
     dir,
   });
 
-  const res = await fetch(`../api/prompts.php?${params.toString()}`);
+  const API_BASE = './api';
+  const res = await fetch(`${API_BASE}/prompts.php?${params.toString()}`);
   const payload = await res.json();
   promptList.innerHTML = '';
 
