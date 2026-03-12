@@ -12,6 +12,9 @@
       <p class="badge">Prompt-Bibliothek</p>
       <h1>KI-Prompts für den schnellen Einsatz</h1>
       <p>Durchsuche Vorlagen, kopiere mit einem Klick und nutze die Prompts direkt weiter.</p>
+      <div class="switch-link-row">
+        <a class="button-link" href="admin/">Zum Admin-Bereich</a>
+      </div>
     </header>
 
     <section class="notice-card">
