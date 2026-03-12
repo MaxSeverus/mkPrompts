@@ -34,7 +34,7 @@
         </div>
         <form id="promptForm" class="form-grid">
           <input type="hidden" id="promptId">
-          <label><span>Nr</span><input type="number" id="nrInput" required min="1"></label>
+          <label><span>Nr</span><input type="text" id="nrInput" required maxlength="15" placeholder="z. B. Meta-Prompts"></label>
           <label><span>Abkürzung</span><input type="text" id="abbrInput" required maxlength="50"></label>
           <label class="full"><span>Prompt</span><textarea id="promptInput" rows="5" required></textarea></label>
           <div class="full row gap-12">

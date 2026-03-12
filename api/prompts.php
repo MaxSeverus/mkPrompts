@@ -17,10 +17,7 @@ $sql = 'SELECT id, nr, abbreviation, prompt FROM prompts';
 $params = [];
 
 if ($q !== '') {
-    $sql .= ' WHERE CAST(nr AS CHAR) LIKE :query OR abbreviation LIKE :query OR prompt LIKE :query';
-    if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
-        $sql = str_replace('CAST(nr AS CHAR)', 'CAST(nr AS TEXT)', $sql);
-    }
+    $sql .= ' WHERE nr LIKE :query OR abbreviation LIKE :query OR prompt LIKE :query';
     $params['query'] = '%' . $q . '%';
 }
 
