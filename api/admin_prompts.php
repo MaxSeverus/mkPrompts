@@ -5,6 +5,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/../src/db.php';
 require_once __DIR__ . '/../src/http.php';
 
+function normalizeNr(mixed $value): string
+{
+    return substr(trim((string) $value), 0, 15);
+}
+
 requireAdminAuth();
 $pdo = db();
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -19,7 +24,7 @@ $data = requestData();
 if ($method === 'POST') {
     $stmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, updated_at) VALUES (:nr, :abbreviation, :prompt, CURRENT_TIMESTAMP)');
     $stmt->execute([
-        'nr' => (int)($data['nr'] ?? 0),
+        'nr' => normalizeNr($data['nr'] ?? ''),
         'abbreviation' => trim((string)($data['abbreviation'] ?? '')),
         'prompt' => trim((string)($data['prompt'] ?? '')),
     ]);
@@ -30,7 +35,7 @@ if ($method === 'PUT') {
     $stmt = $pdo->prepare('UPDATE prompts SET nr=:nr, abbreviation=:abbreviation, prompt=:prompt, updated_at=CURRENT_TIMESTAMP WHERE id=:id');
     $stmt->execute([
         'id' => (int)($data['id'] ?? 0),
-        'nr' => (int)($data['nr'] ?? 0),
+        'nr' => normalizeNr($data['nr'] ?? ''),
         'abbreviation' => trim((string)($data['abbreviation'] ?? '')),
         'prompt' => trim((string)($data['prompt'] ?? '')),
     ]);
