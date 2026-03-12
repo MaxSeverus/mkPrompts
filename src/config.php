@@ -43,6 +43,12 @@ function appConfig(): array
 
     loadEnv(__DIR__ . '/../.env');
 
+    $projectRoot = realpath(__DIR__ . '/..') ?: (__DIR__ . '/..');
+    $sqlitePath = env('SQLITE_PATH', $projectRoot . '/data/prompts.sqlite');
+    if ($sqlitePath !== '' && $sqlitePath[0] !== '/' && !preg_match('/^[A-Za-z]:/', $sqlitePath)) {
+        $sqlitePath = $projectRoot . '/' . ltrim($sqlitePath, '/');
+    }
+
     $config = [
         'app_name' => env('APP_NAME', 'Prompt-Bibliothek'),
         'admin_password' => env('ADMIN_PASSWORD', 'admin123'),
@@ -52,7 +58,7 @@ function appConfig(): array
         'db_name' => env('DB_NAME', 'prompt_library'),
         'db_user' => env('DB_USER', ''),
         'db_pass' => env('DB_PASS', ''),
-        'sqlite_path' => env('SQLITE_PATH', __DIR__ . '/../data/prompts.sqlite'),
+        'sqlite_path' => $sqlitePath,
     ];
 
     return $config;
