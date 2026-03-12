@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt-Bibliothek</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <p class="badge">Prompt-Bibliothek</p>
+      <h1>KI-Prompts für den schnellen Einsatz</h1>
+      <p>Durchsuche Vorlagen, kopiere mit einem Klick und nutze die Prompts direkt weiter.</p>
+    </header>
+
+    <section class="notice-card">
+      <h2>Geschützte Inhalte – nur für Teilnehmer:innen</h2>
+      <p>Diese Sammlung ist für den internen Einsatz bestimmt. Bitte verantwortungsvoll nutzen und nicht extern teilen.</p>
+    </section>
+
+    <section class="toolbar">
+      <label class="field">
+        <span>Suche</span>
+        <input id="searchInput" type="search" placeholder="Nr, Abkürzung oder Prompt durchsuchen">
+      </label>
+      <label class="field">
+        <span>Sortieren nach</span>
+        <select id="sortSelect">
+          <option value="nr">Nr</option>
+          <option value="abbreviation">Abkürzung</option>
+        </select>
+      </label>
+      <button id="dirButton" class="secondary">Aufsteigend</button>
+    </section>
+
+    <section>
+      <div id="promptList" class="prompt-grid" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="assertive"></div>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
