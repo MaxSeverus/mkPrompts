@@ -5,6 +5,8 @@ const promptForm = document.getElementById('promptForm');
 const adminTableBody = document.getElementById('adminTableBody');
 const resetButton = document.getElementById('resetButton');
 const logoutButton = document.getElementById('logoutButton');
+const csvUploadForm = document.getElementById('csvUploadForm');
+const csvFileInput = document.getElementById('csvFileInput');
 const toast = document.getElementById('toast');
 
 const formFields = {
@@ -138,5 +140,37 @@ logoutButton.addEventListener('click', async () => {
   await fetch('../api/admin_logout.php', { method: 'POST' });
   location.reload();
 });
+
+
+if (csvUploadForm) {
+  csvUploadForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (!csvFileInput.files || !csvFileInput.files.length) {
+      showToast('Bitte eine CSV-Datei auswählen.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('csv', csvFileInput.files[0]);
+
+    const res = await fetch('../api/admin_csv_upload.php', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const payload = await res.json().catch(() => ({ ok: false, message: 'Import fehlgeschlagen.' }));
+
+    if (!res.ok || !payload.ok) {
+      showToast(payload.message || 'Import fehlgeschlagen.');
+      return;
+    }
+
+    showToast(`CSV importiert (${payload.inserted} neu, ${payload.updated} aktualisiert).`);
+    csvUploadForm.reset();
+    await loadPrompts();
+  });
+}
+
 
 checkSession();
