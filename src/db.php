@@ -46,13 +46,14 @@ function initializeDatabase(PDO $pdo, string $driver): void
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS prompts (
         id {$idColumn},
-        nr INTEGER NOT NULL,
+        nr VARCHAR(15) NOT NULL,
         abbreviation VARCHAR(50) NOT NULL,
         prompt TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
+    ensureNrColumnSupportsText($pdo, $driver);
     $count = (int) $pdo->query('SELECT COUNT(*) FROM prompts')->fetchColumn();
     if ($count > 0) {
         return;
@@ -60,7 +61,7 @@ function initializeDatabase(PDO $pdo, string $driver): void
 
     $seedData = [
         [
-            'nr' => 1,
+            'nr' => '1',
             'abbreviation' => 'HINWEIS',
             'prompt' => '[HIER DIE VOLLSTÄNDIGE LISTE DER BESTEHENDEN PROMPTS 1:1 EINFÜGEN]'
         ],
@@ -69,5 +70,32 @@ function initializeDatabase(PDO $pdo, string $driver): void
     $stmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt) VALUES (:nr, :abbreviation, :prompt)');
     foreach ($seedData as $row) {
         $stmt->execute($row);
+    }
+}
+
+
+function ensureNrColumnSupportsText(PDO $pdo, string $driver): void
+{
+    if (in_array($driver, ['mysql', 'mariadb'], true)) {
+        $column = $pdo->query("SHOW COLUMNS FROM prompts LIKE 'nr'")->fetch();
+        $columnType = strtolower((string) ($column['Type'] ?? ''));
+        if (strpos($columnType, 'varchar') !== 0) {
+            $pdo->exec('ALTER TABLE prompts MODIFY nr VARCHAR(15) NOT NULL');
+        }
+        return;
+    }
+
+    if ($driver === 'sqlite') {
+        $columns = $pdo->query('PRAGMA table_info(prompts)')->fetchAll();
+        foreach ($columns as $column) {
+            if (($column['name'] ?? '') !== 'nr') {
+                continue;
+            }
+            $type = strtoupper((string) ($column['type'] ?? ''));
+            if ($type !== '' && strpos($type, 'VARCHAR(15)') === 0) {
+                return;
+            }
+            break;
+        }
     }
 }
