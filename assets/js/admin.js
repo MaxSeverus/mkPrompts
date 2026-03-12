@@ -26,7 +26,7 @@ function resetForm() {
 }
 
 async function checkSession() {
-  const res = await fetch('/api/admin_session.php');
+  const res = await fetch('../api/admin_session.php');
   const data = await res.json();
   if (data.isAdmin) {
     loginCard.classList.add('hidden');
@@ -36,7 +36,7 @@ async function checkSession() {
 }
 
 async function loadPrompts() {
-  const res = await fetch('/api/admin_prompts.php');
+  const res = await fetch('../api/admin_prompts.php');
   if (res.status === 401) return;
 
   const payload = await res.json();
@@ -62,7 +62,7 @@ loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const password = document.getElementById('passwordInput').value;
 
-  const res = await fetch('/api/admin_login.php', {
+  const res = await fetch('../api/admin_login.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ password }),
@@ -90,7 +90,7 @@ promptForm.addEventListener('submit', async (event) => {
   };
 
   const method = payload.id ? 'PUT' : 'POST';
-  const res = await fetch('/api/admin_prompts.php', {
+  const res = await fetch('../api/admin_prompts.php', {
     method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -121,7 +121,7 @@ adminTableBody.addEventListener('click', async (event) => {
     return;
   }
 
-  const res = await fetch('/api/admin_prompts.php', {
+  const res = await fetch('../api/admin_prompts.php', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id: entry.id }),
@@ -135,7 +135,7 @@ adminTableBody.addEventListener('click', async (event) => {
 
 resetButton.addEventListener('click', resetForm);
 logoutButton.addEventListener('click', async () => {
-  await fetch('/api/admin_logout.php', { method: 'POST' });
+  await fetch('../api/admin_logout.php', { method: 'POST' });
   location.reload();
 });
 
