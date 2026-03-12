@@ -54,6 +54,10 @@ button.secondary { background: #edf1ff; color: var(--text); border: 1px solid va
 .gap-12 { gap: 12px; }
 .gap-20 { gap: 20px; }
 .row { display: flex; }
+
+.wrap { flex-wrap: wrap; }
+.slicer-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.slicer-buttons button.is-active { background: var(--primary); color: #fff; border-color: var(--primary); }
 .between { justify-content: space-between; }
 .align-center { align-items: center; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
