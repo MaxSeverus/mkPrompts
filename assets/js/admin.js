@@ -86,7 +86,7 @@ promptForm.addEventListener('submit', async (event) => {
 
   const payload = {
     id: Number(formFields.id.value || 0),
-    nr: Number(formFields.nr.value),
+    nr: formFields.nr.value.trim().slice(0, 15),
     abbreviation: formFields.abbreviation.value.trim(),
     prompt: formFields.prompt.value.trim(),
   };

@@ -58,7 +58,7 @@ $pdo->beginTransaction();
 
 try {
     while (($row = fgetcsv($handle, 0, ',')) !== false) {
-        $nrValue = trim((string) ($row[$indices['nr']] ?? ''));
+        $nrValue = substr(trim((string) ($row[$indices['nr']] ?? '')), 0, 15);
         $abbrValue = trim((string) ($row[$indices['abbreviation']] ?? ''));
         $promptValue = trim((string) ($row[$indices['prompt']] ?? ''));
 
@@ -66,20 +66,15 @@ try {
             continue;
         }
 
-        $nr = (int) $nrValue;
-        if ($nr <= 0) {
-            continue;
-        }
-
         $selectStmt->execute([
-            'nr' => $nr,
+            'nr' => $nrValue,
             'abbreviation' => $abbrValue,
         ]);
         $existingId = $selectStmt->fetchColumn();
 
         if ($existingId === false) {
             $insertStmt->execute([
-                'nr' => $nr,
+                'nr' => $nrValue,
                 'abbreviation' => $abbrValue,
                 'prompt' => $promptValue,
             ]);
@@ -89,7 +84,7 @@ try {
 
         $updateStmt->execute([
             'id' => (int) $existingId,
-            'nr' => $nr,
+            'nr' => $nrValue,
             'abbreviation' => $abbrValue,
             'prompt' => $promptValue,
         ]);
