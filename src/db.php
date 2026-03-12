@@ -49,10 +49,12 @@ function initializeDatabase(PDO $pdo, string $driver): void
         nr VARCHAR(15) NOT NULL,
         abbreviation VARCHAR(50) NOT NULL,
         prompt TEXT NOT NULL,
+        content_type VARCHAR(20) NOT NULL DEFAULT 'prompt',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
+    ensureContentTypeColumn($pdo, $driver);
     ensureNrColumnSupportsText($pdo, $driver);
     $count = (int) $pdo->query('SELECT COUNT(*) FROM prompts')->fetchColumn();
     if ($count > 0) {
@@ -67,12 +69,34 @@ function initializeDatabase(PDO $pdo, string $driver): void
         ],
     ];
 
-    $stmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt) VALUES (:nr, :abbreviation, :prompt)');
+    $stmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, content_type) VALUES (:nr, :abbreviation, :prompt, :content_type)');
     foreach ($seedData as $row) {
-        $stmt->execute($row);
+        $stmt->execute($row + ['content_type' => 'prompt']);
     }
 }
 
+
+
+function ensureContentTypeColumn(PDO $pdo, string $driver): void
+{
+    if (in_array($driver, ['mysql', 'mariadb'], true)) {
+        $column = $pdo->query("SHOW COLUMNS FROM prompts LIKE 'content_type'")->fetch();
+        if (!$column) {
+            $pdo->exec("ALTER TABLE prompts ADD COLUMN content_type VARCHAR(20) NOT NULL DEFAULT 'prompt'");
+        }
+        return;
+    }
+
+    if ($driver === 'sqlite') {
+        $columns = $pdo->query('PRAGMA table_info(prompts)')->fetchAll();
+        foreach ($columns as $column) {
+            if (($column['name'] ?? '') === 'content_type') {
+                return;
+            }
+        }
+        $pdo->exec("ALTER TABLE prompts ADD COLUMN content_type VARCHAR(20) NOT NULL DEFAULT 'prompt'");
+    }
+}
 
 function ensureNrColumnSupportsText(PDO $pdo, string $driver): void
 {
