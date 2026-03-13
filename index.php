@@ -51,6 +51,13 @@
       </div>
     </section>
 
+    <section id="projectFilterSection" class="card hidden">
+      <div class="row gap-12 align-center wrap">
+        <strong>Projekt:</strong>
+        <div id="projectFilterButtons" class="slicer-buttons"></div>
+      </div>
+    </section>
+
     <section>
       <div id="promptList" class="prompt-grid" aria-live="polite"></div>
     </section>

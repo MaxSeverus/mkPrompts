@@ -56,9 +56,9 @@ $pdo = db();
 $inserted = 0;
 $updated = 0;
 
-$selectStmt = $pdo->prepare('SELECT id FROM prompts WHERE content_type = :type AND nr = :nr AND abbreviation = :abbreviation LIMIT 1');
-$insertStmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, content_type, updated_at) VALUES (:nr, :abbreviation, :prompt, :type, CURRENT_TIMESTAMP)');
-$updateStmt = $pdo->prepare('UPDATE prompts SET nr = :nr, abbreviation = :abbreviation, prompt = :prompt, updated_at = CURRENT_TIMESTAMP WHERE id = :id AND content_type = :type');
+$selectStmt = $pdo->prepare('SELECT id FROM prompts WHERE content_type = :type AND project = :project AND nr = :nr AND abbreviation = :abbreviation LIMIT 1');
+$insertStmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, project, content_type, updated_at) VALUES (:nr, :abbreviation, :prompt, :project, :type, CURRENT_TIMESTAMP)');
+$updateStmt = $pdo->prepare('UPDATE prompts SET nr = :nr, abbreviation = :abbreviation, prompt = :prompt, project = :project, updated_at = CURRENT_TIMESTAMP WHERE id = :id AND content_type = :type');
 
 $pdo->beginTransaction();
 
@@ -67,6 +67,10 @@ try {
         $nrValue = substr(trim((string) ($row[$indices['nr']] ?? '')), 0, 15);
         $abbrValue = trim((string) ($row[$indices['abbreviation']] ?? ''));
         $promptValue = trim((string) ($row[$indices['prompt']] ?? ''));
+        $projectValue = '';
+        if (array_key_exists('project', $indices)) {
+            $projectValue = substr(trim((string) ($row[$indices['project']] ?? '')), 0, 80);
+        }
 
         if ($nrValue === '' || $abbrValue === '' || $promptValue === '') {
             continue;
@@ -74,6 +78,7 @@ try {
 
         $selectStmt->execute([
             'type' => $type,
+            'project' => $projectValue,
             'nr' => $nrValue,
             'abbreviation' => $abbrValue,
         ]);
@@ -84,6 +89,7 @@ try {
                 'nr' => $nrValue,
                 'abbreviation' => $abbrValue,
                 'prompt' => $promptValue,
+                'project' => $projectValue,
                 'type' => $type,
             ]);
             $inserted++;
@@ -95,6 +101,7 @@ try {
             'nr' => $nrValue,
             'abbreviation' => $abbrValue,
             'prompt' => $promptValue,
+            'project' => $projectValue,
             'type' => $type,
         ]);
         $updated++;
