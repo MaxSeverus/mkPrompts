@@ -6,10 +6,13 @@ const viewSwitch = document.getElementById('viewSwitch');
 const toast = document.getElementById('toast');
 const nrFilterSection = document.getElementById('nrFilterSection');
 const nrFilterButtons = document.getElementById('nrFilterButtons');
+const projectFilterSection = document.getElementById('projectFilterSection');
+const projectFilterButtons = document.getElementById('projectFilterButtons');
 
 let dir = 'asc';
 let currentView = 'prompt';
 let selectedNr = '';
+let selectedProject = '';
 
 function showToast(message) {
   toast.textContent = message;
@@ -76,11 +79,16 @@ async function loadPrompts() {
     type: currentView,
   });
 
+  if (currentView === 'exercise' && selectedProject !== '') {
+    params.set('project', selectedProject);
+  }
+
   const API_BASE = './api';
   const res = await fetch(`${API_BASE}/prompts.php?${params.toString()}`);
   const payload = await res.json();
   const entries = Array.isArray(payload.data) ? payload.data : [];
 
+  renderProjectFilterButtons(entries);
   renderNrFilterButtons(entries);
 
   const filteredEntries = selectedNr
@@ -90,10 +98,14 @@ async function loadPrompts() {
   promptList.innerHTML = '';
 
   filteredEntries.forEach((entry) => {
+    const projectBadge = currentView === 'exercise' && String(entry.project ?? '').trim() !== ''
+      ? `<span><strong>Projekt:</strong> ${entry.project}</span>`
+      : '';
     const card = document.createElement('article');
     card.className = 'prompt-card';
     card.innerHTML = `
       <div class="prompt-meta">
+        ${projectBadge}
         <span><strong>Nr:</strong> ${entry.nr}</span>
         <span><strong>Abkürzung:</strong> ${entry.abbreviation}</span>
       </div>
@@ -103,6 +115,51 @@ async function loadPrompts() {
       </div>
     `;
     promptList.appendChild(card);
+  });
+}
+
+function renderProjectFilterButtons(entries) {
+  if (!projectFilterSection || !projectFilterButtons) return;
+
+  if (currentView !== 'exercise') {
+    selectedProject = '';
+    projectFilterSection.classList.add('hidden');
+    projectFilterButtons.innerHTML = '';
+    return;
+  }
+
+  const projectValues = [...new Set(entries
+    .map((entry) => String(entry.project ?? '').trim())
+    .filter((value) => value !== ''))]
+    .sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
+
+  if (selectedProject && !projectValues.includes(selectedProject)) {
+    selectedProject = '';
+  }
+
+  projectFilterButtons.innerHTML = '';
+
+  if (!projectValues.length) {
+    projectFilterSection.classList.add('hidden');
+    return;
+  }
+
+  projectFilterSection.classList.remove('hidden');
+
+  const allButton = document.createElement('button');
+  allButton.type = 'button';
+  allButton.className = `secondary ${selectedProject === '' ? 'is-active' : ''}`.trim();
+  allButton.textContent = 'Alle Projekte';
+  allButton.dataset.project = '';
+  projectFilterButtons.appendChild(allButton);
+
+  projectValues.forEach((project) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `secondary ${selectedProject === project ? 'is-active' : ''}`.trim();
+    button.textContent = project;
+    button.dataset.project = project;
+    projectFilterButtons.appendChild(button);
   });
 }
 
@@ -121,6 +178,14 @@ nrFilterButtons?.addEventListener('click', async (event) => {
   await loadPrompts();
 });
 
+projectFilterButtons?.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-project]');
+  if (!button) return;
+  selectedProject = button.dataset.project || '';
+  selectedNr = '';
+  await loadPrompts();
+});
+
 viewSwitch?.addEventListener('click', async (event) => {
   const button = event.target.closest('button[data-view]');
   if (!button || button.dataset.view === currentView) {
@@ -129,6 +194,7 @@ viewSwitch?.addEventListener('click', async (event) => {
 
   currentView = button.dataset.view;
   selectedNr = '';
+  selectedProject = '';
   updateSwitchButtons();
   await loadPrompts();
 });

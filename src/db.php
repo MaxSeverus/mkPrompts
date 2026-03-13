@@ -49,12 +49,14 @@ function initializeDatabase(PDO $pdo, string $driver): void
         nr VARCHAR(15) NOT NULL,
         abbreviation VARCHAR(50) NOT NULL,
         prompt TEXT NOT NULL,
+        project VARCHAR(80) NOT NULL DEFAULT '',
         content_type VARCHAR(20) NOT NULL DEFAULT 'prompt',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
     ensureContentTypeColumn($pdo, $driver);
+    ensureProjectColumn($pdo, $driver);
     ensureNrColumnSupportsText($pdo, $driver);
     $count = (int) $pdo->query('SELECT COUNT(*) FROM prompts')->fetchColumn();
     if ($count > 0) {
@@ -121,5 +123,26 @@ function ensureNrColumnSupportsText(PDO $pdo, string $driver): void
             }
             break;
         }
+    }
+}
+
+function ensureProjectColumn(PDO $pdo, string $driver): void
+{
+    if (in_array($driver, ['mysql', 'mariadb'], true)) {
+        $column = $pdo->query("SHOW COLUMNS FROM prompts LIKE 'project'")->fetch();
+        if (!$column) {
+            $pdo->exec("ALTER TABLE prompts ADD COLUMN project VARCHAR(80) NOT NULL DEFAULT ''");
+        }
+        return;
+    }
+
+    if ($driver === 'sqlite') {
+        $columns = $pdo->query('PRAGMA table_info(prompts)')->fetchAll();
+        foreach ($columns as $column) {
+            if (($column['name'] ?? '') === 'project') {
+                return;
+            }
+        }
+        $pdo->exec("ALTER TABLE prompts ADD COLUMN project VARCHAR(80) NOT NULL DEFAULT ''");
     }
 }
