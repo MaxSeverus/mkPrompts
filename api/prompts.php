@@ -23,7 +23,11 @@ $orderBy = $sortMap[$sort] ?? 'nr';
 $sql = 'SELECT id, nr, abbreviation, prompt, project FROM prompts WHERE content_type = :type';
 $params = ['type' => $type];
 
-if ($type === 'exercise' && $project !== '') {
+if ($type === 'exercise') {
+    if ($project === '') {
+        jsonResponse(['ok' => true, 'data' => []]);
+    }
+
     $sql .= ' AND project = :project';
     $params['project'] = $project;
 }
