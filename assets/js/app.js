@@ -14,6 +14,13 @@ let currentView = 'prompt';
 let selectedNr = '';
 let selectedProject = '';
 
+function normalizeProjectParam(value) {
+  return value.trim().replace(/^['\"]|['\"]$/g, '');
+}
+
+const projectParam = new URLSearchParams(window.location.search).get('project') || '';
+const forcedProject = normalizeProjectParam(projectParam);
+
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add('show');
@@ -79,8 +86,9 @@ async function loadPrompts() {
     type: currentView,
   });
 
-  if (currentView === 'exercise' && selectedProject !== '') {
-    params.set('project', selectedProject);
+  const effectiveProject = forcedProject || selectedProject;
+  if (currentView === 'exercise' && effectiveProject !== '') {
+    params.set('project', effectiveProject);
   }
 
   const API_BASE = './api';
@@ -125,6 +133,21 @@ function renderProjectFilterButtons(entries) {
     selectedProject = '';
     projectFilterSection.classList.add('hidden');
     projectFilterButtons.innerHTML = '';
+    return;
+  }
+
+  if (forcedProject !== '') {
+    selectedProject = forcedProject;
+    projectFilterSection.classList.remove('hidden');
+    projectFilterButtons.innerHTML = '';
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'secondary is-active';
+    button.textContent = forcedProject;
+    button.dataset.project = forcedProject;
+    button.disabled = true;
+    projectFilterButtons.appendChild(button);
     return;
   }
 
@@ -194,7 +217,7 @@ viewSwitch?.addEventListener('click', async (event) => {
 
   currentView = button.dataset.view;
   selectedNr = '';
-  selectedProject = '';
+  selectedProject = forcedProject || '';
   updateSwitchButtons();
   await loadPrompts();
 });
