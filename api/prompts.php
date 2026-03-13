@@ -15,12 +15,18 @@ $q = trim((string)($_GET['q'] ?? ''));
 $sort = (string)($_GET['sort'] ?? 'nr');
 $dir = strtolower((string)($_GET['dir'] ?? 'asc')) === 'desc' ? 'DESC' : 'ASC';
 $type = resolveContentType((string) ($_GET['type'] ?? 'prompt'));
+$project = trim((string) ($_GET['project'] ?? ''));
 
 $sortMap = ['nr' => 'nr', 'abbreviation' => 'abbreviation'];
 $orderBy = $sortMap[$sort] ?? 'nr';
 
-$sql = 'SELECT id, nr, abbreviation, prompt FROM prompts WHERE content_type = :type';
+$sql = 'SELECT id, nr, abbreviation, prompt, project FROM prompts WHERE content_type = :type';
 $params = ['type' => $type];
+
+if ($type === 'exercise' && $project !== '') {
+    $sql .= ' AND project = :project';
+    $params['project'] = $project;
+}
 
 if ($q !== '') {
     $sql .= ' AND (nr LIKE :query OR abbreviation LIKE :query OR prompt LIKE :query)';
