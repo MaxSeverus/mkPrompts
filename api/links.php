@@ -16,7 +16,7 @@ $sortMap = [
 ];
 $orderBy = $sortMap[$sort] ?? 'description';
 
-$sql = 'SELECT id, description, url, category FROM links';
+$sql = 'SELECT description, url, category FROM links';
 $params = [];
 
 if ($q !== '') {

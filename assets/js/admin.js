@@ -38,7 +38,7 @@ const formFields = {
 };
 
 const linkFields = {
-  id: document.getElementById('linkId'),
+  originalUrl: document.getElementById('linkOriginalUrl'),
   description: document.getElementById('linkDescriptionInput'),
   url: document.getElementById('linkUrlInput'),
   category: document.getElementById('linkCategoryInput'),
@@ -113,7 +113,7 @@ function resetForm() {
 }
 
 function resetLinkForm() {
-  linkFields.id.value = '';
+  linkFields.originalUrl.value = '';
   linkForm.reset();
 }
 
@@ -270,8 +270,8 @@ function renderLinkTable(entries) {
       <td><a href="${entry.url}" target="_blank" rel="noopener noreferrer">${entry.url}</a></td>
       <td>${entry.category}</td>
       <td>
-        <button class="secondary" data-action="edit" data-id="${entry.id}">Bearbeiten</button>
-        <button data-action="delete" data-id="${entry.id}">Löschen</button>
+        <button class="secondary" data-action="edit" data-url="${encodeURIComponent(entry.url)}">Bearbeiten</button>
+        <button data-action="delete" data-url="${encodeURIComponent(entry.url)}">Löschen</button>
       </td>
     `;
     tr.dataset.entry = JSON.stringify(entry);
@@ -375,13 +375,13 @@ linkForm.addEventListener('submit', async (event) => {
   event.preventDefault();
 
   const payload = {
-    id: Number(linkFields.id.value || 0),
+    old_url: linkFields.originalUrl.value.trim(),
     description: linkFields.description.value.trim(),
     url: linkFields.url.value.trim(),
     category: linkFields.category.value.trim().slice(0, 80),
   };
 
-  const method = payload.id ? 'PUT' : 'POST';
+  const method = payload.old_url ? 'PUT' : 'POST';
   const res = await fetch('../api/admin_links.php', {
     method,
     headers: { 'Content-Type': 'application/json' },
@@ -434,7 +434,7 @@ adminLinkTableBody.addEventListener('click', async (event) => {
   const entry = JSON.parse(row.dataset.entry);
 
   if (button.dataset.action === 'edit') {
-    linkFields.id.value = entry.id;
+    linkFields.originalUrl.value = entry.url;
     linkFields.description.value = entry.description;
     linkFields.url.value = entry.url;
     linkFields.category.value = entry.category;
@@ -444,7 +444,7 @@ adminLinkTableBody.addEventListener('click', async (event) => {
   const res = await fetch('../api/admin_links.php', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: entry.id }),
+    body: JSON.stringify({ url: entry.url }),
   });
 
   if (res.ok) {
