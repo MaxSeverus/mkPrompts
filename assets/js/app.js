@@ -17,6 +17,16 @@ let selectedNr = '';
 let selectedProject = '';
 let selectedCategory = '';
 
+function normalizeView(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+
+  if (normalized === 'links') return 'link';
+  if (normalized === 'prompts') return 'prompt';
+  if (normalized === 'übungen' || normalized === 'uebungen') return 'exercise';
+
+  return ['prompt', 'exercise', 'link'].includes(normalized) ? normalized : 'prompt';
+}
+
 function normalizeProjectParam(value) {
   return value.trim().replace(/^['\"]|['\"]$/g, '');
 }
@@ -325,11 +335,13 @@ categoryFilterButtons?.addEventListener('click', async (event) => {
 
 viewSwitch?.addEventListener('click', async (event) => {
   const button = event.target.closest('button[data-view]');
-  if (!button || button.dataset.view === currentView) {
+  const nextView = normalizeView(button?.dataset.view);
+
+  if (!button || nextView === currentView) {
     return;
   }
 
-  currentView = button.dataset.view;
+  currentView = nextView;
   selectedNr = '';
   selectedCategory = '';
   selectedProject = forcedProject || '';
@@ -346,6 +358,7 @@ dirButton.addEventListener('click', () => {
   loadEntries();
 });
 
+currentView = normalizeView(new URLSearchParams(window.location.search).get('view'));
 updateSwitchButtons();
 updateSortOptions();
 loadEntries();
