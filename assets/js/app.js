@@ -8,11 +8,14 @@ const nrFilterSection = document.getElementById('nrFilterSection');
 const nrFilterButtons = document.getElementById('nrFilterButtons');
 const projectFilterSection = document.getElementById('projectFilterSection');
 const projectFilterButtons = document.getElementById('projectFilterButtons');
+const categoryFilterSection = document.getElementById('categoryFilterSection');
+const categoryFilterButtons = document.getElementById('categoryFilterButtons');
 
 let dir = 'asc';
 let currentView = 'prompt';
 let selectedNr = '';
 let selectedProject = '';
+let selectedCategory = '';
 
 function normalizeProjectParam(value) {
   return value.trim().replace(/^['\"]|['\"]$/g, '');
@@ -31,6 +34,17 @@ function highlightPlaceholders(text) {
   return text.replace(/\[([^\]]+)\]/g, '<span class="placeholder">[$1]</span>');
 }
 
+function updateSortOptions() {
+  if (currentView === 'link') {
+    searchInput.placeholder = 'Beschreibung, URL oder Kategorie durchsuchen';
+    sortSelect.innerHTML = '<option value="description">Beschreibung</option><option value="category">Kategorie</option>';
+    return;
+  }
+
+  searchInput.placeholder = 'Nr, Abkürzung oder Inhalt durchsuchen';
+  sortSelect.innerHTML = '<option value="nr">Nr</option><option value="abbreviation">Abkürzung</option>';
+}
+
 function updateSwitchButtons() {
   const buttons = viewSwitch?.querySelectorAll('button[data-view]') || [];
   buttons.forEach((button) => {
@@ -42,6 +56,11 @@ function updateSwitchButtons() {
 
 function renderNrFilterButtons(entries) {
   if (!nrFilterSection || !nrFilterButtons) return;
+  if (currentView === 'link') {
+    nrFilterSection.classList.add('hidden');
+    nrFilterButtons.innerHTML = '';
+    return;
+  }
 
   const nrValues = [...new Set(entries
     .map((entry) => String(entry.nr ?? '').trim())
@@ -78,7 +97,89 @@ function renderNrFilterButtons(entries) {
   });
 }
 
-async function loadPrompts() {
+function renderCategoryFilterButtons(entries) {
+  if (!categoryFilterSection || !categoryFilterButtons) return;
+
+  if (currentView !== 'link') {
+    selectedCategory = '';
+    categoryFilterSection.classList.add('hidden');
+    categoryFilterButtons.innerHTML = '';
+    return;
+  }
+
+  const categoryValues = [...new Set(entries
+    .map((entry) => String(entry.category ?? '').trim())
+    .filter((value) => value !== ''))]
+    .sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
+
+  if (selectedCategory && !categoryValues.includes(selectedCategory)) {
+    selectedCategory = '';
+  }
+
+  categoryFilterButtons.innerHTML = '';
+
+  if (!categoryValues.length) {
+    categoryFilterSection.classList.add('hidden');
+    return;
+  }
+
+  categoryFilterSection.classList.remove('hidden');
+
+  const allButton = document.createElement('button');
+  allButton.type = 'button';
+  allButton.className = `secondary ${selectedCategory === '' ? 'is-active' : ''}`.trim();
+  allButton.textContent = 'Alle Kategorien';
+  allButton.dataset.category = '';
+  categoryFilterButtons.appendChild(allButton);
+
+  categoryValues.forEach((category) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `secondary ${selectedCategory === category ? 'is-active' : ''}`.trim();
+    button.textContent = category;
+    button.dataset.category = category;
+    categoryFilterButtons.appendChild(button);
+  });
+}
+
+async function loadEntries() {
+  if (currentView === 'link') {
+    const params = new URLSearchParams({
+      q: searchInput.value,
+      sort: sortSelect.value,
+      dir,
+    });
+
+    const res = await fetch(`./api/links.php?${params.toString()}`);
+    const payload = await res.json();
+    const entries = Array.isArray(payload.data) ? payload.data : [];
+
+    renderProjectFilterButtons([]);
+    renderNrFilterButtons([]);
+    renderCategoryFilterButtons(entries);
+
+    const filteredEntries = selectedCategory
+      ? entries.filter((entry) => String(entry.category ?? '').trim() === selectedCategory)
+      : entries;
+
+    promptList.innerHTML = '';
+    filteredEntries.forEach((entry) => {
+      const card = document.createElement('article');
+      card.className = 'prompt-card';
+      card.innerHTML = `
+        <div class="prompt-meta">
+          <span><strong>Kategorie:</strong> ${entry.category}</span>
+        </div>
+        <div class="prompt-row">
+          <p class="prompt-text"><strong>${entry.description}</strong><br><a href="${entry.url}" target="_blank" rel="noopener noreferrer">${entry.url}</a></p>
+          <button class="copy-button" data-copy="${encodeURIComponent(entry.url)}">kopieren</button>
+        </div>
+      `;
+      promptList.appendChild(card);
+    });
+    return;
+  }
+
   const params = new URLSearchParams({
     q: searchInput.value,
     sort: sortSelect.value,
@@ -91,13 +192,13 @@ async function loadPrompts() {
     params.set('project', effectiveProject);
   }
 
-  const API_BASE = './api';
-  const res = await fetch(`${API_BASE}/prompts.php?${params.toString()}`);
+  const res = await fetch(`./api/prompts.php?${params.toString()}`);
   const payload = await res.json();
   const entries = Array.isArray(payload.data) ? payload.data : [];
 
   renderProjectFilterButtons(entries);
   renderNrFilterButtons(entries);
+  renderCategoryFilterButtons([]);
 
   const filteredEntries = selectedNr
     ? entries.filter((entry) => String(entry.nr ?? '').trim() === selectedNr)
@@ -119,7 +220,7 @@ async function loadPrompts() {
       </div>
       <div class="prompt-row">
         <p class="prompt-text">${highlightPlaceholders(entry.prompt)}</p>
-        <button class="copy-button" data-prompt="${encodeURIComponent(entry.prompt)}">kopieren</button>
+        <button class="copy-button" data-copy="${encodeURIComponent(entry.prompt)}">kopieren</button>
       </div>
     `;
     promptList.appendChild(card);
@@ -187,18 +288,24 @@ function renderProjectFilterButtons(entries) {
 }
 
 promptList.addEventListener('click', async (event) => {
-  const button = event.target.closest('button[data-prompt]');
+  const button = event.target.closest('button[data-copy]');
   if (!button) return;
-  const prompt = decodeURIComponent(button.dataset.prompt);
-  await navigator.clipboard.writeText(prompt);
-  showToast(currentView === 'exercise' ? 'Übung kopiert.' : 'Prompt kopiert.');
+  const value = decodeURIComponent(button.dataset.copy);
+  await navigator.clipboard.writeText(value);
+  if (currentView === 'exercise') {
+    showToast('Übung kopiert.');
+  } else if (currentView === 'link') {
+    showToast('Link kopiert.');
+  } else {
+    showToast('Prompt kopiert.');
+  }
 });
 
 nrFilterButtons?.addEventListener('click', async (event) => {
   const button = event.target.closest('button[data-nr]');
   if (!button) return;
   selectedNr = button.dataset.nr || '';
-  await loadPrompts();
+  await loadEntries();
 });
 
 projectFilterButtons?.addEventListener('click', async (event) => {
@@ -206,7 +313,14 @@ projectFilterButtons?.addEventListener('click', async (event) => {
   if (!button) return;
   selectedProject = button.dataset.project || '';
   selectedNr = '';
-  await loadPrompts();
+  await loadEntries();
+});
+
+categoryFilterButtons?.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-category]');
+  if (!button) return;
+  selectedCategory = button.dataset.category || '';
+  await loadEntries();
 });
 
 viewSwitch?.addEventListener('click', async (event) => {
@@ -217,18 +331,21 @@ viewSwitch?.addEventListener('click', async (event) => {
 
   currentView = button.dataset.view;
   selectedNr = '';
+  selectedCategory = '';
   selectedProject = forcedProject || '';
   updateSwitchButtons();
-  await loadPrompts();
+  updateSortOptions();
+  await loadEntries();
 });
 
-searchInput.addEventListener('input', loadPrompts);
-sortSelect.addEventListener('change', loadPrompts);
+searchInput.addEventListener('input', loadEntries);
+sortSelect.addEventListener('change', loadEntries);
 dirButton.addEventListener('click', () => {
   dir = dir === 'asc' ? 'desc' : 'asc';
   dirButton.textContent = dir === 'asc' ? 'Aufsteigend' : 'Absteigend';
-  loadPrompts();
+  loadEntries();
 });
 
 updateSwitchButtons();
-loadPrompts();
+updateSortOptions();
+loadEntries();

@@ -28,6 +28,7 @@
         <div class="view-switch" id="viewSwitch" role="tablist" aria-label="Inhalte auswählen">
           <button type="button" class="secondary is-active" data-view="prompt" role="tab" aria-selected="true">Prompts</button>
           <button type="button" class="secondary" data-view="exercise" role="tab" aria-selected="false">Übungen</button>
+          <button type="button" class="secondary" data-view="link" role="tab" aria-selected="false">Links</button>
         </div>
       </label>
       <label class="field">
@@ -36,10 +37,7 @@
       </label>
       <label class="field">
         <span>Sortieren nach</span>
-        <select id="sortSelect">
-          <option value="nr">Nr</option>
-          <option value="abbreviation">Abkürzung</option>
-        </select>
+        <select id="sortSelect"></select>
       </label>
       <button id="dirButton" class="secondary">Aufsteigend</button>
     </section>
@@ -55,6 +53,13 @@
       <div class="row gap-12 align-center wrap">
         <strong>Projekt:</strong>
         <div id="projectFilterButtons" class="slicer-buttons"></div>
+      </div>
+    </section>
+
+    <section id="categoryFilterSection" class="card hidden">
+      <div class="row gap-12 align-center wrap">
+        <strong>Kategorie:</strong>
+        <div id="categoryFilterButtons" class="slicer-buttons"></div>
       </div>
     </section>
 
