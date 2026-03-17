@@ -2,9 +2,15 @@ const loginCard = document.getElementById('loginCard');
 const adminPanel = document.getElementById('adminPanel');
 const loginForm = document.getElementById('loginForm');
 const promptForm = document.getElementById('promptForm');
+const linkForm = document.getElementById('linkForm');
 const adminTableBody = document.getElementById('adminTableBody');
+const adminLinkTableBody = document.getElementById('adminLinkTableBody');
+const promptTable = document.getElementById('promptTable');
+const linkTable = document.getElementById('linkTable');
 const resetButton = document.getElementById('resetButton');
+const resetLinkButton = document.getElementById('resetLinkButton');
 const logoutButton = document.getElementById('logoutButton');
+const csvCard = document.getElementById('csvCard');
 const csvUploadForm = document.getElementById('csvUploadForm');
 const csvFileInput = document.getElementById('csvFileInput');
 const csvExportButton = document.getElementById('csvExportButton');
@@ -20,6 +26,8 @@ const csvHint = document.getElementById('csvHint');
 const toast = document.getElementById('toast');
 const adminNrFilterSection = document.getElementById('adminNrFilterSection');
 const adminNrFilterButtons = document.getElementById('adminNrFilterButtons');
+const adminCategoryFilterSection = document.getElementById('adminCategoryFilterSection');
+const adminCategoryFilterButtons = document.getElementById('adminCategoryFilterButtons');
 
 const formFields = {
   id: document.getElementById('promptId'),
@@ -29,8 +37,16 @@ const formFields = {
   project: document.getElementById('projectInput'),
 };
 
+const linkFields = {
+  id: document.getElementById('linkId'),
+  description: document.getElementById('linkDescriptionInput'),
+  url: document.getElementById('linkUrlInput'),
+  category: document.getElementById('linkCategoryInput'),
+};
+
 let currentView = 'prompt';
 let selectedNr = '';
+let selectedCategory = '';
 
 function showToast(message) {
   toast.textContent = message;
@@ -39,37 +55,49 @@ function showToast(message) {
 }
 
 function getViewMeta() {
-  return currentView === 'exercise'
-    ? {
-      singular: 'Übung',
-      plural: 'Übungen',
-      filePrefix: 'uebungen',
-    }
-    : {
-      singular: 'Prompt',
-      plural: 'Prompts',
-      filePrefix: 'prompts',
-    };
+  if (currentView === 'exercise') {
+    return { singular: 'Übung', plural: 'Übungen', filePrefix: 'uebungen' };
+  }
+
+  if (currentView === 'link') {
+    return { singular: 'Link', plural: 'Links', filePrefix: 'links' };
+  }
+
+  return { singular: 'Prompt', plural: 'Prompts', filePrefix: 'prompts' };
 }
 
 function updateViewTexts() {
   const meta = getViewMeta();
   const isExerciseView = currentView === 'exercise';
+  const isLinkView = currentView === 'link';
+
   editorTitle.textContent = `${meta.singular} speichern`;
   contentLabel.textContent = meta.singular;
   tableContentHeading.textContent = meta.singular;
-  csvTitle.textContent = `CSV-Upload (${meta.plural})`;
-  if (csvDescription) {
-    csvDescription.innerHTML = isExerciseView
-      ? 'CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong>, <strong>prompt</strong> und optional <strong>project</strong> hochladen.'
-      : 'CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong> und <strong>prompt</strong> hochladen.';
-  }
-  csvHint.textContent = isExerciseView
-    ? 'Optional kann die Spalte project angegeben werden. Der Import ersetzt Einträge mit gleicher Kombination aus Projekt, Nr und Abkürzung.'
-    : 'Der Import ersetzt bestehende Einträge mit gleicher Nr oder Abkürzung.';
 
-  projectField?.classList.toggle('hidden', !isExerciseView);
-  tableProjectHeading?.classList.toggle('hidden', !isExerciseView);
+  promptForm?.classList.toggle('hidden', isLinkView);
+  linkForm?.classList.toggle('hidden', !isLinkView);
+  promptTable?.classList.toggle('hidden', isLinkView);
+  linkTable?.classList.toggle('hidden', !isLinkView);
+  csvCard?.classList.toggle('hidden', isLinkView);
+
+  projectField?.classList.toggle('hidden', !isExerciseView || isLinkView);
+  tableProjectHeading?.classList.toggle('hidden', !isExerciseView || isLinkView);
+
+  adminNrFilterSection?.classList.toggle('hidden', isLinkView);
+  adminCategoryFilterSection?.classList.toggle('hidden', !isLinkView);
+
+  if (!isLinkView) {
+    csvTitle.textContent = `CSV-Upload (${meta.plural})`;
+    if (csvDescription) {
+      csvDescription.innerHTML = isExerciseView
+        ? 'CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong>, <strong>prompt</strong> und optional <strong>project</strong> hochladen.'
+        : 'CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong> und <strong>prompt</strong> hochladen.';
+    }
+    csvHint.textContent = isExerciseView
+      ? 'Optional kann die Spalte project angegeben werden. Der Import ersetzt Einträge mit gleicher Kombination aus Projekt, Nr und Abkürzung.'
+      : 'Der Import ersetzt bestehende Einträge mit gleicher Nr oder Abkürzung.';
+  }
 
   const buttons = viewSwitch?.querySelectorAll('button[data-view]') || [];
   buttons.forEach((button) => {
@@ -82,6 +110,11 @@ function updateViewTexts() {
 function resetForm() {
   formFields.id.value = '';
   promptForm.reset();
+}
+
+function resetLinkForm() {
+  linkFields.id.value = '';
+  linkForm.reset();
 }
 
 function escapeCsvValue(value) {
@@ -131,7 +164,7 @@ function downloadCsv(content) {
 }
 
 function renderNrFilterButtons(entries) {
-  if (!adminNrFilterSection || !adminNrFilterButtons) return;
+  if (!adminNrFilterSection || !adminNrFilterButtons || currentView === 'link') return;
 
   const nrValues = [...new Set(entries
     .map((entry) => String(entry.nr ?? '').trim())
@@ -168,6 +201,44 @@ function renderNrFilterButtons(entries) {
   });
 }
 
+function renderCategoryFilterButtons(entries) {
+  if (!adminCategoryFilterSection || !adminCategoryFilterButtons || currentView !== 'link') return;
+
+  const categories = [...new Set(entries
+    .map((entry) => String(entry.category ?? '').trim())
+    .filter((value) => value !== ''))]
+    .sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
+
+  if (selectedCategory && !categories.includes(selectedCategory)) {
+    selectedCategory = '';
+  }
+
+  adminCategoryFilterButtons.innerHTML = '';
+
+  if (!categories.length) {
+    adminCategoryFilterSection.classList.add('hidden');
+    return;
+  }
+
+  adminCategoryFilterSection.classList.remove('hidden');
+
+  const allButton = document.createElement('button');
+  allButton.type = 'button';
+  allButton.className = `secondary ${selectedCategory === '' ? 'is-active' : ''}`.trim();
+  allButton.textContent = 'Alle Kategorien';
+  allButton.dataset.category = '';
+  adminCategoryFilterButtons.appendChild(allButton);
+
+  categories.forEach((category) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `secondary ${selectedCategory === category ? 'is-active' : ''}`.trim();
+    button.textContent = category;
+    button.dataset.category = category;
+    adminCategoryFilterButtons.appendChild(button);
+  });
+}
+
 function renderTable(entries) {
   adminTableBody.innerHTML = '';
   const isExerciseView = currentView === 'exercise';
@@ -189,6 +260,25 @@ function renderTable(entries) {
   });
 }
 
+function renderLinkTable(entries) {
+  adminLinkTableBody.innerHTML = '';
+
+  entries.forEach((entry) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${entry.description}</td>
+      <td><a href="${entry.url}" target="_blank" rel="noopener noreferrer">${entry.url}</a></td>
+      <td>${entry.category}</td>
+      <td>
+        <button class="secondary" data-action="edit" data-id="${entry.id}">Bearbeiten</button>
+        <button data-action="delete" data-id="${entry.id}">Löschen</button>
+      </td>
+    `;
+    tr.dataset.entry = JSON.stringify(entry);
+    adminLinkTableBody.appendChild(tr);
+  });
+}
+
 async function checkSession() {
   const res = await fetch('../api/admin_session.php');
   const data = await res.json();
@@ -196,11 +286,25 @@ async function checkSession() {
     loginCard.classList.add('hidden');
     adminPanel.classList.remove('hidden');
     updateViewTexts();
-    await loadPrompts();
+    await loadEntries();
   }
 }
 
-async function loadPrompts() {
+async function loadEntries() {
+  if (currentView === 'link') {
+    const res = await fetch('../api/admin_links.php');
+    if (res.status === 401) return;
+
+    const payload = await res.json();
+    const entries = Array.isArray(payload.data) ? payload.data : [];
+    renderCategoryFilterButtons(entries);
+    const filteredEntries = selectedCategory
+      ? entries.filter((entry) => String(entry.category ?? '').trim() === selectedCategory)
+      : entries;
+    renderLinkTable(filteredEntries);
+    return;
+  }
+
   const params = new URLSearchParams({ type: currentView });
   const res = await fetch(`../api/admin_prompts.php?${params.toString()}`);
   if (res.status === 401) return;
@@ -209,7 +313,6 @@ async function loadPrompts() {
   const entries = Array.isArray(payload.data) ? payload.data : [];
 
   renderNrFilterButtons(entries);
-
   const filteredEntries = selectedNr
     ? entries.filter((entry) => String(entry.nr ?? '').trim() === selectedNr)
     : entries;
@@ -236,7 +339,7 @@ loginForm.addEventListener('submit', async (event) => {
   adminPanel.classList.remove('hidden');
   updateViewTexts();
   showToast('Erfolgreich angemeldet.');
-  await loadPrompts();
+  await loadEntries();
 });
 
 promptForm.addEventListener('submit', async (event) => {
@@ -265,7 +368,34 @@ promptForm.addEventListener('submit', async (event) => {
 
   showToast(`${getViewMeta().singular} gespeichert.`);
   resetForm();
-  await loadPrompts();
+  await loadEntries();
+});
+
+linkForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const payload = {
+    id: Number(linkFields.id.value || 0),
+    description: linkFields.description.value.trim(),
+    url: linkFields.url.value.trim(),
+    category: linkFields.category.value.trim().slice(0, 80),
+  };
+
+  const method = payload.id ? 'PUT' : 'POST';
+  const res = await fetch('../api/admin_links.php', {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    showToast('Speichern fehlgeschlagen.');
+    return;
+  }
+
+  showToast('Link gespeichert.');
+  resetLinkForm();
+  await loadEntries();
 });
 
 adminTableBody.addEventListener('click', async (event) => {
@@ -292,7 +422,34 @@ adminTableBody.addEventListener('click', async (event) => {
 
   if (res.ok) {
     showToast(`${getViewMeta().singular} gelöscht.`);
-    await loadPrompts();
+    await loadEntries();
+  }
+});
+
+adminLinkTableBody.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-action]');
+  if (!button) return;
+
+  const row = button.closest('tr');
+  const entry = JSON.parse(row.dataset.entry);
+
+  if (button.dataset.action === 'edit') {
+    linkFields.id.value = entry.id;
+    linkFields.description.value = entry.description;
+    linkFields.url.value = entry.url;
+    linkFields.category.value = entry.category;
+    return;
+  }
+
+  const res = await fetch('../api/admin_links.php', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: entry.id }),
+  });
+
+  if (res.ok) {
+    showToast('Link gelöscht.');
+    await loadEntries();
   }
 });
 
@@ -300,7 +457,14 @@ adminNrFilterButtons?.addEventListener('click', async (event) => {
   const button = event.target.closest('button[data-nr]');
   if (!button) return;
   selectedNr = button.dataset.nr || '';
-  await loadPrompts();
+  await loadEntries();
+});
+
+adminCategoryFilterButtons?.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-category]');
+  if (!button) return;
+  selectedCategory = button.dataset.category || '';
+  await loadEntries();
 });
 
 viewSwitch?.addEventListener('click', async (event) => {
@@ -311,12 +475,15 @@ viewSwitch?.addEventListener('click', async (event) => {
 
   currentView = button.dataset.view;
   selectedNr = '';
+  selectedCategory = '';
   updateViewTexts();
   resetForm();
-  await loadPrompts();
+  resetLinkForm();
+  await loadEntries();
 });
 
 resetButton.addEventListener('click', resetForm);
+resetLinkButton.addEventListener('click', resetLinkForm);
 logoutButton.addEventListener('click', async () => {
   await fetch('../api/admin_logout.php', { method: 'POST' });
   location.reload();
@@ -349,7 +516,7 @@ if (csvUploadForm) {
 
     showToast(`CSV importiert (${payload.inserted} neu, ${payload.updated} aktualisiert).`);
     csvUploadForm.reset();
-    await loadPrompts();
+    await loadEntries();
   });
 }
 
