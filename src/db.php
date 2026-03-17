@@ -56,17 +56,15 @@ function initializeDatabase(PDO $pdo, string $driver): void
     )");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS links (
-        id {$idColumn},
+        url VARCHAR(500) PRIMARY KEY,
         description TEXT NOT NULL,
-        url TEXT NOT NULL,
-        category VARCHAR(80) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        category VARCHAR(80) NOT NULL
     )");
 
     ensureContentTypeColumn($pdo, $driver);
     ensureProjectColumn($pdo, $driver);
     ensureNrColumnSupportsText($pdo, $driver);
+    ensureLinksTableColumns($pdo, $driver);
     $count = (int) $pdo->query('SELECT COUNT(*) FROM prompts')->fetchColumn();
     if ($count > 0) {
         return;
@@ -83,6 +81,68 @@ function initializeDatabase(PDO $pdo, string $driver): void
     $stmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, content_type) VALUES (:nr, :abbreviation, :prompt, :content_type)');
     foreach ($seedData as $row) {
         $stmt->execute($row + ['content_type' => 'prompt']);
+    }
+}
+
+function ensureLinksTableColumns(PDO $pdo, string $driver): void
+{
+    if (in_array($driver, ['mysql', 'mariadb'], true)) {
+        $columns = $pdo->query('SHOW COLUMNS FROM links')->fetchAll();
+        $columnNames = array_map(static fn($column) => (string) ($column['Field'] ?? ''), $columns);
+        $hasOnlyRequiredColumns = $columnNames === ['url', 'description', 'category'];
+
+        if ($hasOnlyRequiredColumns) {
+            return;
+        }
+
+        $pdo->beginTransaction();
+        try {
+            $pdo->exec('DROP TABLE IF EXISTS links_new');
+            $pdo->exec("CREATE TABLE links_new (
+                url VARCHAR(500) PRIMARY KEY,
+                description TEXT NOT NULL,
+                category VARCHAR(80) NOT NULL
+            )");
+            $pdo->exec('INSERT INTO links_new (url, description, category) SELECT url, description, category FROM links');
+            $pdo->exec('DROP TABLE links');
+            $pdo->exec('RENAME TABLE links_new TO links');
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+
+        return;
+    }
+
+    if ($driver === 'sqlite') {
+        $columns = $pdo->query('PRAGMA table_info(links)')->fetchAll();
+        $columnNames = array_map(static fn($column) => (string) ($column['name'] ?? ''), $columns);
+        $hasOnlyRequiredColumns = $columnNames === ['url', 'description', 'category'];
+
+        if ($hasOnlyRequiredColumns) {
+            return;
+        }
+
+        $pdo->beginTransaction();
+        try {
+            $pdo->exec("CREATE TABLE links_new (
+                url VARCHAR(500) PRIMARY KEY,
+                description TEXT NOT NULL,
+                category VARCHAR(80) NOT NULL
+            )");
+            $pdo->exec('INSERT INTO links_new (url, description, category) SELECT url, description, category FROM links');
+            $pdo->exec('DROP TABLE links');
+            $pdo->exec('ALTER TABLE links_new RENAME TO links');
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 }
 

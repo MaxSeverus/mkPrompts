@@ -16,12 +16,12 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $data = requestData();
 
 if ($method === 'GET') {
-    $stmt = $pdo->query('SELECT id, description, url, category FROM links ORDER BY category ASC, description ASC');
+    $stmt = $pdo->query('SELECT description, url, category FROM links ORDER BY category ASC, description ASC');
     jsonResponse(['ok' => true, 'data' => $stmt->fetchAll()]);
 }
 
 if ($method === 'POST') {
-    $stmt = $pdo->prepare('INSERT INTO links (description, url, category, updated_at) VALUES (:description, :url, :category, CURRENT_TIMESTAMP)');
+    $stmt = $pdo->prepare('INSERT INTO links (description, url, category) VALUES (:description, :url, :category)');
     $stmt->execute([
         'description' => trim((string) ($data['description'] ?? '')),
         'url' => trim((string) ($data['url'] ?? '')),
@@ -31,9 +31,9 @@ if ($method === 'POST') {
 }
 
 if ($method === 'PUT') {
-    $stmt = $pdo->prepare('UPDATE links SET description=:description, url=:url, category=:category, updated_at=CURRENT_TIMESTAMP WHERE id=:id');
+    $stmt = $pdo->prepare('UPDATE links SET description=:description, url=:url, category=:category WHERE url=:old_url');
     $stmt->execute([
-        'id' => (int) ($data['id'] ?? 0),
+        'old_url' => trim((string) ($data['old_url'] ?? '')),
         'description' => trim((string) ($data['description'] ?? '')),
         'url' => trim((string) ($data['url'] ?? '')),
         'category' => normalizeCategory($data['category'] ?? ''),
@@ -42,9 +42,9 @@ if ($method === 'PUT') {
 }
 
 if ($method === 'DELETE') {
-    $stmt = $pdo->prepare('DELETE FROM links WHERE id = :id');
+    $stmt = $pdo->prepare('DELETE FROM links WHERE url = :url');
     $stmt->execute([
-        'id' => (int) ($data['id'] ?? 0),
+        'url' => trim((string) ($data['url'] ?? '')),
     ]);
     jsonResponse(['ok' => true]);
 }

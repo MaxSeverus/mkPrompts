@@ -55,7 +55,7 @@
         </form>
 
         <form id="linkForm" class="form-grid hidden">
-          <input type="hidden" id="linkId">
+          <input type="hidden" id="linkOriginalUrl">
           <label class="full"><span>Beschreibung</span><input type="text" id="linkDescriptionInput" required maxlength="255"></label>
           <label><span>URL</span><input type="url" id="linkUrlInput" required maxlength="500" placeholder="https://..."></label>
           <label><span>Kategorie</span><input type="text" id="linkCategoryInput" required maxlength="80"></label>
