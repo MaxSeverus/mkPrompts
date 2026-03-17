@@ -55,6 +55,15 @@ function initializeDatabase(PDO $pdo, string $driver): void
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
+    $pdo->exec("CREATE TABLE IF NOT EXISTS links (
+        id {$idColumn},
+        description TEXT NOT NULL,
+        url TEXT NOT NULL,
+        category VARCHAR(80) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+
     ensureContentTypeColumn($pdo, $driver);
     ensureProjectColumn($pdo, $driver);
     ensureNrColumnSupportsText($pdo, $driver);

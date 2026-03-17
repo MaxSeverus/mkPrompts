@@ -11,7 +11,7 @@
     <header class="hero compact">
       <p class="badge">Admin-Bereich</p>
       <h1>Inhalte verwalten</h1>
-      <p>Prompts und Übungsbeispiele hinzufügen, bearbeiten und löschen.</p>
+      <p>Prompts, Übungsbeispiele und Links hinzufügen, bearbeiten und löschen.</p>
       <div class="switch-link-row">
         <a class="button-link" href="../">Zum Benutzerbereich</a>
       </div>
@@ -38,6 +38,7 @@
           <div class="view-switch" id="viewSwitch" role="tablist" aria-label="Inhalte auswählen">
             <button type="button" class="secondary is-active" data-view="prompt" role="tab" aria-selected="true">Prompts</button>
             <button type="button" class="secondary" data-view="exercise" role="tab" aria-selected="false">Übungen</button>
+            <button type="button" class="secondary" data-view="link" role="tab" aria-selected="false">Links</button>
           </div>
         </label>
 
@@ -52,9 +53,20 @@
             <button type="button" id="resetButton" class="secondary">Zurücksetzen</button>
           </div>
         </form>
+
+        <form id="linkForm" class="form-grid hidden">
+          <input type="hidden" id="linkId">
+          <label class="full"><span>Beschreibung</span><input type="text" id="linkDescriptionInput" required maxlength="255"></label>
+          <label><span>URL</span><input type="url" id="linkUrlInput" required maxlength="500" placeholder="https://..."></label>
+          <label><span>Kategorie</span><input type="text" id="linkCategoryInput" required maxlength="80"></label>
+          <div class="full row gap-12">
+            <button type="submit">Speichern</button>
+            <button type="button" id="resetLinkButton" class="secondary">Zurücksetzen</button>
+          </div>
+        </form>
       </div>
 
-      <div class="card">
+      <div id="csvCard" class="card">
         <h2 id="csvTitle">CSV-Upload</h2>
         <p id="csvDescription">CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong> und <strong>prompt</strong> hochladen.</p>
         <form id="csvUploadForm" class="stack gap-12">
@@ -78,12 +90,26 @@
         </div>
       </div>
 
+      <div id="adminCategoryFilterSection" class="card hidden">
+        <div class="row gap-12 align-center wrap">
+          <strong>Kategorie:</strong>
+          <div id="adminCategoryFilterButtons" class="slicer-buttons"></div>
+        </div>
+      </div>
+
       <div class="card overflow-x">
-        <table>
+        <table id="promptTable">
           <thead>
             <tr><th>Nr</th><th id="tableProjectHeading" class="hidden">Projekt</th><th>Abkürzung</th><th id="tableContentHeading">Prompt</th><th>Aktionen</th></tr>
           </thead>
           <tbody id="adminTableBody"></tbody>
+        </table>
+
+        <table id="linkTable" class="hidden">
+          <thead>
+            <tr><th>Beschreibung</th><th>URL</th><th>Kategorie</th><th>Aktionen</th></tr>
+          </thead>
+          <tbody id="adminLinkTableBody"></tbody>
         </table>
       </div>
     </section>
