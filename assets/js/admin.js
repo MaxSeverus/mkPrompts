@@ -1,14 +1,12 @@
 const loginCard = document.getElementById('loginCard');
 const adminPanel = document.getElementById('adminPanel');
 const loginForm = document.getElementById('loginForm');
-const promptForm = document.getElementById('promptForm');
-const linkForm = document.getElementById('linkForm');
+const adminEntryForm = document.getElementById('adminEntryForm');
 const adminTableBody = document.getElementById('adminTableBody');
 const adminLinkTableBody = document.getElementById('adminLinkTableBody');
 const promptTable = document.getElementById('promptTable');
 const linkTable = document.getElementById('linkTable');
 const resetButton = document.getElementById('resetButton');
-const resetLinkButton = document.getElementById('resetLinkButton');
 const logoutButton = document.getElementById('logoutButton');
 const csvCard = document.getElementById('csvCard');
 const csvUploadForm = document.getElementById('csvUploadForm');
@@ -26,6 +24,8 @@ const adminNrFilterSection = document.getElementById('adminNrFilterSection');
 const adminNrFilterButtons = document.getElementById('adminNrFilterButtons');
 const adminCategoryFilterSection = document.getElementById('adminCategoryFilterSection');
 const adminCategoryFilterButtons = document.getElementById('adminCategoryFilterButtons');
+
+const formGroups = document.querySelectorAll('[data-form-group]');
 
 const formFields = {
   id: document.getElementById('promptId'),
@@ -63,17 +63,32 @@ function getViewMeta() {
   return { singular: 'Prompt', plural: 'Prompts', filePrefix: 'prompts' };
 }
 
+function setFieldState(field, required) {
+  if (!field) return;
+  field.required = required;
+  field.disabled = !required;
+}
+
 function updateViewTexts() {
   const meta = getViewMeta();
-  const isExerciseView = currentView === 'exercise';
   const isLinkView = currentView === 'link';
 
   editorTitle.textContent = `${meta.singular} speichern`;
-  contentLabel.textContent = 'Prompt';
+  contentLabel.textContent = isLinkView ? 'Link' : 'Prompt';
   tableContentHeading.textContent = isLinkView ? 'Link' : 'Prompt';
 
-  promptForm?.classList.toggle('hidden', isLinkView);
-  linkForm?.classList.toggle('hidden', !isLinkView);
+  formGroups.forEach((group) => {
+    const shouldShow = group.dataset.formGroup === (isLinkView ? 'link' : 'text');
+    group.classList.toggle('hidden', !shouldShow);
+  });
+
+  setFieldState(formFields.nr, !isLinkView);
+  setFieldState(formFields.abbreviation, !isLinkView);
+  setFieldState(formFields.prompt, !isLinkView);
+  setFieldState(linkFields.description, isLinkView);
+  setFieldState(linkFields.url, isLinkView);
+  setFieldState(linkFields.category, isLinkView);
+
   promptTable?.classList.toggle('hidden', isLinkView);
   linkTable?.classList.toggle('hidden', !isLinkView);
   csvCard?.classList.toggle('hidden', isLinkView);
@@ -84,9 +99,7 @@ function updateViewTexts() {
   if (!isLinkView) {
     csvTitle.textContent = `CSV-Upload (${meta.plural})`;
     if (csvDescription) {
-      csvDescription.innerHTML = isExerciseView
-        ? 'CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong> und <strong>prompt</strong> hochladen.'
-        : 'CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong> und <strong>prompt</strong> hochladen.';
+      csvDescription.innerHTML = 'CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong> und <strong>prompt</strong> hochladen.';
     }
     csvHint.textContent = 'Der Import ersetzt bestehende Einträge mit gleicher Nr oder Abkürzung.';
   }
@@ -99,14 +112,32 @@ function updateViewTexts() {
   });
 }
 
-function resetForm() {
+function resetTextForm() {
   formFields.id.value = '';
-  promptForm.reset();
+  formFields.nr.value = '';
+  formFields.abbreviation.value = '';
+  formFields.prompt.value = '';
 }
 
 function resetLinkForm() {
   linkFields.originalUrl.value = '';
-  linkForm.reset();
+  linkFields.description.value = '';
+  linkFields.url.value = '';
+  linkFields.category.value = '';
+}
+
+function resetActiveForm() {
+  if (currentView === 'link') {
+    resetLinkForm();
+    return;
+  }
+
+  resetTextForm();
+}
+
+function resetAllForms() {
+  resetTextForm();
+  resetLinkForm();
 }
 
 function escapeCsvValue(value) {
@@ -325,8 +356,34 @@ loginForm.addEventListener('submit', async (event) => {
   await loadEntries();
 });
 
-promptForm.addEventListener('submit', async (event) => {
+adminEntryForm.addEventListener('submit', async (event) => {
   event.preventDefault();
+
+  if (currentView === 'link') {
+    const payload = {
+      old_url: linkFields.originalUrl.value.trim(),
+      description: linkFields.description.value.trim(),
+      url: linkFields.url.value.trim(),
+      category: linkFields.category.value.trim().slice(0, 80),
+    };
+
+    const method = payload.old_url ? 'PUT' : 'POST';
+    const res = await fetch('../api/admin_links.php', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      showToast('Speichern fehlgeschlagen.');
+      return;
+    }
+
+    showToast('Link gespeichert.');
+    resetLinkForm();
+    await loadEntries();
+    return;
+  }
 
   const payload = {
     id: Number(formFields.id.value || 0),
@@ -350,34 +407,7 @@ promptForm.addEventListener('submit', async (event) => {
   }
 
   showToast(`${getViewMeta().singular} gespeichert.`);
-  resetForm();
-  await loadEntries();
-});
-
-linkForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-
-  const payload = {
-    old_url: linkFields.originalUrl.value.trim(),
-    description: linkFields.description.value.trim(),
-    url: linkFields.url.value.trim(),
-    category: linkFields.category.value.trim().slice(0, 80),
-  };
-
-  const method = payload.old_url ? 'PUT' : 'POST';
-  const res = await fetch('../api/admin_links.php', {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    showToast('Speichern fehlgeschlagen.');
-    return;
-  }
-
-  showToast('Link gespeichert.');
-  resetLinkForm();
+  resetTextForm();
   await loadEntries();
 });
 
@@ -459,13 +489,11 @@ viewSwitch?.addEventListener('click', async (event) => {
   selectedNr = '';
   selectedCategory = '';
   updateViewTexts();
-  resetForm();
-  resetLinkForm();
+  resetAllForms();
   await loadEntries();
 });
 
-resetButton.addEventListener('click', resetForm);
-resetLinkButton.addEventListener('click', resetLinkForm);
+resetButton.addEventListener('click', resetActiveForm);
 logoutButton.addEventListener('click', async () => {
   await fetch('../api/admin_logout.php', { method: 'POST' });
   location.reload();
