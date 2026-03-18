@@ -92,17 +92,27 @@
         </div>
       </div>
 
+      <div class="card">
+        <div class="row gap-12 align-center wrap">
+          <label class="field">
+            <span>Sortieren nach</span>
+            <select id="adminSortSelect"></select>
+          </label>
+          <button type="button" id="adminDirButton" class="secondary">Aufsteigend</button>
+        </div>
+      </div>
+
       <div class="card overflow-x">
         <table id="promptTable">
           <thead>
-            <tr><th>Nr</th><th>Abkürzung</th><th id="tableContentHeading">Prompt</th><th>Aktionen</th></tr>
+            <tr><th>Nr</th><th>Abkürzung</th><th id="tableContentHeading">Prompt</th><th>Erstellt am</th><th>Geändert am</th><th>Aktionen</th></tr>
           </thead>
           <tbody id="adminTableBody"></tbody>
         </table>
 
         <table id="linkTable" class="hidden">
           <thead>
-            <tr><th>Beschreibung</th><th>URL</th><th>Kategorie</th><th>Aktionen</th></tr>
+            <tr><th>Beschreibung</th><th>URL</th><th>Kategorie</th><th>Erstellt am</th><th>Geändert am</th><th>Aktionen</th></tr>
           </thead>
           <tbody id="adminLinkTableBody"></tbody>
         </table>
