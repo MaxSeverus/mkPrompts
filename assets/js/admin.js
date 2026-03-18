@@ -33,6 +33,7 @@ const formFields = {
   id: document.getElementById('promptId'),
   nr: document.getElementById('nrInput'),
   abbreviation: document.getElementById('abbrInput'),
+  project: document.getElementById('projectInput'),
   prompt: document.getElementById('promptInput'),
 };
 
@@ -141,6 +142,7 @@ function updateViewTexts() {
 
   setFieldState(formFields.nr, !isLinkView);
   setFieldState(formFields.abbreviation, !isLinkView);
+  setFieldState(formFields.project, !isLinkView);
   setFieldState(formFields.prompt, !isLinkView);
   setFieldState(linkFields.description, isLinkView);
   setFieldState(linkFields.url, isLinkView);
@@ -156,7 +158,7 @@ function updateViewTexts() {
   if (!isLinkView) {
     csvTitle.textContent = `CSV-Upload (${meta.plural})`;
     if (csvDescription) {
-      csvDescription.innerHTML = 'CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong> und <strong>prompt</strong> hochladen.';
+      csvDescription.innerHTML = 'CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong>, <strong>project</strong> und <strong>prompt</strong> hochladen.';
     }
     csvHint.textContent = 'Der Import ersetzt bestehende Einträge mit gleicher Nr oder Abkürzung.';
   }
@@ -175,6 +177,7 @@ function resetTextForm() {
   formFields.id.value = '';
   formFields.nr.value = '';
   formFields.abbreviation.value = '';
+  formFields.project.value = '';
   formFields.prompt.value = '';
 }
 
@@ -205,13 +208,14 @@ function escapeCsvValue(value) {
 }
 
 function toCsv(rows) {
-  const header = ['nr', 'abbreviation', 'prompt'];
+  const header = ['nr', 'abbreviation', 'project', 'prompt'];
   const lines = [header.join(',')];
 
   rows.forEach((row) => {
     const values = [
       escapeCsvValue(row.nr),
       escapeCsvValue(row.abbreviation),
+      escapeCsvValue(row.project),
       escapeCsvValue(row.prompt),
     ];
 
@@ -319,6 +323,7 @@ function renderTable(entries) {
     tr.innerHTML = `
       <td>${escapeHtml(entry.nr)}</td>
       <td>${escapeHtml(entry.abbreviation)}</td>
+      <td>${escapeHtml(entry.project)}</td>
       <td>${escapeHtml(entry.prompt)}</td>
       <td>${formatDateTime(entry.created_at)}</td>
       <td>${formatDateTime(entry.updated_at)}</td>
@@ -458,7 +463,7 @@ adminEntryForm.addEventListener('submit', async (event) => {
     nr: formFields.nr.value.trim().slice(0, 15),
     abbreviation: formFields.abbreviation.value.trim(),
     prompt: formFields.prompt.value.trim(),
-    project: '',
+    project: formFields.project.value.trim().slice(0, 80),
     type: currentView,
   };
 
@@ -490,6 +495,7 @@ adminTableBody.addEventListener('click', async (event) => {
     formFields.id.value = entry.id;
     formFields.nr.value = entry.nr;
     formFields.abbreviation.value = entry.abbreviation;
+    formFields.project.value = entry.project ?? '';
     formFields.prompt.value = entry.prompt;
     return;
   }
