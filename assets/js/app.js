@@ -54,6 +54,24 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
+function applyInlineFormatting(text) {
+  return text
+    .replace(/\[B\](.*?)\[\/B\]/gis, '<strong>$1</strong>')
+    .replace(/\[I\](.*?)\[\/I\]/gis, '<em>$1</em>')
+    .replace(/\[U\](.*?)\[\/U\]/gis, '<u>$1</u>');
+}
+
+function highlightPlaceholders(text) {
+  return text.replace(/\[(?!\/?(?:B|I|U)\])([^\]]+)\]/g, '<span class="placeholder">[$1]</span>');
+}
+
+function formatRichText(value, { highlight = false } = {}) {
+  const escaped = escapeHtml(value).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const withFormatting = applyInlineFormatting(escaped);
+  const withHighlights = highlight ? highlightPlaceholders(withFormatting) : withFormatting;
+  return withHighlights.replace(/\n/g, '<br>');
+}
+
 const projectParam = new URLSearchParams(window.location.search).get('project') || '';
 const forcedProject = normalizeProjectParam(projectParam);
 
@@ -61,10 +79,6 @@ function showToast(message) {
   toast.textContent = message;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 1800);
-}
-
-function highlightPlaceholders(text) {
-  return escapeHtml(text).replace(/\[([^\]]+)\]/g, '<span class="placeholder">[$1]</span>');
 }
 
 function getPublicSortOptions() {
@@ -257,6 +271,26 @@ function renderProjectFilterButtons(entries) {
   });
 }
 
+function renderEntryMeta(entry) {
+  const items = [];
+
+  if (currentView === 'exercise' && String(entry.project ?? '').trim() !== '') {
+    items.push(`<span><strong>Projekt:</strong> ${escapeHtml(entry.project)}</span>`);
+  }
+
+  if (currentView === 'link') {
+    items.push(`<span><strong>Kategorie:</strong> ${formatRichText(entry.category)}</span>`);
+  } else {
+    items.push(`<span><strong>Nr:</strong> ${escapeHtml(entry.nr)}</span>`);
+    items.push(`<span><strong>Abkürzung:</strong> ${formatRichText(entry.abbreviation)}</span>`);
+  }
+
+  items.push(`<span><strong>Erstellt:</strong> ${formatDateTime(entry.created_at)}</span>`);
+  items.push(`<span><strong>Geändert:</strong> ${formatDateTime(entry.updated_at)}</span>`);
+
+  return `<div class="prompt-meta">${items.join('')}</div>`;
+}
+
 async function loadEntries() {
   if (currentView === 'link') {
     const params = new URLSearchParams({
@@ -282,13 +316,12 @@ async function loadEntries() {
       const card = document.createElement('article');
       card.className = 'prompt-card';
       card.innerHTML = `
-        <div class="prompt-meta">
-          <span><strong>Kategorie:</strong> ${escapeHtml(entry.category)}</span>
-          <span><strong>Erstellt:</strong> ${formatDateTime(entry.created_at)}</span>
-          <span><strong>Geändert:</strong> ${formatDateTime(entry.updated_at)}</span>
-        </div>
         <div class="prompt-row">
-          <p class="prompt-text prompt-link-text">${escapeHtml(entry.description)}<br><a class="prompt-link-url" href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.url)}</a></p>
+          <div class="prompt-content">
+            <div class="prompt-text prompt-link-text">${formatRichText(entry.description)}</div>
+            <a class="prompt-link-url" href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.url)}</a>
+            ${renderEntryMeta(entry)}
+          </div>
           <button class="copy-button" data-open="${encodeURIComponent(entry.url)}">öffnen</button>
         </div>
       `;
@@ -324,21 +357,18 @@ async function loadEntries() {
   promptList.innerHTML = '';
 
   filteredEntries.forEach((entry) => {
-    const projectBadge = currentView === 'exercise' && String(entry.project ?? '').trim() !== ''
-      ? `<span><strong>Projekt:</strong> ${escapeHtml(entry.project)}</span>`
+    const title = currentView === 'exercise' && String(entry.abbreviation ?? '').trim() !== ''
+      ? `<div class="prompt-title"><strong>${formatRichText(entry.abbreviation)}</strong></div>`
       : '';
     const card = document.createElement('article');
     card.className = 'prompt-card';
     card.innerHTML = `
-      <div class="prompt-meta">
-        ${projectBadge}
-        <span><strong>Nr:</strong> ${escapeHtml(entry.nr)}</span>
-        <span><strong>Abkürzung:</strong> ${escapeHtml(entry.abbreviation)}</span>
-        <span><strong>Erstellt:</strong> ${formatDateTime(entry.created_at)}</span>
-        <span><strong>Geändert:</strong> ${formatDateTime(entry.updated_at)}</span>
-      </div>
       <div class="prompt-row">
-        <p class="prompt-text">${highlightPlaceholders(entry.prompt)}</p>
+        <div class="prompt-content">
+          ${title}
+          <div class="prompt-text">${formatRichText(entry.prompt, { highlight: true })}</div>
+          ${renderEntryMeta(entry)}
+        </div>
         <button class="copy-button" data-copy="${encodeURIComponent(entry.prompt)}">kopieren</button>
       </div>
     `;
