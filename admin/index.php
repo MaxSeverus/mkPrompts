@@ -42,25 +42,21 @@
           </div>
         </label>
 
-        <form id="promptForm" class="form-grid">
+        <form id="adminEntryForm" class="form-grid">
           <input type="hidden" id="promptId">
-          <label><span>Nr</span><input type="text" id="nrInput" required maxlength="15" placeholder="z. B. 1"></label>
-          <label><span>Abkürzung</span><input type="text" id="abbrInput" required maxlength="50"></label>
-          <label class="full"><span id="contentLabel">Prompt</span><textarea id="promptInput" rows="5" required></textarea></label>
+          <input type="hidden" id="linkOriginalUrl">
+
+          <label data-form-group="text"><span>Nr</span><input type="text" id="nrInput" maxlength="15" placeholder="z. B. 1"></label>
+          <label data-form-group="text"><span>Abkürzung</span><input type="text" id="abbrInput" maxlength="50"></label>
+          <label class="full" data-form-group="text"><span id="contentLabel">Prompt</span><textarea id="promptInput" rows="5"></textarea></label>
+
+          <label class="full hidden" data-form-group="link"><span>Beschreibung</span><input type="text" id="linkDescriptionInput" maxlength="255"></label>
+          <label class="hidden" data-form-group="link"><span>URL</span><input type="url" id="linkUrlInput" maxlength="500" placeholder="https://..."></label>
+          <label class="hidden" data-form-group="link"><span>Kategorie</span><input type="text" id="linkCategoryInput" maxlength="80"></label>
+
           <div class="full row gap-12">
             <button type="submit">Speichern</button>
             <button type="button" id="resetButton" class="secondary">Zurücksetzen</button>
-          </div>
-        </form>
-
-        <form id="linkForm" class="form-grid hidden">
-          <input type="hidden" id="linkOriginalUrl">
-          <label class="full"><span>Beschreibung</span><input type="text" id="linkDescriptionInput" required maxlength="255"></label>
-          <label><span>URL</span><input type="url" id="linkUrlInput" required maxlength="500" placeholder="https://..."></label>
-          <label><span>Kategorie</span><input type="text" id="linkCategoryInput" required maxlength="80"></label>
-          <div class="full row gap-12">
-            <button type="submit">Speichern</button>
-            <button type="button" id="resetLinkButton" class="secondary">Zurücksetzen</button>
           </div>
         </form>
       </div>
