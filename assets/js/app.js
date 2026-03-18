@@ -181,8 +181,8 @@ async function loadEntries() {
           <span><strong>Kategorie:</strong> ${entry.category}</span>
         </div>
         <div class="prompt-row">
-          <p class="prompt-text"><strong>${entry.description}</strong><br><a href="${entry.url}" target="_blank" rel="noopener noreferrer">${entry.url}</a></p>
-          <button class="copy-button" data-copy="${encodeURIComponent(entry.url)}">kopieren</button>
+          <p class="prompt-text prompt-link-text">${entry.description}<br><a class="prompt-link-url" href="${entry.url}" target="_blank" rel="noopener noreferrer">${entry.url}</a></p>
+          <button class="copy-button" data-open="${encodeURIComponent(entry.url)}">öffnen</button>
         </div>
       `;
       promptList.appendChild(card);
@@ -298,6 +298,14 @@ function renderProjectFilterButtons(entries) {
 }
 
 promptList.addEventListener('click', async (event) => {
+  const openButton = event.target.closest('button[data-open]');
+  if (openButton) {
+    const url = decodeURIComponent(openButton.dataset.open);
+    window.open(url, '_blank', 'noopener,noreferrer');
+    showToast('Link geöffnet.');
+    return;
+  }
+
   const button = event.target.closest('button[data-copy]');
   if (!button) return;
   const value = decodeURIComponent(button.dataset.copy);
