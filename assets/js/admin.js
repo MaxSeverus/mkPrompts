@@ -24,6 +24,8 @@ const adminNrFilterSection = document.getElementById('adminNrFilterSection');
 const adminNrFilterButtons = document.getElementById('adminNrFilterButtons');
 const adminCategoryFilterSection = document.getElementById('adminCategoryFilterSection');
 const adminCategoryFilterButtons = document.getElementById('adminCategoryFilterButtons');
+const adminSortSelect = document.getElementById('adminSortSelect');
+const adminDirButton = document.getElementById('adminDirButton');
 
 const formGroups = document.querySelectorAll('[data-form-group]');
 
@@ -44,11 +46,35 @@ const linkFields = {
 let currentView = 'prompt';
 let selectedNr = '';
 let selectedCategory = '';
+let sortDir = 'asc';
 
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatDateTime(value) {
+  if (!value) return '–';
+  const normalized = String(value).replace(' ', 'T');
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('de-DE', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
 }
 
 function getViewMeta() {
@@ -61,6 +87,37 @@ function getViewMeta() {
   }
 
   return { singular: 'Prompt', plural: 'Prompts', filePrefix: 'prompts' };
+}
+
+function getSortOptions() {
+  if (currentView === 'link') {
+    return [
+      { value: 'category', label: 'Kategorie' },
+      { value: 'description', label: 'Beschreibung' },
+      { value: 'created_at', label: 'Erstellt am' },
+      { value: 'updated_at', label: 'Geändert am' },
+    ];
+  }
+
+  return [
+    { value: 'project', label: 'Projekt' },
+    { value: 'nr', label: 'Nr' },
+    { value: 'abbreviation', label: 'Abkürzung' },
+    { value: 'created_at', label: 'Erstellt am' },
+    { value: 'updated_at', label: 'Geändert am' },
+  ];
+}
+
+function updateSortControls() {
+  const options = getSortOptions();
+  const previousValue = adminSortSelect?.value || '';
+  adminSortSelect.innerHTML = options
+    .map((option) => `<option value="${option.value}">${option.label}</option>`)
+    .join('');
+
+  const allowed = options.map((option) => option.value);
+  adminSortSelect.value = allowed.includes(previousValue) ? previousValue : options[0].value;
+  adminDirButton.textContent = sortDir === 'asc' ? 'Aufsteigend' : 'Absteigend';
 }
 
 function setFieldState(field, required) {
@@ -110,6 +167,8 @@ function updateViewTexts() {
     button.classList.toggle('is-active', isActive);
     button.setAttribute('aria-selected', isActive ? 'true' : 'false');
   });
+
+  updateSortControls();
 }
 
 function resetTextForm() {
@@ -152,12 +211,9 @@ function toCsv(rows) {
   rows.forEach((row) => {
     const values = [
       escapeCsvValue(row.nr),
-    ];
-
-    values.push(
       escapeCsvValue(row.abbreviation),
       escapeCsvValue(row.prompt),
-    );
+    ];
 
     lines.push(values.join(','));
   });
@@ -261,9 +317,11 @@ function renderTable(entries) {
   entries.forEach((entry) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${entry.nr}</td>
-      <td>${entry.abbreviation}</td>
-      <td>${entry.prompt}</td>
+      <td>${escapeHtml(entry.nr)}</td>
+      <td>${escapeHtml(entry.abbreviation)}</td>
+      <td>${escapeHtml(entry.prompt)}</td>
+      <td>${formatDateTime(entry.created_at)}</td>
+      <td>${formatDateTime(entry.updated_at)}</td>
       <td>
         <button class="secondary" data-action="edit" data-id="${entry.id}">Bearbeiten</button>
         <button data-action="delete" data-id="${entry.id}">Löschen</button>
@@ -280,9 +338,11 @@ function renderLinkTable(entries) {
   entries.forEach((entry) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${entry.description}</td>
-      <td><a href="${entry.url}" target="_blank" rel="noopener noreferrer">${entry.url}</a></td>
-      <td>${entry.category}</td>
+      <td>${escapeHtml(entry.description)}</td>
+      <td><a href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.url)}</a></td>
+      <td>${escapeHtml(entry.category)}</td>
+      <td>${formatDateTime(entry.created_at)}</td>
+      <td>${formatDateTime(entry.updated_at)}</td>
       <td>
         <button class="secondary" data-action="edit" data-url="${encodeURIComponent(entry.url)}">Bearbeiten</button>
         <button data-action="delete" data-url="${encodeURIComponent(entry.url)}">Löschen</button>
@@ -306,7 +366,11 @@ async function checkSession() {
 
 async function loadEntries() {
   if (currentView === 'link') {
-    const res = await fetch('../api/admin_links.php');
+    const params = new URLSearchParams({
+      sort: adminSortSelect.value,
+      dir: sortDir,
+    });
+    const res = await fetch(`../api/admin_links.php?${params.toString()}`);
     if (res.status === 401) return;
 
     const payload = await res.json();
@@ -319,7 +383,11 @@ async function loadEntries() {
     return;
   }
 
-  const params = new URLSearchParams({ type: currentView });
+  const params = new URLSearchParams({
+    type: currentView,
+    sort: adminSortSelect.value,
+    dir: sortDir,
+  });
   const res = await fetch(`../api/admin_prompts.php?${params.toString()}`);
   if (res.status === 401) return;
 
@@ -479,6 +547,13 @@ adminCategoryFilterButtons?.addEventListener('click', async (event) => {
   await loadEntries();
 });
 
+adminSortSelect?.addEventListener('change', loadEntries);
+adminDirButton?.addEventListener('click', async () => {
+  sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  updateSortControls();
+  await loadEntries();
+});
+
 viewSwitch?.addEventListener('click', async (event) => {
   const button = event.target.closest('button[data-view]');
   if (!button || button.dataset.view === currentView) {
@@ -524,32 +599,33 @@ if (csvUploadForm) {
       return;
     }
 
-    showToast(`CSV importiert (${payload.inserted} neu, ${payload.updated} aktualisiert).`);
     csvUploadForm.reset();
+    showToast(payload.message || 'CSV importiert.');
     await loadEntries();
   });
 }
 
-if (csvExportButton) {
-  csvExportButton.addEventListener('click', async () => {
-    const params = new URLSearchParams({ type: currentView });
-    const res = await fetch(`../api/admin_prompts.php?${params.toString()}`);
-    if (!res.ok) {
-      showToast('Export fehlgeschlagen.');
-      return;
-    }
+csvExportButton?.addEventListener('click', async () => {
+  if (currentView === 'link') {
+    showToast('CSV-Export ist nur für Prompts und Übungen verfügbar.');
+    return;
+  }
 
-    const payload = await res.json().catch(() => ({ ok: false, data: [] }));
-    if (!payload.ok || !Array.isArray(payload.data)) {
-      showToast('Export fehlgeschlagen.');
-      return;
-    }
-
-    const csv = toCsv(payload.data);
-    downloadCsv(csv);
-    showToast(`CSV exportiert (${payload.data.length} Einträge).`);
+  const params = new URLSearchParams({
+    type: currentView,
+    sort: adminSortSelect.value,
+    dir: sortDir,
   });
-}
+  const res = await fetch(`../api/admin_prompts.php?${params.toString()}`);
+  if (!res.ok) {
+    showToast('Export fehlgeschlagen.');
+    return;
+  }
 
-updateViewTexts();
+  const payload = await res.json();
+  const rows = Array.isArray(payload.data) ? payload.data : [];
+  downloadCsv(toCsv(rows));
+  showToast('CSV exportiert.');
+});
+
 checkSession();
