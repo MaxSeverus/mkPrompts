@@ -358,9 +358,7 @@ async function loadEntries() {
 
   filteredEntries.forEach((entry) => {
     const title = currentView === 'exercise' && String(entry.abbreviation ?? '').trim() !== ''
-      ? `<div class="prompt-title">${formatRichText(entry.abbreviation)}</div>`
       ? `<div class="prompt-title"><strong>${formatRichText(entry.abbreviation)}</strong></div>`
->>>>>>> main
       : '';
     const card = document.createElement('article');
     card.className = 'prompt-card';
