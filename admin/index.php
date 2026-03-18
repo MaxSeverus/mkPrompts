@@ -50,6 +50,7 @@
           <label data-form-group="text"><span>Abkürzung</span><input type="text" id="abbrInput" maxlength="50"></label>
           <label data-form-group="text"><span>Projekt</span><input type="text" id="projectInput" maxlength="80" placeholder="z. B. Website-Relaunch"></label>
           <label class="full" data-form-group="text"><span id="contentLabel">Prompt</span><textarea id="promptInput" rows="5"></textarea></label>
+          <small id="formattingHint" class="full field-hint">Formatierung in Prompt und Abkürzung mit [B]...[/B], [I]...[/I] und [U]...[/U] möglich.</small>
 
           <label class="full hidden" data-form-group="link"><span>Beschreibung</span><input type="text" id="linkDescriptionInput" maxlength="255"></label>
           <label class="hidden" data-form-group="link"><span>URL</span><input type="url" id="linkUrlInput" maxlength="500" placeholder="https://..."></label>

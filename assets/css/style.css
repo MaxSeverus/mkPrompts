@@ -41,11 +41,14 @@ button.secondary { background: #edf1ff; color: var(--text); border: 1px solid va
 .prompt-grid { display: grid; gap: 12px; }
 
 .prompt-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; box-shadow: 0 6px 18px rgba(54, 73, 117, 0.08); }
-.prompt-meta { display: flex; gap: 10px; margin-bottom: 10px; color: var(--muted); font-size: .9rem; }
 .prompt-row { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
-.prompt-text { margin: 0; line-height: 1.5; white-space: pre-wrap; flex: 1; }
+.prompt-content { flex: 1; min-width: 0; }
+.prompt-title { margin: 0 0 10px; font-size: 1.1rem; font-weight: 800; line-height: 1.4; }
+.prompt-title strong { font-weight: 800; }
+.prompt-text { margin: 0; line-height: 1.5; white-space: pre-wrap; }
 .prompt-link-text { font-weight: 400; }
-.prompt-link-url { display: inline-block; margin-top: 4px; font-size: 1.2em; }
+.prompt-link-url { display: inline-block; margin-top: 8px; font-size: 1.05rem; word-break: break-all; }
+.prompt-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; color: var(--muted); font-size: .9rem; }
 .copy-button { flex-shrink: 0; }
 .placeholder { color: #2d62ff; background: #edf2ff; border-radius: 6px; padding: 2px 6px; }
 .toast { position: fixed; right: 16px; bottom: 16px; background: #132036; color: #fff; padding: 10px 14px; border-radius: 10px; opacity: 0; transform: translateY(10px); transition: .25s; pointer-events: none; }
@@ -71,3 +74,5 @@ th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left
   .toolbar { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
 }
+
+.field-hint { display: block; color: var(--muted); margin-top: -4px; }

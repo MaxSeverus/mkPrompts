@@ -26,6 +26,7 @@ const adminCategoryFilterSection = document.getElementById('adminCategoryFilterS
 const adminCategoryFilterButtons = document.getElementById('adminCategoryFilterButtons');
 const adminSortSelect = document.getElementById('adminSortSelect');
 const adminDirButton = document.getElementById('adminDirButton');
+const formattingHint = document.getElementById('formattingHint');
 
 const formGroups = document.querySelectorAll('[data-form-group]');
 
@@ -134,6 +135,12 @@ function updateViewTexts() {
   editorTitle.textContent = `${meta.singular} speichern`;
   contentLabel.textContent = isLinkView ? 'Link' : 'Prompt';
   tableContentHeading.textContent = isLinkView ? 'Link' : 'Prompt';
+
+  if (formattingHint) {
+    formattingHint.textContent = isLinkView
+      ? 'Formatierung in Beschreibung mit [B]...[/B], [I]...[/I] und [U]...[/U] möglich.'
+      : 'Formatierung in Prompt und Abkürzung mit [B]...[/B], [I]...[/I] und [U]...[/U] möglich.';
+  }
 
   formGroups.forEach((group) => {
     const shouldShow = group.dataset.formGroup === (isLinkView ? 'link' : 'text');
