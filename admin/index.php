@@ -48,6 +48,7 @@
 
           <label data-form-group="text"><span>Nr</span><input type="text" id="nrInput" maxlength="15" placeholder="z. B. 1"></label>
           <label data-form-group="text"><span>Abkürzung</span><input type="text" id="abbrInput" maxlength="50"></label>
+          <label data-form-group="text"><span>Projekt</span><input type="text" id="projectInput" maxlength="80" placeholder="z. B. Website-Relaunch"></label>
           <label class="full" data-form-group="text"><span id="contentLabel">Prompt</span><textarea id="promptInput" rows="5"></textarea></label>
 
           <label class="full hidden" data-form-group="link"><span>Beschreibung</span><input type="text" id="linkDescriptionInput" maxlength="255"></label>
@@ -63,7 +64,7 @@
 
       <div id="csvCard" class="card">
         <h2 id="csvTitle">CSV-Upload</h2>
-        <p id="csvDescription">CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong> und <strong>prompt</strong> hochladen.</p>
+        <p id="csvDescription">CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong>, <strong>project</strong> und <strong>prompt</strong> hochladen.</p>
         <form id="csvUploadForm" class="stack gap-12">
           <input type="file" id="csvFileInput" accept=",.csv,text/csv" required>
           <div class="row gap-12">
@@ -105,7 +106,7 @@
       <div class="card overflow-x">
         <table id="promptTable">
           <thead>
-            <tr><th>Nr</th><th>Abkürzung</th><th id="tableContentHeading">Prompt</th><th>Erstellt am</th><th>Geändert am</th><th>Aktionen</th></tr>
+            <tr><th>Nr</th><th>Abkürzung</th><th>Projekt</th><th id="tableContentHeading">Prompt</th><th>Erstellt am</th><th>Geändert am</th><th>Aktionen</th></tr>
           </thead>
           <tbody id="adminTableBody"></tbody>
         </table>
