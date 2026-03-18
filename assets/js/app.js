@@ -31,6 +31,29 @@ function normalizeProjectParam(value) {
   return value.trim().replace(/^['\"]|['\"]$/g, '');
 }
 
+function formatDateTime(value) {
+  if (!value) return '–';
+  const normalized = String(value).replace(' ', 'T');
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('de-DE', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const projectParam = new URLSearchParams(window.location.search).get('project') || '';
 const forcedProject = normalizeProjectParam(projectParam);
 
@@ -41,18 +64,40 @@ function showToast(message) {
 }
 
 function highlightPlaceholders(text) {
-  return text.replace(/\[([^\]]+)\]/g, '<span class="placeholder">[$1]</span>');
+  return escapeHtml(text).replace(/\[([^\]]+)\]/g, '<span class="placeholder">[$1]</span>');
+}
+
+function getPublicSortOptions() {
+  if (currentView === 'link') {
+    return [
+      { value: 'description', label: 'Beschreibung' },
+      { value: 'category', label: 'Kategorie' },
+      { value: 'created_at', label: 'Erstellt am' },
+      { value: 'updated_at', label: 'Geändert am' },
+    ];
+  }
+
+  return [
+    { value: 'nr', label: 'Nr' },
+    { value: 'abbreviation', label: 'Abkürzung' },
+    { value: 'created_at', label: 'Erstellt am' },
+    { value: 'updated_at', label: 'Geändert am' },
+  ];
 }
 
 function updateSortOptions() {
-  if (currentView === 'link') {
-    searchInput.placeholder = 'Beschreibung, URL oder Kategorie durchsuchen';
-    sortSelect.innerHTML = '<option value="description">Beschreibung</option><option value="category">Kategorie</option>';
-    return;
-  }
+  searchInput.placeholder = currentView === 'link'
+    ? 'Beschreibung, URL oder Kategorie durchsuchen'
+    : 'Nr, Abkürzung oder Inhalt durchsuchen';
 
-  searchInput.placeholder = 'Nr, Abkürzung oder Inhalt durchsuchen';
-  sortSelect.innerHTML = '<option value="nr">Nr</option><option value="abbreviation">Abkürzung</option>';
+  const options = getPublicSortOptions();
+  const previousValue = sortSelect.value;
+  sortSelect.innerHTML = options
+    .map((option) => `<option value="${option.value}">${option.label}</option>`)
+    .join('');
+
+  const availableValues = options.map((option) => option.value);
+  sortSelect.value = availableValues.includes(previousValue) ? previousValue : options[0].value;
 }
 
 function updateSwitchButtons() {
@@ -152,91 +197,6 @@ function renderCategoryFilterButtons(entries) {
   });
 }
 
-async function loadEntries() {
-  if (currentView === 'link') {
-    const params = new URLSearchParams({
-      q: searchInput.value,
-      sort: sortSelect.value,
-      dir,
-    });
-
-    const res = await fetch(`./api/links.php?${params.toString()}`);
-    const payload = await res.json();
-    const entries = Array.isArray(payload.data) ? payload.data : [];
-
-    renderProjectFilterButtons([]);
-    renderNrFilterButtons([]);
-    renderCategoryFilterButtons(entries);
-
-    const filteredEntries = selectedCategory
-      ? entries.filter((entry) => String(entry.category ?? '').trim() === selectedCategory)
-      : entries;
-
-    promptList.innerHTML = '';
-    filteredEntries.forEach((entry) => {
-      const card = document.createElement('article');
-      card.className = 'prompt-card';
-      card.innerHTML = `
-        <div class="prompt-meta">
-          <span><strong>Kategorie:</strong> ${entry.category}</span>
-        </div>
-        <div class="prompt-row">
-          <p class="prompt-text prompt-link-text">${entry.description}<br><a class="prompt-link-url" href="${entry.url}" target="_blank" rel="noopener noreferrer">${entry.url}</a></p>
-          <button class="copy-button" data-open="${encodeURIComponent(entry.url)}">öffnen</button>
-        </div>
-      `;
-      promptList.appendChild(card);
-    });
-    return;
-  }
-
-  const params = new URLSearchParams({
-    q: searchInput.value,
-    sort: sortSelect.value,
-    dir,
-    type: currentView,
-  });
-
-  const effectiveProject = forcedProject || selectedProject;
-  if (currentView === 'exercise' && effectiveProject !== '') {
-    params.set('project', effectiveProject);
-  }
-
-  const res = await fetch(`./api/prompts.php?${params.toString()}`);
-  const payload = await res.json();
-  const entries = Array.isArray(payload.data) ? payload.data : [];
-
-  renderProjectFilterButtons(entries);
-  renderNrFilterButtons(entries);
-  renderCategoryFilterButtons([]);
-
-  const filteredEntries = selectedNr
-    ? entries.filter((entry) => String(entry.nr ?? '').trim() === selectedNr)
-    : entries;
-
-  promptList.innerHTML = '';
-
-  filteredEntries.forEach((entry) => {
-    const projectBadge = currentView === 'exercise' && String(entry.project ?? '').trim() !== ''
-      ? `<span><strong>Projekt:</strong> ${entry.project}</span>`
-      : '';
-    const card = document.createElement('article');
-    card.className = 'prompt-card';
-    card.innerHTML = `
-      <div class="prompt-meta">
-        ${projectBadge}
-        <span><strong>Nr:</strong> ${entry.nr}</span>
-        <span><strong>Abkürzung:</strong> ${entry.abbreviation}</span>
-      </div>
-      <div class="prompt-row">
-        <p class="prompt-text">${highlightPlaceholders(entry.prompt)}</p>
-        <button class="copy-button" data-copy="${encodeURIComponent(entry.prompt)}">kopieren</button>
-      </div>
-    `;
-    promptList.appendChild(card);
-  });
-}
-
 function renderProjectFilterButtons(entries) {
   if (!projectFilterSection || !projectFilterButtons) return;
 
@@ -294,6 +254,95 @@ function renderProjectFilterButtons(entries) {
     button.textContent = project;
     button.dataset.project = project;
     projectFilterButtons.appendChild(button);
+  });
+}
+
+async function loadEntries() {
+  if (currentView === 'link') {
+    const params = new URLSearchParams({
+      q: searchInput.value,
+      sort: sortSelect.value,
+      dir,
+    });
+
+    const res = await fetch(`./api/links.php?${params.toString()}`);
+    const payload = await res.json();
+    const entries = Array.isArray(payload.data) ? payload.data : [];
+
+    renderProjectFilterButtons([]);
+    renderNrFilterButtons([]);
+    renderCategoryFilterButtons(entries);
+
+    const filteredEntries = selectedCategory
+      ? entries.filter((entry) => String(entry.category ?? '').trim() === selectedCategory)
+      : entries;
+
+    promptList.innerHTML = '';
+    filteredEntries.forEach((entry) => {
+      const card = document.createElement('article');
+      card.className = 'prompt-card';
+      card.innerHTML = `
+        <div class="prompt-meta">
+          <span><strong>Kategorie:</strong> ${escapeHtml(entry.category)}</span>
+          <span><strong>Erstellt:</strong> ${formatDateTime(entry.created_at)}</span>
+          <span><strong>Geändert:</strong> ${formatDateTime(entry.updated_at)}</span>
+        </div>
+        <div class="prompt-row">
+          <p class="prompt-text prompt-link-text">${escapeHtml(entry.description)}<br><a class="prompt-link-url" href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.url)}</a></p>
+          <button class="copy-button" data-open="${encodeURIComponent(entry.url)}">öffnen</button>
+        </div>
+      `;
+      promptList.appendChild(card);
+    });
+    return;
+  }
+
+  const params = new URLSearchParams({
+    q: searchInput.value,
+    sort: sortSelect.value,
+    dir,
+    type: currentView,
+  });
+
+  const effectiveProject = forcedProject || selectedProject;
+  if (currentView === 'exercise' && effectiveProject !== '') {
+    params.set('project', effectiveProject);
+  }
+
+  const res = await fetch(`./api/prompts.php?${params.toString()}`);
+  const payload = await res.json();
+  const entries = Array.isArray(payload.data) ? payload.data : [];
+
+  renderProjectFilterButtons(entries);
+  renderNrFilterButtons(entries);
+  renderCategoryFilterButtons([]);
+
+  const filteredEntries = selectedNr
+    ? entries.filter((entry) => String(entry.nr ?? '').trim() === selectedNr)
+    : entries;
+
+  promptList.innerHTML = '';
+
+  filteredEntries.forEach((entry) => {
+    const projectBadge = currentView === 'exercise' && String(entry.project ?? '').trim() !== ''
+      ? `<span><strong>Projekt:</strong> ${escapeHtml(entry.project)}</span>`
+      : '';
+    const card = document.createElement('article');
+    card.className = 'prompt-card';
+    card.innerHTML = `
+      <div class="prompt-meta">
+        ${projectBadge}
+        <span><strong>Nr:</strong> ${escapeHtml(entry.nr)}</span>
+        <span><strong>Abkürzung:</strong> ${escapeHtml(entry.abbreviation)}</span>
+        <span><strong>Erstellt:</strong> ${formatDateTime(entry.created_at)}</span>
+        <span><strong>Geändert:</strong> ${formatDateTime(entry.updated_at)}</span>
+      </div>
+      <div class="prompt-row">
+        <p class="prompt-text">${highlightPlaceholders(entry.prompt)}</p>
+        <button class="copy-button" data-copy="${encodeURIComponent(entry.prompt)}">kopieren</button>
+      </div>
+    `;
+    promptList.appendChild(card);
   });
 }
 
