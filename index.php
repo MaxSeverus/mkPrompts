@@ -14,6 +14,8 @@
       <p>Durchsuche Vorlagen, kopiere mit einem Klick und nutze die Prompts direkt weiter.</p>
       <div class="switch-link-row">
         <a class="button-link" href="admin/">Zum Admin-Bereich</a>
+        <a class="button-link" href="https://ki-stammtisch.at/ki-stammtisch/">Zurück zum KI-Stammtisch</a>
+        <button type="button" class="button-link button-link-button" onclick="window.history.back()">Zurück</button>
       </div>
     </header>
 
