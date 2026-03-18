@@ -18,8 +18,6 @@ const viewSwitch = document.getElementById('viewSwitch');
 const editorTitle = document.getElementById('editorTitle');
 const contentLabel = document.getElementById('contentLabel');
 const tableContentHeading = document.getElementById('tableContentHeading');
-const tableProjectHeading = document.getElementById('tableProjectHeading');
-const projectField = document.getElementById('projectField');
 const csvTitle = document.getElementById('csvTitle');
 const csvDescription = document.getElementById('csvDescription');
 const csvHint = document.getElementById('csvHint');
@@ -34,7 +32,6 @@ const formFields = {
   nr: document.getElementById('nrInput'),
   abbreviation: document.getElementById('abbrInput'),
   prompt: document.getElementById('promptInput'),
-  project: document.getElementById('projectInput'),
 };
 
 const linkFields = {
@@ -72,17 +69,14 @@ function updateViewTexts() {
   const isLinkView = currentView === 'link';
 
   editorTitle.textContent = `${meta.singular} speichern`;
-  contentLabel.textContent = meta.singular;
-  tableContentHeading.textContent = meta.singular;
+  contentLabel.textContent = 'Prompt';
+  tableContentHeading.textContent = isLinkView ? 'Link' : 'Prompt';
 
   promptForm?.classList.toggle('hidden', isLinkView);
   linkForm?.classList.toggle('hidden', !isLinkView);
   promptTable?.classList.toggle('hidden', isLinkView);
   linkTable?.classList.toggle('hidden', !isLinkView);
   csvCard?.classList.toggle('hidden', isLinkView);
-
-  projectField?.classList.toggle('hidden', !isExerciseView || isLinkView);
-  tableProjectHeading?.classList.toggle('hidden', !isExerciseView || isLinkView);
 
   adminNrFilterSection?.classList.toggle('hidden', isLinkView);
   adminCategoryFilterSection?.classList.toggle('hidden', !isLinkView);
@@ -91,12 +85,10 @@ function updateViewTexts() {
     csvTitle.textContent = `CSV-Upload (${meta.plural})`;
     if (csvDescription) {
       csvDescription.innerHTML = isExerciseView
-        ? 'CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong>, <strong>prompt</strong> und optional <strong>project</strong> hochladen.'
+        ? 'CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong> und <strong>prompt</strong> hochladen.'
         : 'CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong> und <strong>prompt</strong> hochladen.';
     }
-    csvHint.textContent = isExerciseView
-      ? 'Optional kann die Spalte project angegeben werden. Der Import ersetzt Einträge mit gleicher Kombination aus Projekt, Nr und Abkürzung.'
-      : 'Der Import ersetzt bestehende Einträge mit gleicher Nr oder Abkürzung.';
+    csvHint.textContent = 'Der Import ersetzt bestehende Einträge mit gleicher Nr oder Abkürzung.';
   }
 
   const buttons = viewSwitch?.querySelectorAll('button[data-view]') || [];
@@ -123,20 +115,13 @@ function escapeCsvValue(value) {
 }
 
 function toCsv(rows) {
-  const includeProject = currentView === 'exercise';
-  const header = includeProject
-    ? ['nr', 'project', 'abbreviation', 'prompt']
-    : ['nr', 'abbreviation', 'prompt'];
+  const header = ['nr', 'abbreviation', 'prompt'];
   const lines = [header.join(',')];
 
   rows.forEach((row) => {
     const values = [
       escapeCsvValue(row.nr),
     ];
-
-    if (includeProject) {
-      values.push(escapeCsvValue(row.project));
-    }
 
     values.push(
       escapeCsvValue(row.abbreviation),
@@ -241,13 +226,11 @@ function renderCategoryFilterButtons(entries) {
 
 function renderTable(entries) {
   adminTableBody.innerHTML = '';
-  const isExerciseView = currentView === 'exercise';
 
   entries.forEach((entry) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${entry.nr}</td>
-      <td class="${isExerciseView ? '' : 'hidden'}">${entry.project ?? ''}</td>
       <td>${entry.abbreviation}</td>
       <td>${entry.prompt}</td>
       <td>
@@ -350,7 +333,7 @@ promptForm.addEventListener('submit', async (event) => {
     nr: formFields.nr.value.trim().slice(0, 15),
     abbreviation: formFields.abbreviation.value.trim(),
     prompt: formFields.prompt.value.trim(),
-    project: currentView === 'exercise' ? formFields.project.value.trim().slice(0, 80) : '',
+    project: '',
     type: currentView,
   };
 
@@ -410,7 +393,6 @@ adminTableBody.addEventListener('click', async (event) => {
     formFields.nr.value = entry.nr;
     formFields.abbreviation.value = entry.abbreviation;
     formFields.prompt.value = entry.prompt;
-    formFields.project.value = entry.project ?? '';
     return;
   }
 
