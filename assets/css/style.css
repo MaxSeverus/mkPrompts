@@ -44,6 +44,8 @@ button.secondary { background: #edf1ff; color: var(--text); border: 1px solid va
 .prompt-meta { display: flex; gap: 10px; margin-bottom: 10px; color: var(--muted); font-size: .9rem; }
 .prompt-row { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
 .prompt-text { margin: 0; line-height: 1.5; white-space: pre-wrap; flex: 1; }
+.prompt-link-text { font-weight: 400; }
+.prompt-link-url { display: inline-block; margin-top: 4px; font-size: 1.2em; }
 .copy-button { flex-shrink: 0; }
 .placeholder { color: #2d62ff; background: #edf2ff; border-radius: 6px; padding: 2px 6px; }
 .toast { position: fixed; right: 16px; bottom: 16px; background: #132036; color: #fff; padding: 10px 14px; border-radius: 10px; opacity: 0; transform: translateY(10px); transition: .25s; pointer-events: none; }
