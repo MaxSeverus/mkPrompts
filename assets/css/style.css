@@ -43,10 +43,8 @@ button.secondary { background: #edf1ff; color: var(--text); border: 1px solid va
 .prompt-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; box-shadow: 0 6px 18px rgba(54, 73, 117, 0.08); }
 .prompt-row { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
 .prompt-content { flex: 1; min-width: 0; }
-.prompt-title { margin: 0 0 10px; font-size: 1.1rem; font-weight: 700; line-height: 1.4; }
 .prompt-title { margin: 0 0 10px; font-size: 1.1rem; font-weight: 800; line-height: 1.4; }
 .prompt-title strong { font-weight: 800; }
->>>>>>> main
 .prompt-text { margin: 0; line-height: 1.5; white-space: pre-wrap; }
 .prompt-link-text { font-weight: 400; }
 .prompt-link-url { display: inline-block; margin-top: 8px; font-size: 1.05rem; word-break: break-all; }
