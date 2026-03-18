@@ -44,8 +44,7 @@
 
         <form id="promptForm" class="form-grid">
           <input type="hidden" id="promptId">
-          <label><span>Nr</span><input type="text" id="nrInput" required maxlength="15" placeholder="z. B. Meta-Prompts"></label>
-          <label id="projectField" class="hidden"><span>Projekt</span><input type="text" id="projectInput" maxlength="80" placeholder="z. B. Projekt Alpha"></label>
+          <label><span>Nr</span><input type="text" id="nrInput" required maxlength="15" placeholder="z. B. 1"></label>
           <label><span>Abkürzung</span><input type="text" id="abbrInput" required maxlength="50"></label>
           <label class="full"><span id="contentLabel">Prompt</span><textarea id="promptInput" rows="5" required></textarea></label>
           <div class="full row gap-12">
@@ -100,7 +99,7 @@
       <div class="card overflow-x">
         <table id="promptTable">
           <thead>
-            <tr><th>Nr</th><th id="tableProjectHeading" class="hidden">Projekt</th><th>Abkürzung</th><th id="tableContentHeading">Prompt</th><th>Aktionen</th></tr>
+            <tr><th>Nr</th><th>Abkürzung</th><th id="tableContentHeading">Prompt</th><th>Aktionen</th></tr>
           </thead>
           <tbody id="adminTableBody"></tbody>
         </table>
