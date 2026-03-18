@@ -10,6 +10,12 @@ const projectFilterSection = document.getElementById('projectFilterSection');
 const projectFilterButtons = document.getElementById('projectFilterButtons');
 const categoryFilterSection = document.getElementById('categoryFilterSection');
 const categoryFilterButtons = document.getElementById('categoryFilterButtons');
+const backLink = document.getElementById('backLink');
+
+const projectBackLinks = {
+  Welle4: 'https://ki-stammtisch.at/ki-stammtisch/ki-stammtisch-pro-4-welle/',
+  GdeOstermiething: 'https://ki-stammtisch.at/ki-stammtisch/ki-stammtisch-pro-5-welle/',
+};
 
 let dir = 'asc';
 let currentView = 'prompt';
@@ -74,6 +80,40 @@ function formatRichText(value, { highlight = false } = {}) {
 
 const projectParam = new URLSearchParams(window.location.search).get('project') || '';
 const forcedProject = normalizeProjectParam(projectParam);
+
+function getFallbackBackUrl() {
+  if (forcedProject && projectBackLinks[forcedProject]) {
+    return projectBackLinks[forcedProject];
+  }
+
+  return 'https://ki-stammtisch.at/ki-stammtisch/';
+}
+
+function getBackUrl() {
+  const referrer = document.referrer || '';
+
+  if (referrer) {
+    try {
+      const referrerUrl = new URL(referrer);
+      if (referrerUrl.origin !== window.location.origin || referrerUrl.pathname !== window.location.pathname || referrerUrl.search !== window.location.search) {
+        return referrerUrl.toString();
+      }
+    } catch (error) {
+      return referrer;
+    }
+  }
+
+  return getFallbackBackUrl();
+}
+
+function initializeBackLink() {
+  if (!backLink) return;
+
+  backLink.href = getBackUrl();
+  backLink.classList.remove('hidden');
+}
+
+initializeBackLink();
 
 function showToast(message) {
   toast.textContent = message;

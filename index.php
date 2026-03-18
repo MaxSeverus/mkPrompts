@@ -15,7 +15,7 @@
       <div class="switch-link-row">
         <a class="button-link" href="admin/">Zum Admin-Bereich</a>
         <a class="button-link" href="https://ki-stammtisch.at/ki-stammtisch/">Zurück zum KI-Stammtisch</a>
-        <button type="button" class="button-link button-link-button" onclick="window.history.back()">Zurück</button>
+        <a id="backLink" class="button-link hidden" href="https://ki-stammtisch.at/ki-stammtisch/">Zurück</a>
       </div>
     </header>
 
