@@ -47,6 +47,8 @@ button.secondary { background: #edf1ff; color: var(--text); border: 1px solid va
 .prompt-title { margin: 0 0 10px; font-size: 1.1rem; font-weight: 800; line-height: 1.4; }
 .prompt-title strong { font-weight: 800; }
 .prompt-text { margin: 0; line-height: 1.5; white-space: pre-wrap; }
+.prompt-text a { color: var(--primary-dark); font-weight: 600; word-break: break-word; }
+.prompt-text a:hover { color: var(--primary); }
 .prompt-link-text { font-weight: 400; }
 .prompt-link-url { display: inline-block; margin-top: 8px; font-size: 1.05rem; word-break: break-all; }
 .prompt-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; color: var(--muted); font-size: .9rem; }
