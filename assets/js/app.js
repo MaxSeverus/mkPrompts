@@ -71,11 +71,32 @@ function highlightPlaceholders(text) {
   return text.replace(/\[(?!\/?(?:B|I|U)\])([^\]]+)\]/g, '<span class="placeholder">[$1]</span>');
 }
 
-function formatRichText(value, { highlight = false } = {}) {
+function normalizeUrlForHref(url) {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
+function linkifyUrls(text) {
+  return text.replace(/(^|[\s>(])((?:https?:\/\/|www\.)[^\s<]+)/gi, (match, prefix, rawUrl) => {
+    const trimmedUrl = rawUrl.replace(/[),.!?:;]+$/g, '');
+    const trailing = rawUrl.slice(trimmedUrl.length);
+
+    if (!trimmedUrl) {
+      return match;
+    }
+
+    const href = escapeHtml(normalizeUrlForHref(trimmedUrl));
+    const label = escapeHtml(trimmedUrl);
+
+    return `${prefix}<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>${trailing}`;
+  });
+}
+
+function formatRichText(value, { highlight = false, linkify = false } = {}) {
   const escaped = escapeHtml(value).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const withFormatting = applyInlineFormatting(escaped);
   const withHighlights = highlight ? highlightPlaceholders(withFormatting) : withFormatting;
-  return withHighlights.replace(/\n/g, '<br>');
+  const withLinks = linkify ? linkifyUrls(withHighlights) : withHighlights;
+  return withLinks.replace(/\n/g, '<br>');
 }
 
 const projectParam = new URLSearchParams(window.location.search).get('project') || '';
@@ -358,7 +379,7 @@ async function loadEntries() {
       card.innerHTML = `
         <div class="prompt-row">
           <div class="prompt-content">
-            <div class="prompt-text prompt-link-text">${formatRichText(entry.description)}</div>
+            <div class="prompt-text prompt-link-text">${formatRichText(entry.description, { linkify: true })}</div>
             <a class="prompt-link-url" href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.url)}</a>
             ${renderEntryMeta(entry)}
           </div>
@@ -406,7 +427,7 @@ async function loadEntries() {
       <div class="prompt-row">
         <div class="prompt-content">
           ${title}
-          <div class="prompt-text">${formatRichText(entry.prompt, { highlight: true })}</div>
+          <div class="prompt-text">${formatRichText(entry.prompt, { highlight: true, linkify: true })}</div>
           ${renderEntryMeta(entry)}
         </div>
         <button class="copy-button" data-copy="${encodeURIComponent(entry.prompt)}">kopieren</button>
