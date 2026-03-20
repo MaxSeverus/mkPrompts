@@ -51,6 +51,7 @@ function initializeDatabase(PDO $pdo, string $driver): void
         prompt TEXT NOT NULL,
         project VARCHAR(80) NOT NULL DEFAULT '',
         content_type VARCHAR(20) NOT NULL DEFAULT 'prompt',
+        action_count INT NOT NULL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
@@ -59,6 +60,7 @@ function initializeDatabase(PDO $pdo, string $driver): void
         url VARCHAR(500) PRIMARY KEY,
         description TEXT NOT NULL,
         category VARCHAR(80) NOT NULL,
+        action_count INT NOT NULL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
@@ -68,12 +70,21 @@ function initializeDatabase(PDO $pdo, string $driver): void
         meta_value TEXT NOT NULL
     )");
 
+    $pdo->exec("CREATE TABLE IF NOT EXISTS page_visitors (
+        visitor_hash VARCHAR(128) NOT NULL,
+        visit_date DATE NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (visitor_hash, visit_date)
+    )");
+
     ensureContentTypeColumn($pdo, $driver);
     ensureProjectColumn($pdo, $driver);
     ensureNrColumnSupportsText($pdo, $driver);
     ensurePromptTimestampColumns($pdo, $driver);
     ensureLinksTableColumns($pdo, $driver);
+    ensurePageVisitorsTable($pdo, $driver);
     backfillLegacyEntryTimestamps($pdo);
+    initializePageViewCounter($pdo);
 
     $count = (int) $pdo->query('SELECT COUNT(*) FROM prompts')->fetchColumn();
     if ($count > 0) {
@@ -88,7 +99,7 @@ function initializeDatabase(PDO $pdo, string $driver): void
         ],
     ];
 
-    $stmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, content_type, created_at, updated_at) VALUES (:nr, :abbreviation, :prompt, :content_type, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
+    $stmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, content_type, action_count, created_at, updated_at) VALUES (:nr, :abbreviation, :prompt, :content_type, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
     foreach ($seedData as $row) {
         $stmt->execute($row + ['content_type' => 'prompt']);
     }
@@ -99,7 +110,7 @@ function ensureLinksTableColumns(PDO $pdo, string $driver): void
     if (in_array($driver, ['mysql', 'mariadb'], true)) {
         $columns = $pdo->query('SHOW COLUMNS FROM links')->fetchAll();
         $columnNames = array_map(static fn($column) => (string) ($column['Field'] ?? ''), $columns);
-        $requiredColumns = ['url', 'description', 'category', 'created_at', 'updated_at'];
+        $requiredColumns = ['url', 'description', 'category', 'action_count', 'created_at', 'updated_at'];
         $hasRequiredColumns = count(array_diff($requiredColumns, $columnNames)) === 0;
 
         if ($hasRequiredColumns) {
@@ -113,11 +124,13 @@ function ensureLinksTableColumns(PDO $pdo, string $driver): void
                 url VARCHAR(500) PRIMARY KEY,
                 description TEXT NOT NULL,
                 category VARCHAR(80) NOT NULL,
+                action_count INT NOT NULL DEFAULT 0,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )");
-            $pdo->exec("INSERT INTO links_new (url, description, category, created_at, updated_at)
+            $pdo->exec("INSERT INTO links_new (url, description, category, action_count, created_at, updated_at)
                 SELECT url, description, category,
+                    COALESCE(action_count, 0),
                     COALESCE(created_at, CURRENT_TIMESTAMP),
                     COALESCE(updated_at, CURRENT_TIMESTAMP)
                 FROM links");
@@ -137,7 +150,7 @@ function ensureLinksTableColumns(PDO $pdo, string $driver): void
     if ($driver === 'sqlite') {
         $columns = $pdo->query('PRAGMA table_info(links)')->fetchAll();
         $columnNames = array_map(static fn($column) => (string) ($column['name'] ?? ''), $columns);
-        $requiredColumns = ['url', 'description', 'category', 'created_at', 'updated_at'];
+        $requiredColumns = ['url', 'description', 'category', 'action_count', 'created_at', 'updated_at'];
         $hasRequiredColumns = count(array_diff($requiredColumns, $columnNames)) === 0;
 
         if ($hasRequiredColumns) {
@@ -151,18 +164,20 @@ function ensureLinksTableColumns(PDO $pdo, string $driver): void
                 url VARCHAR(500) PRIMARY KEY,
                 description TEXT NOT NULL,
                 category VARCHAR(80) NOT NULL,
+                action_count INT NOT NULL DEFAULT 0,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )");
 
-            $selectColumns = ['url', 'description', 'category'];
             $createdAtExpr = in_array('created_at', $columnNames, true) ? 'COALESCE(created_at, CURRENT_TIMESTAMP)' : 'CURRENT_TIMESTAMP';
             $updatedAtExpr = in_array('updated_at', $columnNames, true) ? 'COALESCE(updated_at, CURRENT_TIMESTAMP)' : 'CURRENT_TIMESTAMP';
+            $actionCountExpr = in_array('action_count', $columnNames, true) ? 'COALESCE(action_count, 0)' : '0';
             $pdo->exec(sprintf(
-                'INSERT INTO links_new (url, description, category, created_at, updated_at) SELECT %s, %s, %s, %s, %s FROM links',
-                $selectColumns[0],
-                $selectColumns[1],
-                $selectColumns[2],
+                'INSERT INTO links_new (url, description, category, action_count, created_at, updated_at) SELECT %s, %s, %s, %s, %s, %s FROM links',
+                'url',
+                'description',
+                'category',
+                $actionCountExpr,
                 $createdAtExpr,
                 $updatedAtExpr
             ));
@@ -190,13 +205,18 @@ function ensurePromptTimestampColumns(PDO $pdo, string $driver): void
         if (!$updatedAtColumn) {
             $pdo->exec('ALTER TABLE prompts ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP');
         }
+
+        $actionCountColumn = $pdo->query("SHOW COLUMNS FROM prompts LIKE 'action_count'")->fetch();
+        if (!$actionCountColumn) {
+            $pdo->exec('ALTER TABLE prompts ADD COLUMN action_count INT NOT NULL DEFAULT 0');
+        }
         return;
     }
 
     if ($driver === 'sqlite') {
         $columns = $pdo->query('PRAGMA table_info(prompts)')->fetchAll();
         $columnNames = array_map(static fn($column) => (string) ($column['name'] ?? ''), $columns);
-        $requiredColumns = ['id', 'nr', 'abbreviation', 'prompt', 'project', 'content_type', 'created_at', 'updated_at'];
+        $requiredColumns = ['id', 'nr', 'abbreviation', 'prompt', 'project', 'content_type', 'action_count', 'created_at', 'updated_at'];
         $hasRequiredColumns = count(array_diff($requiredColumns, $columnNames)) === 0;
 
         if ($hasRequiredColumns) {
@@ -213,16 +233,18 @@ function ensurePromptTimestampColumns(PDO $pdo, string $driver): void
                 prompt TEXT NOT NULL,
                 project VARCHAR(80) NOT NULL DEFAULT '',
                 content_type VARCHAR(20) NOT NULL DEFAULT 'prompt',
+                action_count INT NOT NULL DEFAULT 0,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )");
 
             $projectExpr = in_array('project', $columnNames, true) ? 'COALESCE(project, "")' : '""';
             $contentTypeExpr = in_array('content_type', $columnNames, true) ? 'COALESCE(content_type, "prompt")' : '"prompt"';
+            $actionCountExpr = in_array('action_count', $columnNames, true) ? 'COALESCE(action_count, 0)' : '0';
             $createdAtExpr = in_array('created_at', $columnNames, true) ? 'COALESCE(created_at, CURRENT_TIMESTAMP)' : 'CURRENT_TIMESTAMP';
             $updatedAtExpr = in_array('updated_at', $columnNames, true) ? 'COALESCE(updated_at, CURRENT_TIMESTAMP)' : 'CURRENT_TIMESTAMP';
-            $pdo->exec("INSERT INTO prompts_new (id, nr, abbreviation, prompt, project, content_type, created_at, updated_at)
-                SELECT id, nr, abbreviation, prompt, {$projectExpr}, {$contentTypeExpr}, {$createdAtExpr}, {$updatedAtExpr}
+            $pdo->exec("INSERT INTO prompts_new (id, nr, abbreviation, prompt, project, content_type, action_count, created_at, updated_at)
+                SELECT id, nr, abbreviation, prompt, {$projectExpr}, {$contentTypeExpr}, {$actionCountExpr}, {$createdAtExpr}, {$updatedAtExpr}
                 FROM prompts");
             $pdo->exec('DROP TABLE prompts');
             $pdo->exec('ALTER TABLE prompts_new RENAME TO prompts');
@@ -234,6 +256,48 @@ function ensurePromptTimestampColumns(PDO $pdo, string $driver): void
             throw $e;
         }
     }
+}
+
+function ensurePageVisitorsTable(PDO $pdo, string $driver): void
+{
+    if (in_array($driver, ['mysql', 'mariadb'], true)) {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS page_visitors (
+            visitor_hash VARCHAR(128) NOT NULL,
+            visit_date DATE NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (visitor_hash, visit_date)
+        )");
+        return;
+    }
+
+    if ($driver === 'sqlite') {
+        $columns = $pdo->query('PRAGMA table_info(page_visitors)')->fetchAll();
+        $columnNames = array_map(static fn($column) => (string) ($column['name'] ?? ''), $columns);
+        $requiredColumns = ['visitor_hash', 'visit_date', 'created_at'];
+        $hasRequiredColumns = count(array_diff($requiredColumns, $columnNames)) === 0;
+
+        if ($hasRequiredColumns) {
+            return;
+        }
+
+        $pdo->exec('DROP TABLE IF EXISTS page_visitors');
+        $pdo->exec("CREATE TABLE page_visitors (
+            visitor_hash VARCHAR(128) NOT NULL,
+            visit_date DATE NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (visitor_hash, visit_date)
+        )");
+    }
+}
+
+function initializePageViewCounter(PDO $pdo): void
+{
+    if (getMetaValue($pdo, 'page_view_count') !== null) {
+        return;
+    }
+
+    $count = (int) $pdo->query('SELECT COUNT(*) FROM page_visitors')->fetchColumn();
+    setMetaValue($pdo, 'page_view_count', (string) $count);
 }
 
 function backfillLegacyEntryTimestamps(PDO $pdo): void
@@ -342,4 +406,115 @@ function ensureProjectColumn(PDO $pdo, string $driver): void
         }
         $pdo->exec("ALTER TABLE prompts ADD COLUMN project VARCHAR(80) NOT NULL DEFAULT ''");
     }
+}
+
+function getMetaValue(PDO $pdo, string $key): ?string
+{
+    $stmt = $pdo->prepare('SELECT meta_value FROM app_meta WHERE meta_key = :key');
+    $stmt->execute(['key' => $key]);
+    $value = $stmt->fetchColumn();
+
+    return $value === false ? null : (string) $value;
+}
+
+function setMetaValue(PDO $pdo, string $key, string $value): void
+{
+    $stmt = $pdo->prepare('REPLACE INTO app_meta (meta_key, meta_value) VALUES (:key, :value)');
+    $stmt->execute([
+        'key' => $key,
+        'value' => $value,
+    ]);
+}
+
+function getPageViewCount(PDO $pdo): int
+{
+    return max(0, (int) (getMetaValue($pdo, 'page_view_count') ?? '0'));
+}
+
+function setPageViewCount(PDO $pdo, int $count): void
+{
+    setMetaValue($pdo, 'page_view_count', (string) max(0, $count));
+}
+
+function recordUniquePageView(PDO $pdo, string $visitorHash): int
+{
+    $today = gmdate('Y-m-d');
+    $stmt = $pdo->prepare('SELECT 1 FROM page_visitors WHERE visitor_hash = :visitor_hash AND visit_date = :visit_date LIMIT 1');
+    $stmt->execute([
+        'visitor_hash' => $visitorHash,
+        'visit_date' => $today,
+    ]);
+
+    if ($stmt->fetchColumn() !== false) {
+        return getPageViewCount($pdo);
+    }
+
+    $pdo->beginTransaction();
+    try {
+        $insertStmt = $pdo->prepare('INSERT INTO page_visitors (visitor_hash, visit_date, created_at) VALUES (:visitor_hash, :visit_date, CURRENT_TIMESTAMP)');
+        $insertStmt->execute([
+            'visitor_hash' => $visitorHash,
+            'visit_date' => $today,
+        ]);
+
+        $count = getPageViewCount($pdo) + 1;
+        setPageViewCount($pdo, $count);
+        $pdo->commit();
+
+        return $count;
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        $stmt->execute([
+            'visitor_hash' => $visitorHash,
+            'visit_date' => $today,
+        ]);
+        if ($stmt->fetchColumn() !== false) {
+            return getPageViewCount($pdo);
+        }
+
+        throw $e;
+    }
+}
+
+function incrementPromptActionCount(PDO $pdo, int $id, string $type): ?int
+{
+    $updateStmt = $pdo->prepare('UPDATE prompts SET action_count = action_count + 1 WHERE id = :id AND content_type = :type');
+    $updateStmt->execute([
+        'id' => $id,
+        'type' => $type,
+    ]);
+
+    if ($updateStmt->rowCount() < 1) {
+        return null;
+    }
+
+    $selectStmt = $pdo->prepare('SELECT action_count FROM prompts WHERE id = :id AND content_type = :type');
+    $selectStmt->execute([
+        'id' => $id,
+        'type' => $type,
+    ]);
+
+    return (int) $selectStmt->fetchColumn();
+}
+
+function incrementLinkActionCount(PDO $pdo, string $url): ?int
+{
+    $updateStmt = $pdo->prepare('UPDATE links SET action_count = action_count + 1 WHERE url = :url');
+    $updateStmt->execute([
+        'url' => $url,
+    ]);
+
+    if ($updateStmt->rowCount() < 1) {
+        return null;
+    }
+
+    $selectStmt = $pdo->prepare('SELECT action_count FROM links WHERE url = :url');
+    $selectStmt->execute([
+        'url' => $url,
+    ]);
+
+    return (int) $selectStmt->fetchColumn();
 }

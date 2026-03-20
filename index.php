@@ -20,8 +20,17 @@
     </header>
 
     <section class="notice-card">
-      <h2>Geschützte Inhalte – nur für Teilnehmer:innen</h2>
-      <p>Diese Sammlung ist für den internen Einsatz bestimmt. Bitte verantwortungsvoll nutzen und nicht extern teilen.</p>
+      <div class="row between align-center wrap gap-12">
+        <div>
+          <h2>Geschützte Inhalte – nur für Teilnehmer:innen</h2>
+          <p>Diese Sammlung ist für den internen Einsatz bestimmt. Bitte verantwortungsvoll nutzen und nicht extern teilen.</p>
+        </div>
+        <div class="counter-badge">
+          <span>Seitenaufrufe</span>
+          <strong id="pageViewCount">0</strong>
+          <small>unique pro Tag</small>
+        </div>
+      </div>
     </section>
 
     <section class="toolbar">

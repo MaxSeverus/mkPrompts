@@ -11,6 +11,7 @@ const projectFilterButtons = document.getElementById('projectFilterButtons');
 const categoryFilterSection = document.getElementById('categoryFilterSection');
 const categoryFilterButtons = document.getElementById('categoryFilterButtons');
 const backLink = document.getElementById('backLink');
+const pageViewCount = document.getElementById('pageViewCount');
 
 const projectBackLinks = {
   Welle4: 'https://ki-stammtisch.at/ki-stammtisch/ki-stammtisch-pro-4-welle/',
@@ -34,7 +35,7 @@ function normalizeView(value) {
 }
 
 function normalizeProjectParam(value) {
-  return value.trim().replace(/^['\"]|['\"]$/g, '');
+  return value.trim().replace(/^['"]|['"]$/g, '');
 }
 
 function formatDateTime(value) {
@@ -99,6 +100,74 @@ function formatRichText(value, { highlight = false, linkify = false } = {}) {
   return withLinks.replace(/\n/g, '<br>');
 }
 
+function updatePageViewDisplay(value) {
+  if (!pageViewCount) return;
+  pageViewCount.textContent = String(Math.max(0, Number(value) || 0));
+}
+
+async function loadPageViewCount() {
+  try {
+    const res = await fetch('./api/stats.php');
+    const payload = await res.json();
+    updatePageViewDisplay(payload?.data?.page_views ?? 0);
+  } catch (error) {
+    updatePageViewDisplay(0);
+  }
+}
+
+async function trackPageView() {
+  try {
+    const res = await fetch('./api/track.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event: 'page_view' }),
+    });
+    const payload = await res.json();
+    updatePageViewDisplay(payload?.data?.page_views ?? 0);
+  } catch (error) {
+    await loadPageViewCount();
+  }
+}
+
+async function trackPromptAction(id, type) {
+  const res = await fetch('./api/track.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ event: 'prompt_action', id, type }),
+  });
+
+  if (!res.ok) {
+    throw new Error('Action tracking failed');
+  }
+
+  const payload = await res.json();
+  return payload?.data?.action_count ?? null;
+}
+
+async function trackLinkAction(url) {
+  const res = await fetch('./api/track.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ event: 'link_action', url }),
+  });
+
+  if (!res.ok) {
+    throw new Error('Link tracking failed');
+  }
+
+  const payload = await res.json();
+  return payload?.data?.action_count ?? null;
+}
+
+function updateCardActionCount(button, count) {
+  if (count === null || count === undefined) return;
+  const card = button.closest('.prompt-card');
+  const counter = card?.querySelector('[data-action-count]');
+  if (counter) {
+    counter.textContent = String(count);
+  }
+}
+
 const projectParam = new URLSearchParams(window.location.search).get('project') || '';
 const forcedProject = normalizeProjectParam(projectParam);
 
@@ -147,6 +216,7 @@ function getPublicSortOptions() {
     return [
       { value: 'description', label: 'Beschreibung' },
       { value: 'category', label: 'Kategorie' },
+      { value: 'action_count', label: 'Nutzungen' },
       { value: 'created_at', label: 'Erstellt am' },
       { value: 'updated_at', label: 'Geändert am' },
     ];
@@ -155,6 +225,7 @@ function getPublicSortOptions() {
   return [
     { value: 'nr', label: 'Nr' },
     { value: 'abbreviation', label: 'Abkürzung' },
+    { value: 'action_count', label: 'Nutzungen' },
     { value: 'created_at', label: 'Erstellt am' },
     { value: 'updated_at', label: 'Geändert am' },
   ];
@@ -346,6 +417,7 @@ function renderEntryMeta(entry) {
     items.push(`<span><strong>Abkürzung:</strong> ${formatRichText(entry.abbreviation)}</span>`);
   }
 
+  items.push(`<span><strong>Nutzungen:</strong> <span data-action-count>${escapeHtml(entry.action_count ?? 0)}</span></span>`);
   items.push(`<span><strong>Erstellt:</strong> ${formatDateTime(entry.created_at)}</span>`);
   items.push(`<span><strong>Geändert:</strong> ${formatDateTime(entry.updated_at)}</span>`);
 
@@ -374,16 +446,17 @@ async function loadEntries() {
 
     promptList.innerHTML = '';
     filteredEntries.forEach((entry) => {
+      const safeUrl = normalizeUrlForHref(entry.url);
       const card = document.createElement('article');
       card.className = 'prompt-card';
       card.innerHTML = `
         <div class="prompt-row">
           <div class="prompt-content">
             <div class="prompt-text prompt-link-text">${formatRichText(entry.description, { linkify: true })}</div>
-            <a class="prompt-link-url" href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.url)}</a>
+            <a class="prompt-link-url" href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.url)}</a>
             ${renderEntryMeta(entry)}
           </div>
-          <button class="copy-button" data-open="${encodeURIComponent(entry.url)}">öffnen</button>
+          <button class="copy-button" data-open="${encodeURIComponent(safeUrl)}" data-track-url="${encodeURIComponent(entry.url)}">öffnen</button>
         </div>
       `;
       promptList.appendChild(card);
@@ -430,7 +503,7 @@ async function loadEntries() {
           <div class="prompt-text">${formatRichText(entry.prompt, { highlight: true, linkify: true })}</div>
           ${renderEntryMeta(entry)}
         </div>
-        <button class="copy-button" data-copy="${encodeURIComponent(entry.prompt)}">kopieren</button>
+        <button class="copy-button" data-copy="${encodeURIComponent(entry.prompt)}" data-id="${entry.id}" data-type="${currentView}">kopieren</button>
       </div>
     `;
     promptList.appendChild(card);
@@ -441,7 +514,16 @@ promptList.addEventListener('click', async (event) => {
   const openButton = event.target.closest('button[data-open]');
   if (openButton) {
     const url = decodeURIComponent(openButton.dataset.open);
+    const trackUrl = decodeURIComponent(openButton.dataset.trackUrl || openButton.dataset.open);
     window.open(url, '_blank', 'noopener,noreferrer');
+
+    try {
+      const count = await trackLinkAction(trackUrl);
+      updateCardActionCount(openButton, count);
+    } catch (error) {
+      // noop
+    }
+
     showToast('Link geöffnet.');
     return;
   }
@@ -450,6 +532,14 @@ promptList.addEventListener('click', async (event) => {
   if (!button) return;
   const value = decodeURIComponent(button.dataset.copy);
   await navigator.clipboard.writeText(value);
+
+  try {
+    const count = await trackPromptAction(Number(button.dataset.id || 0), button.dataset.type || 'prompt');
+    updateCardActionCount(button, count);
+  } catch (error) {
+    // noop
+  }
+
   if (currentView === 'exercise') {
     showToast('Übung kopiert.');
   } else if (currentView === 'link') {
@@ -509,4 +599,5 @@ dirButton.addEventListener('click', () => {
 currentView = normalizeView(new URLSearchParams(window.location.search).get('view'));
 updateSwitchButtons();
 updateSortOptions();
+trackPageView();
 loadEntries();
