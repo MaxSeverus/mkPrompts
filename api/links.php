@@ -13,12 +13,13 @@ $dir = strtolower((string) ($_GET['dir'] ?? 'asc')) === 'desc' ? 'DESC' : 'ASC';
 $sortMap = [
     'description' => 'description',
     'category' => 'category',
+    'action_count' => 'action_count',
     'created_at' => 'created_at',
     'updated_at' => 'updated_at',
 ];
 $orderBy = $sortMap[$sort] ?? 'description';
 
-$sql = 'SELECT description, url, category, created_at, updated_at FROM links';
+$sql = 'SELECT description, url, category, action_count, created_at, updated_at FROM links';
 $params = [];
 
 if ($q !== '') {

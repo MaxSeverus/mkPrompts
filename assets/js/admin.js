@@ -27,6 +27,9 @@ const adminCategoryFilterButtons = document.getElementById('adminCategoryFilterB
 const adminSortSelect = document.getElementById('adminSortSelect');
 const adminDirButton = document.getElementById('adminDirButton');
 const formattingHint = document.getElementById('formattingHint');
+const pageViewForm = document.getElementById('pageViewForm');
+const pageViewInput = document.getElementById('pageViewInput');
+const pageViewResetButton = document.getElementById('pageViewResetButton');
 
 const formGroups = document.querySelectorAll('[data-form-group]');
 
@@ -96,6 +99,7 @@ function getSortOptions() {
     return [
       { value: 'category', label: 'Kategorie' },
       { value: 'description', label: 'Beschreibung' },
+      { value: 'action_count', label: 'Nutzungen' },
       { value: 'created_at', label: 'Erstellt am' },
       { value: 'updated_at', label: 'Geändert am' },
     ];
@@ -105,6 +109,7 @@ function getSortOptions() {
     { value: 'project', label: 'Projekt' },
     { value: 'nr', label: 'Nr' },
     { value: 'abbreviation', label: 'Abkürzung' },
+    { value: 'action_count', label: 'Nutzungen' },
     { value: 'created_at', label: 'Erstellt am' },
     { value: 'updated_at', label: 'Geändert am' },
   ];
@@ -332,6 +337,7 @@ function renderTable(entries) {
       <td>${escapeHtml(entry.abbreviation)}</td>
       <td>${escapeHtml(entry.project)}</td>
       <td>${escapeHtml(entry.prompt)}</td>
+      <td>${escapeHtml(entry.action_count ?? 0)}</td>
       <td>${formatDateTime(entry.created_at)}</td>
       <td>${formatDateTime(entry.updated_at)}</td>
       <td>
@@ -353,6 +359,7 @@ function renderLinkTable(entries) {
       <td>${escapeHtml(entry.description)}</td>
       <td><a href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.url)}</a></td>
       <td>${escapeHtml(entry.category)}</td>
+      <td>${escapeHtml(entry.action_count ?? 0)}</td>
       <td>${formatDateTime(entry.created_at)}</td>
       <td>${formatDateTime(entry.updated_at)}</td>
       <td>
@@ -365,6 +372,14 @@ function renderLinkTable(entries) {
   });
 }
 
+async function loadPageViewCounter() {
+  const res = await fetch('../api/admin_stats.php');
+  if (res.status === 401) return;
+
+  const payload = await res.json();
+  pageViewInput.value = String(payload?.data?.page_views ?? 0);
+}
+
 async function checkSession() {
   const res = await fetch('../api/admin_session.php');
   const data = await res.json();
@@ -372,6 +387,7 @@ async function checkSession() {
     loginCard.classList.add('hidden');
     adminPanel.classList.remove('hidden');
     updateViewTexts();
+    await loadPageViewCounter();
     await loadEntries();
   }
 }
@@ -432,8 +448,36 @@ loginForm.addEventListener('submit', async (event) => {
   loginCard.classList.add('hidden');
   adminPanel.classList.remove('hidden');
   updateViewTexts();
+  await loadPageViewCounter();
   showToast('Erfolgreich angemeldet.');
   await loadEntries();
+});
+
+pageViewForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const payload = { page_views: Math.max(0, Number(pageViewInput.value || 0)) };
+
+  const res = await fetch('../api/admin_stats.php', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    showToast('Seitenaufrufzähler konnte nicht gespeichert werden.');
+    return;
+  }
+
+  const responsePayload = await res.json();
+  pageViewInput.value = String(responsePayload?.data?.page_views ?? payload.page_views);
+  showToast('Seitenaufrufzähler gespeichert.');
+});
+
+pageViewResetButton?.addEventListener('click', async () => {
+  pageViewInput.value = '0';
+  if (pageViewForm) {
+    pageViewForm.requestSubmit();
+  }
 });
 
 adminEntryForm.addEventListener('submit', async (event) => {
@@ -618,27 +662,29 @@ if (csvUploadForm) {
   });
 }
 
-csvExportButton?.addEventListener('click', async () => {
-  if (currentView === 'link') {
-    showToast('CSV-Export ist nur für Prompts und Übungen verfügbar.');
-    return;
-  }
+if (csvExportButton) {
+  csvExportButton.addEventListener('click', async () => {
+    if (currentView === 'link') {
+      showToast('CSV-Export ist nur für Prompts und Übungen verfügbar.');
+      return;
+    }
 
-  const params = new URLSearchParams({
-    type: currentView,
-    sort: adminSortSelect.value,
-    dir: sortDir,
+    const params = new URLSearchParams({
+      type: currentView,
+      sort: adminSortSelect.value,
+      dir: sortDir,
+    });
+    const res = await fetch(`../api/admin_prompts.php?${params.toString()}`);
+    if (!res.ok) {
+      showToast('CSV-Export fehlgeschlagen.');
+      return;
+    }
+
+    const payload = await res.json();
+    const entries = Array.isArray(payload.data) ? payload.data : [];
+    downloadCsv(toCsv(entries));
+    showToast('CSV exportiert.');
   });
-  const res = await fetch(`../api/admin_prompts.php?${params.toString()}`);
-  if (!res.ok) {
-    showToast('Export fehlgeschlagen.');
-    return;
-  }
-
-  const payload = await res.json();
-  const rows = Array.isArray(payload.data) ? payload.data : [];
-  downloadCsv(toCsv(rows));
-  showToast('CSV exportiert.');
-});
+}
 
 checkSession();

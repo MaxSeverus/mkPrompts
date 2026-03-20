@@ -34,18 +34,19 @@ if ($method === 'GET') {
         'nr' => 'nr',
         'abbreviation' => 'abbreviation',
         'project' => 'project',
+        'action_count' => 'action_count',
         'created_at' => 'created_at',
         'updated_at' => 'updated_at',
     ];
     $orderBy = $sortMap[$sort] ?? 'project';
 
-    $stmt = $pdo->prepare("SELECT id, nr, abbreviation, prompt, project, created_at, updated_at FROM prompts WHERE content_type = :type ORDER BY {$orderBy} {$dir}, project ASC, nr ASC");
+    $stmt = $pdo->prepare("SELECT id, nr, abbreviation, prompt, project, action_count, created_at, updated_at FROM prompts WHERE content_type = :type ORDER BY {$orderBy} {$dir}, project ASC, nr ASC");
     $stmt->execute(['type' => $type]);
     jsonResponse(['ok' => true, 'data' => $stmt->fetchAll()]);
 }
 
 if ($method === 'POST') {
-    $stmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, project, content_type, created_at, updated_at) VALUES (:nr, :abbreviation, :prompt, :project, :type, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
+    $stmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, project, content_type, action_count, created_at, updated_at) VALUES (:nr, :abbreviation, :prompt, :project, :type, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
     $stmt->execute([
         'nr' => normalizeNr($data['nr'] ?? ''),
         'abbreviation' => trim((string)($data['abbreviation'] ?? '')),
