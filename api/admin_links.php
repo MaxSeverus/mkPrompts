@@ -21,17 +21,18 @@ if ($method === 'GET') {
     $sortMap = [
         'description' => 'description',
         'category' => 'category',
+        'action_count' => 'action_count',
         'created_at' => 'created_at',
         'updated_at' => 'updated_at',
     ];
     $orderBy = $sortMap[$sort] ?? 'category';
 
-    $stmt = $pdo->query("SELECT description, url, category, created_at, updated_at FROM links ORDER BY {$orderBy} {$dir}, category ASC, description ASC");
+    $stmt = $pdo->query("SELECT description, url, category, action_count, created_at, updated_at FROM links ORDER BY {$orderBy} {$dir}, category ASC, description ASC");
     jsonResponse(['ok' => true, 'data' => $stmt->fetchAll()]);
 }
 
 if ($method === 'POST') {
-    $stmt = $pdo->prepare('INSERT INTO links (description, url, category, created_at, updated_at) VALUES (:description, :url, :category, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
+    $stmt = $pdo->prepare('INSERT INTO links (description, url, category, action_count, created_at, updated_at) VALUES (:description, :url, :category, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
     $stmt->execute([
         'description' => trim((string) ($data['description'] ?? '')),
         'url' => trim((string) ($data['url'] ?? '')),

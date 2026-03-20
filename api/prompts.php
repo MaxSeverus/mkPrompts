@@ -20,12 +20,13 @@ $project = trim((string) ($_GET['project'] ?? ''));
 $sortMap = [
     'nr' => 'nr',
     'abbreviation' => 'abbreviation',
+    'action_count' => 'action_count',
     'created_at' => 'created_at',
     'updated_at' => 'updated_at',
 ];
 $orderBy = $sortMap[$sort] ?? 'nr';
 
-$sql = 'SELECT id, nr, abbreviation, prompt, project, created_at, updated_at FROM prompts WHERE content_type = :type';
+$sql = 'SELECT id, nr, abbreviation, prompt, project, action_count, created_at, updated_at FROM prompts WHERE content_type = :type';
 $params = ['type' => $type];
 
 if ($type === 'exercise') {

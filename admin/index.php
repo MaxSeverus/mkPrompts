@@ -63,6 +63,24 @@
         </form>
       </div>
 
+
+      <div class="card">
+        <div class="row between align-center wrap gap-12">
+          <div>
+            <h2>Seitenaufrufzähler</h2>
+            <p>Gezählt werden eindeutige Besucher:innen pro Tag im Benutzerbereich.</p>
+          </div>
+          <form id="pageViewForm" class="row gap-12 align-center wrap">
+            <label class="field">
+              <span>Stand</span>
+              <input type="number" id="pageViewInput" min="0" step="1" value="0">
+            </label>
+            <button type="submit">Speichern</button>
+            <button type="button" id="pageViewResetButton" class="secondary">Auf 0 setzen</button>
+          </form>
+        </div>
+      </div>
+
       <div id="csvCard" class="card">
         <h2 id="csvTitle">CSV-Upload</h2>
         <p id="csvDescription">CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong>, <strong>project</strong> und <strong>prompt</strong> hochladen.</p>
@@ -107,14 +125,14 @@
       <div class="card overflow-x">
         <table id="promptTable">
           <thead>
-            <tr><th>Nr</th><th>Abkürzung</th><th>Projekt</th><th id="tableContentHeading">Prompt</th><th>Erstellt am</th><th>Geändert am</th><th>Aktionen</th></tr>
+            <tr><th>Nr</th><th>Abkürzung</th><th>Projekt</th><th id="tableContentHeading">Prompt</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th><th>Aktionen</th></tr>
           </thead>
           <tbody id="adminTableBody"></tbody>
         </table>
 
         <table id="linkTable" class="hidden">
           <thead>
-            <tr><th>Beschreibung</th><th>URL</th><th>Kategorie</th><th>Erstellt am</th><th>Geändert am</th><th>Aktionen</th></tr>
+            <tr><th>Beschreibung</th><th>URL</th><th>Kategorie</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th><th>Aktionen</th></tr>
           </thead>
           <tbody id="adminLinkTableBody"></tbody>
         </table>
