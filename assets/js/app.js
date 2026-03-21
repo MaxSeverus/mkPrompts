@@ -343,6 +343,10 @@ function renderCategoryFilterButtons(entries) {
   });
 }
 
+function isGlobalExerciseProject(value) {
+  return String(value || '').trim().toLocaleLowerCase('de-DE') === 'alle';
+}
+
 function renderProjectFilterButtons(entries) {
   if (!projectFilterSection || !projectFilterButtons) return;
 
@@ -370,7 +374,7 @@ function renderProjectFilterButtons(entries) {
 
   const projectValues = [...new Set(entries
     .map((entry) => String(entry.project ?? '').trim())
-    .filter((value) => value !== ''))]
+    .filter((value) => value !== '' && !isGlobalExerciseProject(value)))]
     .sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
 
   if (selectedProject && !projectValues.includes(selectedProject)) {

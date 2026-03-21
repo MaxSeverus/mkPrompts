@@ -10,6 +10,11 @@ function resolveContentType(string $type): string
     return strtolower($type) === 'exercise' ? 'exercise' : 'prompt';
 }
 
+function isGlobalExerciseProject(string $project): bool
+{
+    return strtolower(trim($project)) === 'alle';
+}
+
 $pdo = db();
 $q = trim((string)($_GET['q'] ?? ''));
 $sort = (string)($_GET['sort'] ?? 'nr');
@@ -34,8 +39,14 @@ if ($type === 'exercise') {
         jsonResponse(['ok' => true, 'data' => []]);
     }
 
-    $sql .= ' AND project = :project';
-    $params['project'] = $project;
+    if (isGlobalExerciseProject($project)) {
+        $sql .= ' AND LOWER(TRIM(project)) = :project';
+        $params['project'] = 'alle';
+    } else {
+        $sql .= ' AND (project = :project OR LOWER(TRIM(project)) = :global_project)';
+        $params['project'] = $project;
+        $params['global_project'] = 'alle';
+    }
 }
 
 if ($q !== '') {
