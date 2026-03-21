@@ -25,11 +25,6 @@
           <h2>Geschützte Inhalte – nur für Teilnehmer:innen</h2>
           <p>Diese Sammlung ist für den internen Einsatz bestimmt. Bitte verantwortungsvoll nutzen und nicht extern teilen.</p>
         </div>
-        <div class="counter-badge">
-          <span>Seitenaufrufe</span>
-          <strong id="pageViewCount">0</strong>
-          <small>unique pro Tag</small>
-        </div>
       </div>
     </section>
 
@@ -76,6 +71,14 @@
 
     <section>
       <div id="promptList" class="prompt-grid" aria-live="polite"></div>
+    </section>
+
+    <section class="page-stats-footer" aria-label="Seitenstatistik">
+      <div class="counter-badge counter-badge-subtle">
+        <span>Seitenaufrufe</span>
+        <strong id="pageViewCount">0</strong>
+        <small>unique pro Tag</small>
+      </div>
     </section>
   </div>
 
