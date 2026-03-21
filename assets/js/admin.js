@@ -30,6 +30,7 @@ const formattingHint = document.getElementById('formattingHint');
 const pageViewForm = document.getElementById('pageViewForm');
 const pageViewInput = document.getElementById('pageViewInput');
 const pageViewResetButton = document.getElementById('pageViewResetButton');
+const totalUsageCount = document.getElementById('totalUsageCount');
 
 const formGroups = document.querySelectorAll('[data-form-group]');
 
@@ -372,12 +373,19 @@ function renderLinkTable(entries) {
   });
 }
 
+function updateStatsDisplay(payload) {
+  pageViewInput.value = String(payload?.data?.page_views ?? 0);
+  if (totalUsageCount) {
+    totalUsageCount.textContent = String(payload?.data?.total_usage_count ?? 0);
+  }
+}
+
 async function loadPageViewCounter() {
   const res = await fetch('../api/admin_stats.php');
   if (res.status === 401) return;
 
   const payload = await res.json();
-  pageViewInput.value = String(payload?.data?.page_views ?? 0);
+  updateStatsDisplay(payload);
 }
 
 async function checkSession() {
@@ -469,7 +477,7 @@ pageViewForm?.addEventListener('submit', async (event) => {
   }
 
   const responsePayload = await res.json();
-  pageViewInput.value = String(responsePayload?.data?.page_views ?? payload.page_views);
+  updateStatsDisplay(responsePayload);
   showToast('Seitenaufrufzähler gespeichert.');
 });
 
