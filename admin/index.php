@@ -75,6 +75,10 @@
               <span>Stand</span>
               <input type="number" id="pageViewInput" min="0" step="1" value="0">
             </label>
+            <div class="stats-inline-card">
+              <span>Summe aller Nutzungen</span>
+              <strong id="totalUsageCount">0</strong>
+            </div>
             <button type="submit">Speichern</button>
             <button type="button" id="pageViewResetButton" class="secondary">Auf 0 setzen</button>
           </form>

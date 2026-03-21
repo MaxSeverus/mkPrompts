@@ -16,6 +16,7 @@ if ($method === 'GET') {
         'ok' => true,
         'data' => [
             'page_views' => getPageViewCount($pdo),
+            'total_usage_count' => getTotalUsageCount($pdo),
         ],
     ]);
 }
@@ -28,6 +29,7 @@ if ($method === 'PUT') {
         'ok' => true,
         'data' => [
             'page_views' => getPageViewCount($pdo),
+            'total_usage_count' => getTotalUsageCount($pdo),
         ],
     ]);
 }

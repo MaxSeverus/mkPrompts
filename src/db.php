@@ -426,6 +426,14 @@ function setMetaValue(PDO $pdo, string $key, string $value): void
     ]);
 }
 
+function getTotalUsageCount(PDO $pdo): int
+{
+    $promptTotal = (int) $pdo->query('SELECT COALESCE(SUM(action_count), 0) FROM prompts')->fetchColumn();
+    $linkTotal = (int) $pdo->query('SELECT COALESCE(SUM(action_count), 0) FROM links')->fetchColumn();
+
+    return max(0, $promptTotal + $linkTotal);
+}
+
 function getPageViewCount(PDO $pdo): int
 {
     return max(0, (int) (getMetaValue($pdo, 'page_view_count') ?? '0'));

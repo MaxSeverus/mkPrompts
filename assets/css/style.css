@@ -102,3 +102,53 @@ button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
+
+.page-stats-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.counter-badge-subtle {
+  min-width: 150px;
+  padding: 10px 12px;
+  gap: 2px;
+  background: rgba(237, 241, 255, 0.72);
+  box-shadow: none;
+}
+
+.counter-badge-subtle strong {
+  font-size: 1.35rem;
+}
+
+.stats-inline-card {
+  min-width: 200px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f7f9ff;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stats-inline-card span {
+  font-size: .85rem;
+  color: var(--muted);
+}
+
+.stats-inline-card strong {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .page-stats-footer {
+    justify-content: stretch;
+  }
+
+  .page-stats-footer .counter-badge,
+  .stats-inline-card {
+    width: 100%;
+  }
+}
