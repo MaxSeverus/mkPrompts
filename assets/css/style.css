@@ -80,18 +80,21 @@ th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left
 }
 
 .admin-actions-cell {
-  min-width: 190px;
-  white-space: nowrap;
+  min-width: 130px;
+  white-space: normal;
 }
 
 .admin-actions-cell button {
-  display: inline-block;
-  margin-right: 8px;
-  margin-bottom: 6px;
+  display: block;
+  width: 100%;
+  margin: 0 0 6px 0;
+  padding: 7px 10px;
+  font-size: 0.9rem;
+  line-height: 1.2;
 }
 
 .admin-actions-cell button:last-child {
-  margin-right: 0;
+  margin-bottom: 0;
 }
 @media (max-width: 900px) {
   .toolbar { grid-template-columns: 1fr; }

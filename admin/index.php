@@ -129,14 +129,14 @@
       <div class="card overflow-x">
         <table id="promptTable">
           <thead>
-            <tr><th>Nr</th><th>Abkürzung</th><th>Projekt</th><th id="tableContentHeading">Prompt</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th><th>Aktionen</th></tr>
+            <tr><th>Aktionen</th><th>Nr</th><th>Abkürzung</th><th>Projekt</th><th id="tableContentHeading">Prompt</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th></tr>
           </thead>
           <tbody id="adminTableBody"></tbody>
         </table>
 
         <table id="linkTable" class="hidden">
           <thead>
-            <tr><th>Beschreibung</th><th>URL</th><th>Kategorie</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th><th>Aktionen</th></tr>
+            <tr><th>Aktionen</th><th>Beschreibung</th><th>URL</th><th>Kategorie</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th></tr>
           </thead>
           <tbody id="adminLinkTableBody"></tbody>
         </table>

@@ -339,6 +339,10 @@ function renderTable(entries) {
   entries.forEach((entry) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td class="admin-actions-cell">
+        <button class="secondary" data-action="edit" data-id="${entry.id}">Bearbeiten</button>
+        <button data-action="delete" data-id="${entry.id}">Löschen</button>
+      </td>
       <td>${escapeHtml(entry.nr)}</td>
       <td>${escapeHtml(entry.abbreviation)}</td>
       <td>${escapeHtml(entry.project)}</td>
@@ -346,10 +350,6 @@ function renderTable(entries) {
       <td>${escapeHtml(entry.action_count ?? 0)}</td>
       <td>${formatDateTime(entry.created_at)}</td>
       <td>${formatDateTime(entry.updated_at)}</td>
-      <td class="admin-actions-cell">
-        <button class="secondary" data-action="edit" data-id="${entry.id}">Bearbeiten</button>
-        <button data-action="delete" data-id="${entry.id}">Löschen</button>
-      </td>
     `;
     tr.dataset.entry = JSON.stringify(entry);
     adminTableBody.appendChild(tr);
@@ -362,16 +362,16 @@ function renderLinkTable(entries) {
   entries.forEach((entry) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td class="admin-actions-cell">
+        <button class="secondary" data-action="edit" data-url="${encodeURIComponent(entry.url)}">Bearbeiten</button>
+        <button data-action="delete" data-url="${encodeURIComponent(entry.url)}">Löschen</button>
+      </td>
       <td>${escapeHtml(entry.description)}</td>
       <td><a href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.url)}</a></td>
       <td>${escapeHtml(entry.category)}</td>
       <td>${escapeHtml(entry.action_count ?? 0)}</td>
       <td>${formatDateTime(entry.created_at)}</td>
       <td>${formatDateTime(entry.updated_at)}</td>
-      <td class="admin-actions-cell">
-        <button class="secondary" data-action="edit" data-url="${encodeURIComponent(entry.url)}">Bearbeiten</button>
-        <button data-action="delete" data-url="${encodeURIComponent(entry.url)}">Löschen</button>
-      </td>
     `;
     tr.dataset.entry = JSON.stringify(entry);
     adminLinkTableBody.appendChild(tr);
