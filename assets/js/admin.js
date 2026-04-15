@@ -225,6 +225,27 @@ function escapeCsvValue(value) {
   return `"${normalized}"`;
 }
 
+function getAdminActionIcon(action) {
+  if (action === 'edit') {
+    return `
+      <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0 0-3L17.5 5a2.1 2.1 0 0 0-3 0L4 15.5V20z"></path>
+        <path d="M13.5 6.5l4 4"></path>
+      </svg>
+    `;
+  }
+
+  return `
+    <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 7h16"></path>
+      <path d="M9 7V5h6v2"></path>
+      <path d="M7 7l1 12h8l1-12"></path>
+      <path d="M10 11v6"></path>
+      <path d="M14 11v6"></path>
+    </svg>
+  `;
+}
+
 function toCsv(rows) {
   const header = ['nr', 'abbreviation', 'project', 'prompt'];
   const lines = [header.join(',')];
@@ -340,8 +361,8 @@ function renderTable(entries) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="admin-actions-cell">
-        <button class="secondary icon-button edit-button" data-action="edit" data-id="${entry.id}" title="Bearbeiten" aria-label="Bearbeiten">✏</button>
-        <button class="icon-button delete-button" data-action="delete" data-id="${entry.id}" title="Löschen" aria-label="Löschen">✕</button>
+        <button class="secondary icon-button edit-button" data-action="edit" data-id="${entry.id}" title="Bearbeiten" aria-label="Bearbeiten">${getAdminActionIcon('edit')}</button>
+        <button class="icon-button delete-button" data-action="delete" data-id="${entry.id}" title="Löschen" aria-label="Löschen">${getAdminActionIcon('delete')}</button>
       </td>
       <td>${escapeHtml(entry.nr)}</td>
       <td>${escapeHtml(entry.abbreviation)}</td>
@@ -363,8 +384,8 @@ function renderLinkTable(entries) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="admin-actions-cell">
-        <button class="secondary icon-button edit-button" data-action="edit" data-url="${encodeURIComponent(entry.url)}" title="Bearbeiten" aria-label="Bearbeiten">✏</button>
-        <button class="icon-button delete-button" data-action="delete" data-url="${encodeURIComponent(entry.url)}" title="Löschen" aria-label="Löschen">✕</button>
+        <button class="secondary icon-button edit-button" data-action="edit" data-url="${encodeURIComponent(entry.url)}" title="Bearbeiten" aria-label="Bearbeiten">${getAdminActionIcon('edit')}</button>
+        <button class="icon-button delete-button" data-action="delete" data-url="${encodeURIComponent(entry.url)}" title="Löschen" aria-label="Löschen">${getAdminActionIcon('delete')}</button>
       </td>
       <td>${escapeHtml(entry.description)}</td>
       <td><a href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.url)}</a></td>

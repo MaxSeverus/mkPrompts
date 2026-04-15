@@ -101,13 +101,23 @@ th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left
 }
 
 .admin-actions-cell .delete-button {
-  background: #ffe8ec;
-  border: 1px solid #f3b8c3;
-  color: #c6223c;
+  background: #fff4f6;
+  border: 1px solid #f1cdd6;
+  color: #bb3752;
 }
 
 .admin-actions-cell .delete-button:hover {
-  background: #ffdbe2;
+  background: #ffe9ee;
+}
+
+.icon-svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 @media (max-width: 900px) {
   .toolbar { grid-template-columns: 1fr; }
