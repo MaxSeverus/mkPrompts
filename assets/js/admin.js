@@ -340,8 +340,8 @@ function renderTable(entries) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="admin-actions-cell">
-        <button class="secondary" data-action="edit" data-id="${entry.id}">Bearbeiten</button>
-        <button data-action="delete" data-id="${entry.id}">Löschen</button>
+        <button class="secondary icon-button edit-button" data-action="edit" data-id="${entry.id}" title="Bearbeiten" aria-label="Bearbeiten">✏</button>
+        <button class="icon-button delete-button" data-action="delete" data-id="${entry.id}" title="Löschen" aria-label="Löschen">✕</button>
       </td>
       <td>${escapeHtml(entry.nr)}</td>
       <td>${escapeHtml(entry.abbreviation)}</td>
@@ -363,8 +363,8 @@ function renderLinkTable(entries) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="admin-actions-cell">
-        <button class="secondary" data-action="edit" data-url="${encodeURIComponent(entry.url)}">Bearbeiten</button>
-        <button data-action="delete" data-url="${encodeURIComponent(entry.url)}">Löschen</button>
+        <button class="secondary icon-button edit-button" data-action="edit" data-url="${encodeURIComponent(entry.url)}" title="Bearbeiten" aria-label="Bearbeiten">✏</button>
+        <button class="icon-button delete-button" data-action="delete" data-url="${encodeURIComponent(entry.url)}" title="Löschen" aria-label="Löschen">✕</button>
       </td>
       <td>${escapeHtml(entry.description)}</td>
       <td><a href="${escapeHtml(entry.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.url)}</a></td>

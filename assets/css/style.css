@@ -80,21 +80,34 @@ th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left
 }
 
 .admin-actions-cell {
-  min-width: 130px;
+  min-width: 68px;
   white-space: normal;
 }
 
 .admin-actions-cell button {
-  display: block;
-  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
   margin: 0 0 6px 0;
-  padding: 7px 10px;
-  font-size: 0.9rem;
-  line-height: 1.2;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .admin-actions-cell button:last-child {
   margin-bottom: 0;
+}
+
+.admin-actions-cell .delete-button {
+  background: #ffe8ec;
+  border: 1px solid #f3b8c3;
+  color: #c6223c;
+}
+
+.admin-actions-cell .delete-button:hover {
+  background: #ffdbe2;
 }
 @media (max-width: 900px) {
   .toolbar { grid-template-columns: 1fr; }
