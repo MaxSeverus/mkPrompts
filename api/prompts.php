@@ -36,10 +36,9 @@ $params = ['type' => $type];
 
 if ($type === 'exercise') {
     if ($project === '') {
-        jsonResponse(['ok' => true, 'data' => []]);
-    }
-
-    if (isGlobalExerciseProject($project)) {
+        $sql .= ' AND LOWER(TRIM(project)) = :global_project';
+        $params['global_project'] = 'alle';
+    } elseif (isGlobalExerciseProject($project)) {
         $sql .= ' AND LOWER(TRIM(project)) = :project';
         $params['project'] = 'alle';
     } else {
