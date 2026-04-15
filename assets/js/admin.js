@@ -14,6 +14,7 @@ const csvFileInput = document.getElementById('csvFileInput');
 const csvExportButton = document.getElementById('csvExportButton');
 const viewSwitch = document.getElementById('viewSwitch');
 const editorTitle = document.getElementById('editorTitle');
+const nrLabel = document.getElementById('nrLabel');
 const contentLabel = document.getElementById('contentLabel');
 const tableContentHeading = document.getElementById('tableContentHeading');
 const csvTitle = document.getElementById('csvTitle');
@@ -139,6 +140,9 @@ function updateViewTexts() {
   const isLinkView = currentView === 'link';
 
   editorTitle.textContent = `${meta.singular} speichern`;
+  if (nrLabel) {
+    nrLabel.textContent = currentView === 'exercise' ? 'Abteilung' : 'Nr';
+  }
   contentLabel.textContent = isLinkView ? 'Link' : 'Prompt';
   tableContentHeading.textContent = isLinkView ? 'Link' : 'Prompt';
 

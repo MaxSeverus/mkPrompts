@@ -46,7 +46,7 @@
           <input type="hidden" id="promptId">
           <input type="hidden" id="linkOriginalUrl">
 
-          <label data-form-group="text"><span>Nr</span><input type="text" id="nrInput" maxlength="15" placeholder="z. B. 1"></label>
+          <label data-form-group="text"><span id="nrLabel">Nr</span><input type="text" id="nrInput" maxlength="15" placeholder="z. B. 1"></label>
           <label data-form-group="text"><span>Abkürzung</span><input type="text" id="abbrInput" maxlength="50"></label>
           <label data-form-group="text"><span>Projekt</span><input type="text" id="projectInput" maxlength="80" placeholder="z. B. Website-Relaunch"></label>
           <label class="full" data-form-group="text"><span id="contentLabel">Prompt</span><textarea id="promptInput" rows="5"></textarea></label>
