@@ -73,6 +73,26 @@ button.secondary { background: #edf1ff; color: var(--text); border: 1px solid va
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
 .overflow-x { overflow-x: auto; }
+
+#promptTable,
+#linkTable {
+  min-width: 980px;
+}
+
+.admin-actions-cell {
+  min-width: 190px;
+  white-space: nowrap;
+}
+
+.admin-actions-cell button {
+  display: inline-block;
+  margin-right: 8px;
+  margin-bottom: 6px;
+}
+
+.admin-actions-cell button:last-child {
+  margin-right: 0;
+}
 @media (max-width: 900px) {
   .toolbar { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }

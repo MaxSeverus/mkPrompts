@@ -346,7 +346,7 @@ function renderTable(entries) {
       <td>${escapeHtml(entry.action_count ?? 0)}</td>
       <td>${formatDateTime(entry.created_at)}</td>
       <td>${formatDateTime(entry.updated_at)}</td>
-      <td>
+      <td class="admin-actions-cell">
         <button class="secondary" data-action="edit" data-id="${entry.id}">Bearbeiten</button>
         <button data-action="delete" data-id="${entry.id}">Löschen</button>
       </td>
@@ -368,7 +368,7 @@ function renderLinkTable(entries) {
       <td>${escapeHtml(entry.action_count ?? 0)}</td>
       <td>${formatDateTime(entry.created_at)}</td>
       <td>${formatDateTime(entry.updated_at)}</td>
-      <td>
+      <td class="admin-actions-cell">
         <button class="secondary" data-action="edit" data-url="${encodeURIComponent(entry.url)}">Bearbeiten</button>
         <button data-action="delete" data-url="${encodeURIComponent(entry.url)}">Löschen</button>
       </td>
