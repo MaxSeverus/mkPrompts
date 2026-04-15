@@ -145,6 +145,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="assertive"></div>
-  <script src="../assets/js/admin.js?v=20260415-1"></script>
+  <script src="../assets/js/admin.js?v=20260415-2"></script>
 </body>
 </html>
