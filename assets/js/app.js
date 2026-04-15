@@ -222,9 +222,11 @@ function getPublicSortOptions() {
     ];
   }
 
+  const promptLabel = currentView === 'exercise' ? 'Übung' : 'Prompt';
   return [
     { value: 'nr', label: 'Nr' },
     { value: 'abbreviation', label: 'Abkürzung' },
+    { value: 'prompt', label: promptLabel },
     { value: 'action_count', label: 'Nutzungen' },
     { value: 'created_at', label: 'Erstellt am' },
     { value: 'updated_at', label: 'Geändert am' },

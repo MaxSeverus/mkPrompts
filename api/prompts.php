@@ -25,6 +25,7 @@ $project = trim((string) ($_GET['project'] ?? ''));
 $sortMap = [
     'nr' => 'nr',
     'abbreviation' => 'abbreviation',
+    'prompt' => 'prompt',
     'action_count' => 'action_count',
     'created_at' => 'created_at',
     'updated_at' => 'updated_at',
