@@ -142,7 +142,11 @@ function updateViewTexts() {
 
   editorTitle.textContent = `${meta.singular} speichern`;
   if (nrLabel) {
-    nrLabel.textContent = currentView === 'exercise' ? 'Abteilung' : 'Nr';
+    nrLabel.textContent = currentView === 'exercise'
+      ? 'Abteilung'
+      : currentView === 'prompt'
+        ? 'Kategorie'
+        : 'Nr';
   }
   contentLabel.textContent = isLinkView ? 'Link' : 'Prompt';
   tableContentHeading.textContent = isLinkView ? 'Link' : 'Prompt';
