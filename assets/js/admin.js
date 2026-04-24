@@ -912,5 +912,8 @@ if (moduleTableBody) {
   });
 }
 
-await loadModules();
+(async () => {
+  await loadModules();
+})();
+
 checkSession();
