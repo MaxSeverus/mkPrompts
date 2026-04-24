@@ -66,6 +66,7 @@ class Router {
   init() {
     const params = this.parseQueryParams();
     this.state = { ...this.state, ...params };
+    this.emit('state-change', this.state);
     window.addEventListener('popstate', () => {
       const params = this.parseQueryParams();
       this.state = { ...this.state, ...params };
