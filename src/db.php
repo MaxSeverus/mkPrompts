@@ -94,6 +94,7 @@ function initializeDatabase(PDO $pdo, string $driver): void
     ensurePageVisitorsTable($pdo, $driver);
     ensureModuleIdColumn($pdo, $driver);
     ensureModulesTable($pdo, $driver);
+    migratePromptsToModules($pdo);
     backfillLegacyEntryTimestamps($pdo);
     initializePageViewCounter($pdo);
 
@@ -463,6 +464,34 @@ function ensureModulesTable(PDO $pdo, string $driver): void
     $stmt = $pdo->prepare('INSERT INTO modules (name, slug, sort_order, created_at, updated_at) VALUES (:name, :slug, :sort_order, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
     foreach ($modules as $module) {
         $stmt->execute($module);
+    }
+}
+
+function migratePromptsToModules(PDO $pdo): void
+{
+    $migrationKey = 'prompts_migrated_to_modules_2026_04_24';
+    $stmt = $pdo->prepare('SELECT meta_value FROM app_meta WHERE meta_key = :key');
+    $stmt->execute(['key' => $migrationKey]);
+    if ($stmt->fetchColumn() !== false) {
+        return;
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        $pdo->exec('UPDATE prompts SET module_id = 1 WHERE module_id IS NULL');
+
+        $pdo->prepare('INSERT INTO app_meta (meta_key, meta_value) VALUES (:key, :value)')->execute([
+            'key' => $migrationKey,
+            'value' => 'done',
+        ]);
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
     }
 }
 
