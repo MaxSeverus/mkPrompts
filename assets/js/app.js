@@ -1,4 +1,4 @@
-const API_BASE = '';
+const API_BASE = '/mkprompts';
 
 class App {
   constructor() {
