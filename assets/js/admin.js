@@ -230,8 +230,7 @@ function getAdminActionIcon(action) {
   if (action === 'edit') {
     return `
       <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
       </svg>
     `;
   }
@@ -362,7 +361,7 @@ function renderTable(entries) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="admin-actions-cell">
-        <button class="secondary icon-button edit-button" data-action="edit" data-id="${entry.id}" title="Bearbeiten" aria-label="Bearbeiten">${getAdminActionIcon('edit')}</button>
+        <button class="icon-button edit-button" data-action="edit" data-id="${entry.id}" title="Bearbeiten" aria-label="Bearbeiten">${getAdminActionIcon('edit')}</button>
         <button class="icon-button delete-button" data-action="delete" data-id="${entry.id}" title="Löschen" aria-label="Löschen">${getAdminActionIcon('delete')}</button>
       </td>
       <td>${escapeHtml(entry.nr)}</td>
@@ -385,7 +384,7 @@ function renderLinkTable(entries) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="admin-actions-cell">
-        <button class="secondary icon-button edit-button" data-action="edit" data-url="${encodeURIComponent(entry.url)}" title="Bearbeiten" aria-label="Bearbeiten">${getAdminActionIcon('edit')}</button>
+        <button class="icon-button edit-button" data-action="edit" data-url="${encodeURIComponent(entry.url)}" title="Bearbeiten" aria-label="Bearbeiten">${getAdminActionIcon('edit')}</button>
         <button class="icon-button delete-button" data-action="delete" data-url="${encodeURIComponent(entry.url)}" title="Löschen" aria-label="Löschen">${getAdminActionIcon('delete')}</button>
       </td>
       <td>${escapeHtml(entry.description)}</td>
