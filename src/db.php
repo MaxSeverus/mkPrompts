@@ -77,12 +77,23 @@ function initializeDatabase(PDO $pdo, string $driver): void
         PRIMARY KEY (visitor_hash, visit_date)
     )");
 
+    $pdo->exec("CREATE TABLE IF NOT EXISTS modules (
+        id {$idColumn},
+        name VARCHAR(80) NOT NULL,
+        slug VARCHAR(50) NOT NULL UNIQUE,
+        sort_order INT NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+
     ensureContentTypeColumn($pdo, $driver);
     ensureProjectColumn($pdo, $driver);
     ensureNrColumnSupportsText($pdo, $driver);
     ensurePromptTimestampColumns($pdo, $driver);
     ensureLinksTableColumns($pdo, $driver);
     ensurePageVisitorsTable($pdo, $driver);
+    ensureModuleIdColumn($pdo, $driver);
+    ensureModulesTable($pdo, $driver);
     backfillLegacyEntryTimestamps($pdo);
     initializePageViewCounter($pdo);
 
@@ -405,6 +416,53 @@ function ensureProjectColumn(PDO $pdo, string $driver): void
             }
         }
         $pdo->exec("ALTER TABLE prompts ADD COLUMN project VARCHAR(80) NOT NULL DEFAULT ''");
+    }
+}
+
+function ensureModuleIdColumn(PDO $pdo, string $driver): void
+{
+    if (in_array($driver, ['mysql', 'mariadb'], true)) {
+        $column = $pdo->query("SHOW COLUMNS FROM prompts LIKE 'module_id'")->fetch();
+        if (!$column) {
+            $pdo->exec("ALTER TABLE prompts ADD COLUMN module_id INT DEFAULT NULL");
+        }
+        return;
+    }
+
+    if ($driver === 'sqlite') {
+        $columns = $pdo->query('PRAGMA table_info(prompts)')->fetchAll();
+        foreach ($columns as $column) {
+            if (($column['name'] ?? '') === 'module_id') {
+                return;
+            }
+        }
+        $pdo->exec("ALTER TABLE prompts ADD COLUMN module_id INT DEFAULT NULL");
+    }
+}
+
+function ensureModulesTable(PDO $pdo, string $driver): void
+{
+    if (in_array($driver, ['mysql', 'mariadb'], true)) {
+        $result = $pdo->query("SELECT COUNT(*) FROM modules")->fetchColumn();
+        if ((int) $result > 0) {
+            return;
+        }
+    } else {
+        $result = $pdo->query("SELECT COUNT(*) FROM modules")->fetchColumn();
+        if ((int) $result > 0) {
+            return;
+        }
+    }
+
+    $modules = [
+        ['name' => 'Anfänger', 'slug' => 'anfaenger', 'sort_order' => 1],
+        ['name' => 'Fortgeschrittene', 'slug' => 'fortgeschrittene', 'sort_order' => 2],
+        ['name' => 'Spezial', 'slug' => 'spezial', 'sort_order' => 3],
+    ];
+
+    $stmt = $pdo->prepare('INSERT INTO modules (name, slug, sort_order, created_at, updated_at) VALUES (:name, :slug, :sort_order, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
+    foreach ($modules as $module) {
+        $stmt->execute($module);
     }
 }
 

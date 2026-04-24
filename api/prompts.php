@@ -21,6 +21,7 @@ $sort = (string)($_GET['sort'] ?? 'nr');
 $dir = strtolower((string)($_GET['dir'] ?? 'asc')) === 'desc' ? 'DESC' : 'ASC';
 $type = resolveContentType((string) ($_GET['type'] ?? 'prompt'));
 $project = trim((string) ($_GET['project'] ?? ''));
+$module = trim((string) ($_GET['module'] ?? ''));
 
 $sortMap = [
     'nr' => 'nr',
@@ -34,6 +35,16 @@ $orderBy = $sortMap[$sort] ?? 'nr';
 
 $sql = 'SELECT id, nr, abbreviation, prompt, project, action_count, created_at, updated_at FROM prompts WHERE content_type = :type';
 $params = ['type' => $type];
+
+if ($module !== '') {
+    $moduleStmt = $pdo->prepare('SELECT id FROM modules WHERE slug = :slug LIMIT 1');
+    $moduleStmt->execute(['slug' => $module]);
+    $moduleId = $moduleStmt->fetchColumn();
+    if ($moduleId !== false) {
+        $sql .= ' AND module_id = :module_id';
+        $params['module_id'] = (int) $moduleId;
+    }
+}
 
 if ($type === 'exercise') {
     if ($project === '') {

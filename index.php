@@ -3,76 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prompt-Bibliothek</title>
+  <title>mkprompts – KI-Prompts für schnellen Einsatz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
   <div class="app-shell">
-    <header class="hero">
-      <p class="badge">Prompt-Bibliothek</p>
-      <h1>KI-Prompts für den schnellen Einsatz</h1>
-      <p>Durchsuche Vorlagen, kopiere mit einem Klick und nutze die Prompts direkt weiter.</p>
-      <div class="switch-link-row">
-        <a class="button-link" href="admin/">Zum Admin-Bereich</a>
-        <a class="button-link" href="https://ki-stammtisch.at/ki-stammtisch/">Zurück zum KI-Stammtisch</a>
-        <a id="backLink" class="button-link hidden" href="https://ki-stammtisch.at/ki-stammtisch/">Zurück</a>
-      </div>
+    <!-- Sticky Header -->
+    <header class="sticky-header">
+      <div class="logo">mkprompts</div>
+      <nav id="headerNav">
+        <a href="https://ki-stammtisch.at/" target="_blank" rel="noopener">KI-Stammtisch</a>
+        <a href="admin/" target="_blank" rel="noopener">Admin</a>
+      </nav>
+      <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
     </header>
 
-    <section class="notice-card">
-      <div class="row between align-center wrap gap-12">
-        <div>
-          <h2>Geschützte Inhalte – nur für Teilnehmer:innen</h2>
-          <p>Diese Sammlung ist für den internen Einsatz bestimmt. Bitte verantwortungsvoll nutzen und nicht extern teilen.</p>
-        </div>
-      </div>
+    <!-- Hero/Intro -->
+    <section class="hero">
+      <p class="badge">Prompt-Sammlung</p>
+      <h1>mkprompts</h1>
+      <p>Durchsuche Vorlagen nach Modul und Projekt. Kopiere mit einem Klick und nutze direkt weiter.</p>
     </section>
 
+    <!-- Module Tabs -->
+    <div class="modules-container" id="modulesNav" role="tablist" aria-label="Module">
+      <!-- Wird von JavaScript gefüllt -->
+    </div>
+
+    <!-- Toolbar -->
     <section class="toolbar">
-      <label class="field full">
+      <label class="field">
         <span>Bereich</span>
-        <div class="view-switch" id="viewSwitch" role="tablist" aria-label="Inhalte auswählen">
+        <div class="view-switch" id="viewSwitch" role="tablist" aria-label="Inhalte">
           <button type="button" class="secondary is-active" data-view="prompt" role="tab" aria-selected="true">Prompts</button>
           <button type="button" class="secondary" data-view="exercise" role="tab" aria-selected="false">Übungen</button>
           <button type="button" class="secondary" data-view="link" role="tab" aria-selected="false">Links</button>
         </div>
       </label>
       <label class="field">
+        <span>Projekt</span>
+        <select id="projectFilter">
+          <option value="">Alle</option>
+        </select>
+      </label>
+      <label class="field">
         <span>Suche</span>
-        <input id="searchInput" type="search" placeholder="Nr, Abkürzung oder Inhalt durchsuchen">
+        <input id="searchInput" type="search" placeholder="Nr, Abkürzung oder Inhalt…">
       </label>
       <label class="field">
         <span>Sortieren nach</span>
-        <select id="sortSelect"></select>
+        <select id="sortSelect">
+          <option value="nr">Nr</option>
+          <option value="abbreviation">Abkürzung</option>
+          <option value="created_at">Datum</option>
+          <option value="action_count">Beliebtheit</option>
+        </select>
       </label>
-      <button id="dirButton" class="secondary">Aufsteigend</button>
+      <label class="field">
+        <button id="dirButton" class="secondary" type="button">Aufsteigend</button>
+      </label>
     </section>
 
-    <section id="nrFilterSection" class="card hidden">
-      <div class="row gap-12 align-center wrap">
-        <strong>Datenschnitt Nr:</strong>
-        <div id="nrFilterButtons" class="slicer-buttons"></div>
+    <!-- Content Area -->
+    <section class="content">
+      <div id="promptList" class="prompt-grid" aria-live="polite" aria-label="Inhalte">
+        <!-- Wird von JavaScript gefüllt -->
       </div>
     </section>
 
-    <section id="projectFilterSection" class="card hidden">
-      <div class="row gap-12 align-center wrap">
-        <strong>Projekt:</strong>
-        <div id="projectFilterButtons" class="slicer-buttons"></div>
-      </div>
-    </section>
-
-    <section id="categoryFilterSection" class="card hidden">
-      <div class="row gap-12 align-center wrap">
-        <strong>Kategorie:</strong>
-        <div id="categoryFilterButtons" class="slicer-buttons"></div>
-      </div>
-    </section>
-
-    <section>
-      <div id="promptList" class="prompt-grid" aria-live="polite"></div>
-    </section>
-
+    <!-- Stats Footer -->
     <section class="page-stats-footer" aria-label="Seitenstatistik">
       <div class="counter-badge counter-badge-subtle">
         <span>Seitenaufrufe</span>
@@ -82,7 +84,10 @@
     </section>
   </div>
 
+  <!-- Toast Notifications -->
   <div id="toast" class="toast" role="status" aria-live="assertive"></div>
+
+  <script src="assets/js/router.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
 </html>
