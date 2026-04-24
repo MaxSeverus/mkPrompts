@@ -109,9 +109,10 @@ function getSortOptions() {
   }
 
   return [
+    { value: 'nr', label: 'Kategorie' },
+    { value: 'abbreviation', label: 'Bezeichnung' },
+    { value: 'prompt', label: 'Inhalt' },
     { value: 'project', label: 'Projekt' },
-    { value: 'nr', label: 'Nr' },
-    { value: 'abbreviation', label: 'Abkürzung' },
     { value: 'action_count', label: 'Nutzungen' },
     { value: 'created_at', label: 'Erstellt am' },
     { value: 'updated_at', label: 'Geändert am' },
@@ -142,14 +143,10 @@ function updateViewTexts() {
 
   editorTitle.textContent = `${meta.singular} speichern`;
   if (nrLabel) {
-    nrLabel.textContent = currentView === 'exercise'
-      ? 'Abteilung'
-      : currentView === 'prompt'
-        ? 'Kategorie'
-        : 'Nr';
+    nrLabel.textContent = 'Kategorie';
   }
-  contentLabel.textContent = isLinkView ? 'Link' : 'Prompt';
-  tableContentHeading.textContent = isLinkView ? 'Link' : 'Prompt';
+  contentLabel.textContent = isLinkView ? 'Link' : 'Inhalt';
+  tableContentHeading.textContent = isLinkView ? 'Link' : 'Inhalt';
 
   if (formattingHint) {
     formattingHint.textContent = isLinkView
@@ -232,7 +229,7 @@ function escapeCsvValue(value) {
 function getAdminActionIcon(action) {
   if (action === 'edit') {
     return `
-      <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
         <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0 0-3L17.5 5a2.1 2.1 0 0 0-3 0L4 15.5V20z"></path>
         <path d="M13.5 6.5l4 4"></path>
       </svg>
@@ -240,7 +237,7 @@ function getAdminActionIcon(action) {
   }
 
   return `
-    <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
       <path d="M4 7h16"></path>
       <path d="M9 7V5h6v2"></path>
       <path d="M7 7l1 12h8l1-12"></path>

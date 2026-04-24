@@ -140,7 +140,7 @@
 
       <div id="adminNrFilterSection" class="card hidden">
         <div class="row gap-12 align-center wrap">
-          <strong>Datenschnitt Nr:</strong>
+          <strong>Kategorie-Filter:</strong>
           <div id="adminNrFilterButtons" class="slicer-buttons"></div>
         </div>
       </div>
@@ -165,7 +165,7 @@
       <div class="card overflow-x">
         <table id="promptTable">
           <thead>
-            <tr><th>Aktionen</th><th>Nr</th><th>Abkürzung</th><th>Projekt</th><th id="tableContentHeading">Prompt</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th></tr>
+            <tr><th>Aktionen</th><th>Kategorie</th><th>Bezeichnung</th><th>Projekt</th><th id="tableContentHeading">Prompt</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th></tr>
           </thead>
           <tbody id="adminTableBody"></tbody>
         </table>

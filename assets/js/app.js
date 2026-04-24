@@ -32,11 +32,6 @@ class App {
       });
     });
 
-    // Project Filter
-    document.getElementById('projectFilter')?.addEventListener('change', (e) => {
-      router.pushState({ project: e.target.value });
-    });
-
     // Search
     document.getElementById('searchInput')?.addEventListener('input', (e) => {
       router.pushState({ search: e.target.value });
@@ -77,10 +72,6 @@ class App {
         dir: state.direction,
       });
 
-      if (state.project && view === 'exercise') {
-        params.set('project', state.project);
-      }
-
       const response = await fetch(`${API_BASE}/api/prompts.php?${params}`);
       const data = await response.json();
 
@@ -90,7 +81,6 @@ class App {
           this.renderLinks();
         } else {
           this.prompts = data.data || [];
-          this.updateProjectFilter();
           this.renderPrompts();
         }
       }
@@ -306,28 +296,6 @@ class App {
     }
 
     return filtered;
-  }
-
-  updateProjectFilter() {
-    const select = document.getElementById('projectFilter');
-    if (!select) return;
-
-    const projects = new Set();
-    this.prompts.forEach(p => {
-      if (p.project && p.project.toLowerCase() !== 'alle') {
-        projects.add(p.project);
-      }
-    });
-
-    const currentValue = select.value;
-    select.innerHTML = '<option value="">Alle</option>';
-    Array.from(projects).sort().forEach(proj => {
-      const option = document.createElement('option');
-      option.value = proj;
-      option.textContent = proj;
-      select.appendChild(option);
-    });
-    select.value = currentValue;
   }
 
   updateDirButton() {

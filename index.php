@@ -25,39 +25,33 @@
     <section class="hero">
       <p class="badge">Prompt-Sammlung</p>
       <h1>mkprompts</h1>
-      <p>Durchsuche Vorlagen nach Modul und Projekt. Kopiere mit einem Klick und nutze direkt weiter.</p>
+      <p>Durchsuche Prompts, Übungen und Links. Kopiere mit einem Klick und nutze direkt weiter.</p>
     </section>
-
 
     <!-- Toolbar -->
     <section class="toolbar">
       <label class="field">
-        <span>Bereich</span>
-        <div class="view-switch" id="viewSwitch" role="tablist" aria-label="Inhalte">
+        <span>Inhaltstyp</span>
+        <div class="view-switch" id="viewSwitch" role="tablist" aria-label="Inhaltstyp">
           <button type="button" class="secondary is-active" data-view="prompt" role="tab" aria-selected="true">Prompts</button>
           <button type="button" class="secondary" data-view="exercise" role="tab" aria-selected="false">Übungen</button>
           <button type="button" class="secondary" data-view="link" role="tab" aria-selected="false">Links</button>
         </div>
       </label>
       <label class="field">
-        <span>Datenschnitt Nr</span>
-        <div class="slicer-buttons" id="nrFilterButtons" role="group" aria-label="Datenschnitt"></div>
-      </label>
-      <label class="field">
-        <span>Projekt</span>
-        <select id="projectFilter">
-          <option value="">Alle</option>
-        </select>
+        <span>Kategorie</span>
+        <div class="slicer-buttons" id="nrFilterButtons" role="group" aria-label="Kategorie-Filter"></div>
       </label>
       <label class="field">
         <span>Suche</span>
-        <input id="searchInput" type="search" placeholder="Nr, Abkürzung oder Inhalt…">
+        <input id="searchInput" type="search" placeholder="Kategorie, Bezeichnung oder Inhalt…">
       </label>
       <label class="field">
-        <span>Sortieren nach</span>
+        <span>Sortierung</span>
         <select id="sortSelect">
-          <option value="nr">Nr</option>
-          <option value="abbreviation">Abkürzung</option>
+          <option value="nr">Kategorie</option>
+          <option value="abbreviation">Bezeichnung</option>
+          <option value="prompt">Inhalt</option>
           <option value="created_at">Datum</option>
           <option value="action_count">Beliebtheit</option>
         </select>
