@@ -2,7 +2,6 @@ const API_BASE = '/mkprompts';
 
 class App {
   constructor() {
-    this.modules = [];
     this.prompts = [];
     this.links = [];
     this.projects = new Set();
@@ -14,16 +13,14 @@ class App {
     router.init();
     this.setupEventListeners();
     this.loadTheme();
-    await this.loadModules();
     await this.loadData();
     this.recordPageView();
   }
 
   setupEventListeners() {
-    // Modules
+    // View change
     router.on('state-change', (state) => {
       this.currentView = state.view;
-      this.renderModules();
       this.updateViewSwitch();
       this.loadData();
     });
@@ -63,18 +60,6 @@ class App {
     });
   }
 
-  async loadModules() {
-    try {
-      const response = await fetch(`${API_BASE}/api/modules.php`);
-      const data = await response.json();
-      if (data.ok) {
-        this.modules = data.data || [];
-        this.renderModules();
-      }
-    } catch (err) {
-      console.error('Fehler beim Laden der Module:', err);
-    }
-  }
 
   async loadData() {
     const state = router.state;
@@ -87,7 +72,6 @@ class App {
     try {
       const params = new URLSearchParams({
         type: view,
-        module: state.module,
         q: state.search,
         sort: state.sort,
         dir: state.direction,
@@ -130,26 +114,6 @@ class App {
     this.loadingState = false;
   }
 
-  renderModules() {
-    const container = document.getElementById('modulesNav');
-    if (!container) return;
-
-    const currentModule = router.state.module;
-    container.textContent = '';
-
-    this.modules.forEach(mod => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'secondary ' + (mod.slug === currentModule ? 'active' : '');
-      btn.dataset.module = mod.slug;
-      btn.setAttribute('aria-pressed', mod.slug === currentModule);
-      btn.textContent = mod.name;
-      btn.addEventListener('click', () => {
-        router.pushState({ module: btn.dataset.module });
-      });
-      container.appendChild(btn);
-    });
-  }
 
   renderPrompts() {
     const container = document.getElementById('promptList');

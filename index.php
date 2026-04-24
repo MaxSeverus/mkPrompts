@@ -28,10 +28,6 @@
       <p>Durchsuche Vorlagen nach Modul und Projekt. Kopiere mit einem Klick und nutze direkt weiter.</p>
     </section>
 
-    <!-- Module Tabs -->
-    <div class="modules-container" id="modulesNav" role="tablist" aria-label="Module">
-      <!-- Wird von JavaScript gefüllt -->
-    </div>
 
     <!-- Toolbar -->
     <section class="toolbar">

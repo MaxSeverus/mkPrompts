@@ -1,7 +1,6 @@
 class Router {
   constructor() {
     this.state = {
-      module: 'anfaenger',
       project: '',
       view: 'prompt',
       search: '',
