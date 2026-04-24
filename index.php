@@ -44,6 +44,10 @@
         </div>
       </label>
       <label class="field">
+        <span>Datenschnitt Nr</span>
+        <div class="slicer-buttons" id="nrFilterButtons" role="group" aria-label="Datenschnitt"></div>
+      </label>
+      <label class="field">
         <span>Projekt</span>
         <select id="projectFilter">
           <option value="">Alle</option>

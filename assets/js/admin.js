@@ -553,6 +553,7 @@ adminEntryForm.addEventListener('submit', async (event) => {
     abbreviation: formFields.abbreviation.value.trim(),
     prompt: formFields.prompt.value.trim(),
     project: formFields.project.value.trim().slice(0, 80),
+    module_id: parseInt(moduleSelectInput?.value) || null,
     type: currentView,
   };
 
@@ -586,6 +587,9 @@ adminTableBody.addEventListener('click', async (event) => {
     formFields.abbreviation.value = entry.abbreviation;
     formFields.project.value = entry.project ?? '';
     formFields.prompt.value = entry.prompt;
+    if (moduleSelectInput) {
+      moduleSelectInput.value = entry.module_id || '';
+    }
     return;
   }
 
@@ -658,9 +662,31 @@ viewSwitch?.addEventListener('click', async (event) => {
   currentView = button.dataset.view;
   selectedNr = '';
   selectedCategory = '';
-  updateViewTexts();
-  resetAllForms();
-  await loadEntries();
+
+  const moduleSection = document.getElementById('moduleSection');
+  const csvCard = document.getElementById('csvCard');
+  const adminNrFilterSection = document.getElementById('adminNrFilterSection');
+  const adminCategoryFilterSection = document.getElementById('adminCategoryFilterSection');
+  const adminTableControls = document.querySelector('.card:has(#adminSortSelect)');
+  const adminTablesCard = document.querySelector('.card:has(#promptTable)');
+  const adminEntryCard = adminEntryForm?.closest('.card');
+
+  const isModuleView = currentView === 'module';
+  if (moduleSection) moduleSection.classList.toggle('hidden', !isModuleView);
+  if (adminEntryCard) adminEntryCard.classList.toggle('hidden', isModuleView);
+  if (csvCard) csvCard.classList.toggle('hidden', isModuleView);
+  if (adminTableControls) adminTableControls.classList.toggle('hidden', isModuleView);
+  if (adminTablesCard) adminTablesCard.classList.toggle('hidden', isModuleView);
+  if (adminNrFilterSection) adminNrFilterSection.classList.toggle('hidden', isModuleView || currentView === 'link');
+  if (adminCategoryFilterSection) adminCategoryFilterSection.classList.toggle('hidden', isModuleView || currentView !== 'link');
+
+  if (isModuleView) {
+    renderModuleTable();
+  } else {
+    updateViewTexts();
+    resetAllForms();
+    await loadEntries();
+  }
 });
 
 resetButton.addEventListener('click', resetActiveForm);
@@ -725,4 +751,166 @@ if (csvExportButton) {
   });
 }
 
+// Modul Management
+const moduleForm = document.getElementById('moduleForm');
+const moduleName = document.getElementById('moduleName');
+const moduleSlug = document.getElementById('moduleSlug');
+const moduleOrder = document.getElementById('moduleOrder');
+const moduleTableBody = document.getElementById('moduleTableBody');
+const moduleSelectInput = document.getElementById('moduleSelectInput');
+let allModules = [];
+
+async function loadModules() {
+  try {
+    const res = await fetch('../api/modules.php');
+    const payload = await res.json();
+    if (payload.ok) {
+      allModules = Array.isArray(payload.data) ? payload.data : [];
+      updateModuleSelectDropdown();
+      if (currentView === 'module') {
+        renderModuleTable();
+      }
+    }
+  } catch (err) {
+    console.error('Fehler beim Laden der Module:', err);
+  }
+}
+
+function updateModuleSelectDropdown() {
+  const currentValue = moduleSelectInput?.value || '';
+  if (!moduleSelectInput) return;
+
+  moduleSelectInput.innerHTML = '<option value="">-- Wählen --</option>';
+  allModules.forEach(mod => {
+    const option = document.createElement('option');
+    option.value = mod.id;
+    option.textContent = mod.name;
+    moduleSelectInput.appendChild(option);
+  });
+  moduleSelectInput.value = currentValue;
+}
+
+function renderModuleTable() {
+  if (!moduleTableBody) return;
+
+  moduleTableBody.innerHTML = '';
+  if (allModules.length === 0) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 5;
+    td.textContent = 'Keine Module vorhanden.';
+    tr.appendChild(td);
+    moduleTableBody.appendChild(tr);
+    return;
+  }
+
+  allModules.forEach(mod => {
+    const tr = document.createElement('tr');
+    tr.dataset.entry = JSON.stringify(mod);
+    const promptCount = mod.prompt_count || 0;
+
+    const cells = [
+      escapeHtml(mod.name),
+      escapeHtml(mod.slug),
+      mod.sort_order || '-',
+      promptCount,
+    ];
+
+    cells.forEach(content => {
+      const td = document.createElement('td');
+      if (content === escapeHtml(mod.slug)) {
+        const code = document.createElement('code');
+        code.textContent = content;
+        td.appendChild(code);
+      } else {
+        td.textContent = content;
+      }
+      tr.appendChild(td);
+    });
+
+    const actionsTd = document.createElement('td');
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.dataset.action = 'edit-module';
+    editBtn.dataset.id = mod.id;
+    editBtn.textContent = 'Bearbeiten';
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.dataset.action = 'delete-module';
+    deleteBtn.dataset.id = mod.id;
+    deleteBtn.textContent = 'Löschen';
+    deleteBtn.style.color = 'var(--primary)';
+    actionsTd.appendChild(editBtn);
+    actionsTd.appendChild(deleteBtn);
+    tr.appendChild(actionsTd);
+
+    moduleTableBody.appendChild(tr);
+  });
+}
+
+if (moduleForm) {
+  moduleForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const payload = {
+      name: moduleName.value.trim(),
+      slug: moduleSlug.value.trim(),
+      sort_order: parseInt(moduleOrder.value) || 1,
+    };
+
+    const res = await fetch('../api/admin_modules.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      showToast('Modul konnte nicht erstellt werden.');
+      return;
+    }
+
+    showToast('Modul erstellt.');
+    moduleForm.reset();
+    moduleOrder.value = (allModules.length + 1).toString();
+    await loadModules();
+  });
+}
+
+if (moduleTableBody) {
+  moduleTableBody.addEventListener('click', async (event) => {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+
+    const moduleId = button.dataset.id;
+    const action = button.dataset.action;
+
+    if (action === 'edit-module') {
+      const mod = allModules.find(m => m.id == moduleId);
+      if (mod) {
+        moduleName.value = mod.name;
+        moduleSlug.value = mod.slug;
+        moduleOrder.value = mod.sort_order || 1;
+        moduleForm.scrollIntoView({ behavior: 'smooth' });
+      }
+      return;
+    }
+
+    if (action === 'delete-module') {
+      if (!confirm('Modul wirklich löschen?')) return;
+
+      const res = await fetch('../api/admin_modules.php', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: moduleId }),
+      });
+
+      if (res.ok) {
+        showToast('Modul gelöscht.');
+        await loadModules();
+      }
+    }
+  });
+}
+
+await loadModules();
 checkSession();

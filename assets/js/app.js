@@ -155,7 +155,11 @@ class App {
     const container = document.getElementById('promptList');
     if (!container) return;
 
-    if (this.prompts.length === 0) {
+    this.updateNrFilter();
+
+    const filtered = this.filterPrompts();
+
+    if (filtered.length === 0) {
       container.textContent = '';
       const emptyDiv = document.createElement('div');
       emptyDiv.className = 'empty-state';
@@ -170,7 +174,7 @@ class App {
     }
 
     container.textContent = '';
-    this.prompts.forEach(prompt => {
+    filtered.forEach(prompt => {
       const card = this.createPromptCard(prompt);
       container.appendChild(card);
     });
@@ -249,24 +253,20 @@ class App {
     const h4 = document.createElement('h4');
     h4.textContent = nr + ' – ' + abbrev;
     titleDiv.appendChild(h4);
-    headerDiv.appendChild(titleDiv);
-
-    const textDiv = document.createElement('div');
-    textDiv.className = 'prompt-text';
-    textDiv.innerHTML = this.formatText(text);
-
-    const btnDiv = document.createElement('div');
-    btnDiv.className = 'row gap-8';
     const btn = document.createElement('button');
     btn.className = 'copy-btn';
     btn.type = 'button';
     btn.textContent = '📋 Kopieren';
     btn.dataset.text = text;
-    btnDiv.appendChild(btn);
+    headerDiv.appendChild(titleDiv);
+    headerDiv.appendChild(btn);
+
+    const textDiv = document.createElement('div');
+    textDiv.className = 'prompt-text';
+    textDiv.innerHTML = this.formatText(text);
 
     card.appendChild(headerDiv);
     card.appendChild(textDiv);
-    card.appendChild(btnDiv);
 
     return card;
   }
@@ -285,6 +285,63 @@ class App {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  updateNrFilter() {
+    const container = document.getElementById('nrFilterButtons');
+    if (!container) return;
+
+    const nrs = new Set();
+    this.prompts.forEach(p => {
+      if (p.nr) nrs.add(p.nr);
+    });
+
+    const sortedNrs = Array.from(nrs).sort((a, b) => {
+      const aNum = parseInt(a) || 0;
+      const bNum = parseInt(b) || 0;
+      if (aNum !== bNum) return aNum - bNum;
+      return a.localeCompare(b);
+    });
+
+    container.textContent = '';
+    const allBtn = document.createElement('button');
+    allBtn.textContent = 'Alle';
+    allBtn.className = 'is-active';
+    allBtn.dataset.nr = '';
+    allBtn.addEventListener('click', () => this.setNrFilter(''));
+    container.appendChild(allBtn);
+
+    sortedNrs.forEach(nr => {
+      const btn = document.createElement('button');
+      btn.textContent = nr;
+      btn.dataset.nr = nr;
+      btn.addEventListener('click', () => this.setNrFilter(nr));
+      container.appendChild(btn);
+    });
+
+    this.updateNrFilterButtons();
+  }
+
+  setNrFilter(nr) {
+    router.pushState({ nrFilter: nr });
+  }
+
+  updateNrFilterButtons() {
+    const nrFilter = router.state.nrFilter || '';
+    document.querySelectorAll('#nrFilterButtons button').forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.nr === nrFilter);
+    });
+  }
+
+  filterPrompts() {
+    let filtered = this.prompts;
+    const nrFilter = router.state.nrFilter || '';
+
+    if (nrFilter) {
+      filtered = filtered.filter(p => p.nr === nrFilter);
+    }
+
+    return filtered;
   }
 
   updateProjectFilter() {

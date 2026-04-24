@@ -39,6 +39,7 @@
             <button type="button" class="secondary is-active" data-view="prompt" role="tab" aria-selected="true">Prompts</button>
             <button type="button" class="secondary" data-view="exercise" role="tab" aria-selected="false">Übungen</button>
             <button type="button" class="secondary" data-view="link" role="tab" aria-selected="false">Links</button>
+            <button type="button" class="secondary" data-view="module" role="tab" aria-selected="false">Module</button>
           </div>
         </label>
 
@@ -48,6 +49,7 @@
 
           <label data-form-group="text"><span id="nrLabel">Nr</span><input type="text" id="nrInput" maxlength="15" placeholder="z. B. 1"></label>
           <label data-form-group="text"><span>Abkürzung</span><input type="text" id="abbrInput" maxlength="50"></label>
+          <label data-form-group="text"><span>Modul</span><select id="moduleSelectInput"><option value="">-- Wählen --</option></select></label>
           <label data-form-group="text"><span>Projekt</span><input type="text" id="projectInput" maxlength="80" placeholder="z. B. Website-Relaunch"></label>
           <label class="full" data-form-group="text"><span id="contentLabel">Prompt</span><textarea id="promptInput" rows="5"></textarea></label>
           <small id="formattingHint" class="full field-hint">Formatierung in Prompt und Abkürzung mit [B]...[/B], [I]...[/I] und [U]...[/U] möglich.</small>
@@ -99,6 +101,40 @@
         <div class="row gap-12 align-center">
           <button type="button" id="csvExportButton" class="secondary">CSV exportieren</button>
           <small>Exportiert alle vorhandenen Einträge als CSV-Datei.</small>
+        </div>
+      </div>
+
+      <div id="moduleSection" class="card hidden">
+        <h2>Module verwalten</h2>
+        <p>Module sind Kategorien, unter denen Prompts und Übungen organisiert werden.</p>
+
+        <div style="margin-bottom: 1.5rem;">
+          <h3 style="margin-bottom: 0.5rem;">Neues Modul erstellen</h3>
+          <form id="moduleForm" class="stack gap-12">
+            <label class="field">
+              <span>Name</span>
+              <input type="text" id="moduleName" placeholder="z. B. Anfänger" required>
+            </label>
+            <label class="field">
+              <span>Slug</span>
+              <input type="text" id="moduleSlug" placeholder="z. B. anfaenger" pattern="[a-z0-9\-]+" required>
+            </label>
+            <label class="field">
+              <span>Sortierungsreihenfolge</span>
+              <input type="number" id="moduleOrder" min="1" value="1" required>
+            </label>
+            <button type="submit">Modul erstellen</button>
+          </form>
+        </div>
+
+        <div class="overflow-x">
+          <h3>Vorhandene Module</h3>
+          <table id="moduleTable">
+            <thead>
+              <tr><th>Name</th><th>Slug</th><th>Reihenfolge</th><th>Inhalte</th><th>Aktionen</th></tr>
+            </thead>
+            <tbody id="moduleTableBody"></tbody>
+          </table>
         </div>
       </div>
 

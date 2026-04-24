@@ -40,31 +40,35 @@ if ($method === 'GET') {
     ];
     $orderBy = $sortMap[$sort] ?? 'project';
 
-    $stmt = $pdo->prepare("SELECT id, nr, abbreviation, prompt, project, action_count, created_at, updated_at FROM prompts WHERE content_type = :type ORDER BY {$orderBy} {$dir}, project ASC, nr ASC");
+    $stmt = $pdo->prepare("SELECT id, nr, abbreviation, prompt, project, module_id, action_count, created_at, updated_at FROM prompts WHERE content_type = :type ORDER BY {$orderBy} {$dir}, project ASC, nr ASC");
     $stmt->execute(['type' => $type]);
     jsonResponse(['ok' => true, 'data' => $stmt->fetchAll()]);
 }
 
 if ($method === 'POST') {
-    $stmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, project, content_type, action_count, created_at, updated_at) VALUES (:nr, :abbreviation, :prompt, :project, :type, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
+    $moduleId = isset($data['module_id']) ? ((int)$data['module_id'] ?: null) : null;
+    $stmt = $pdo->prepare('INSERT INTO prompts (nr, abbreviation, prompt, project, module_id, content_type, action_count, created_at, updated_at) VALUES (:nr, :abbreviation, :prompt, :project, :module_id, :type, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
     $stmt->execute([
         'nr' => normalizeNr($data['nr'] ?? ''),
         'abbreviation' => trim((string)($data['abbreviation'] ?? '')),
         'prompt' => trim((string)($data['prompt'] ?? '')),
         'project' => normalizeProject($data['project'] ?? ''),
+        'module_id' => $moduleId,
         'type' => $type,
     ]);
     jsonResponse(['ok' => true]);
 }
 
 if ($method === 'PUT') {
-    $stmt = $pdo->prepare('UPDATE prompts SET nr=:nr, abbreviation=:abbreviation, prompt=:prompt, project=:project, updated_at=CURRENT_TIMESTAMP WHERE id=:id AND content_type=:type');
+    $moduleId = isset($data['module_id']) ? ((int)$data['module_id'] ?: null) : null;
+    $stmt = $pdo->prepare('UPDATE prompts SET nr=:nr, abbreviation=:abbreviation, prompt=:prompt, project=:project, module_id=:module_id, updated_at=CURRENT_TIMESTAMP WHERE id=:id AND content_type=:type');
     $stmt->execute([
         'id' => (int)($data['id'] ?? 0),
         'nr' => normalizeNr($data['nr'] ?? ''),
         'abbreviation' => trim((string)($data['abbreviation'] ?? '')),
         'prompt' => trim((string)($data['prompt'] ?? '')),
         'project' => normalizeProject($data['project'] ?? ''),
+        'module_id' => $moduleId,
         'type' => $type,
     ]);
     jsonResponse(['ok' => true]);
