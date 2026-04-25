@@ -1,4 +1,8 @@
 DirectoryIndex index.php
 
+<FilesMatch "\.php$">
+    Allow from all
+</FilesMatch>
+
 RewriteEngine On
 RewriteRule ^admin$ /admin/ [R=301,L]
