@@ -116,8 +116,28 @@ $promptIndex = resolveHeaderIndex($header, ['prompt', 'inhalt', 'text']);
 $projectIndex = resolveHeaderIndex($header, ['project', 'thema']);
 
 if ($nrIndex === null || $abbrIndex === null || $promptIndex === null) {
+    $foundHeaderText = implode(', ', array_filter($header, static fn($value) => $value !== ''));
+    $missing = [];
+    if ($nrIndex === null) {
+        $missing[] = 'nr';
+    }
+    if ($abbrIndex === null) {
+        $missing[] = 'abbreviation';
+    }
+    if ($promptIndex === null) {
+        $missing[] = 'prompt';
+    }
+
     fclose($handle);
-    jsonResponse(['ok' => false, 'message' => 'CSV benötigt die Spalten nr (Kürzel intern), abbreviation (Titel) und prompt.'], 400);
+    jsonResponse([
+        'ok' => false,
+        'message' => sprintf(
+            'CSV benötigt die Spalten nr (Kürzel intern), abbreviation (Titel) und prompt. Fehlend: %s. Erkannt: %s. Delimiter: %s',
+            implode(', ', $missing),
+            $foundHeaderText !== '' ? $foundHeaderText : 'keine',
+            $delimiter === "\t" ? 'TAB' : $delimiter
+        ),
+    ], 400);
 }
 $pdo = db();
 $inserted = 0;
