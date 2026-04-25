@@ -659,8 +659,8 @@ th { font-weight: 600; font-size: 0.875rem; color: var(--text-light); }
 
 .admin-shell .card,
 .admin-shell section {
-  padding: var(--spacing-12);
-  margin-bottom: var(--spacing-12);
+  padding: var(--spacing-8);
+  margin-bottom: var(--spacing-4);
 }
 
 .admin-shell .field span {
@@ -752,7 +752,33 @@ th { font-weight: 600; font-size: 0.875rem; color: var(--text-light); }
 }
 
 .admin-top-panel {
-  padding-top: var(--spacing-8);
+  padding-top: var(--spacing-4);
+}
+
+.admin-shell #adminPanel {
+  gap: var(--spacing-4);
+}
+
+.admin-shell #adminPanel > .card {
+  margin-bottom: 0;
+}
+
+.admin-shell .row {
+  gap: var(--spacing-8);
+}
+
+.admin-shell .field {
+  gap: 2px;
+}
+
+.admin-shell p,
+.admin-shell h2,
+.admin-shell h3 {
+  margin-bottom: var(--spacing-4);
+}
+
+.admin-shell hr {
+  margin: var(--spacing-4) 0;
 }
 
 .collapsible-panel {

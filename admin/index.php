@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin · Prompt-Bibliothek</title>
-  <link rel="stylesheet" href="../assets/css/style.css?v=20260425-compact-3">
+  <link rel="stylesheet" href="../assets/css/style.css?v=20260425-compact-4">
 </head>
 <body>
   <div class="app-shell admin-shell">
@@ -70,7 +70,7 @@
       </div>
 
       <div class="card">
-        <div class="row between align-center">
+        <div class="row between align-center" id="editorHeaderRow">
           <h2 id="editorTitle">Prompt speichern</h2>
         </div>
 

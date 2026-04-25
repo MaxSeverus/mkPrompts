@@ -835,13 +835,14 @@ viewSwitch?.addEventListener('click', async (event) => {
   const adminThemeFilterSection = document.getElementById('adminThemeFilterSection');
   const adminGoalFilterSection = document.getElementById('adminGoalFilterSection');
   const adminCategoryFilterSection = document.getElementById('adminCategoryFilterSection');
+  const editorHeaderRow = document.getElementById('editorHeaderRow');
   const adminTableControls = document.querySelector('.card:has(#adminSortSelect)');
   const adminTablesCard = document.querySelector('.card:has(#promptTable)');
-  const adminEntryCard = adminEntryForm?.closest('.card');
 
   const isModuleView = currentView === 'module';
   if (moduleSection) moduleSection.classList.toggle('hidden', !isModuleView);
-  if (adminEntryCard) adminEntryCard.classList.toggle('hidden', isModuleView);
+  if (editorHeaderRow) editorHeaderRow.classList.toggle('hidden', isModuleView);
+  if (adminEntryForm) adminEntryForm.classList.toggle('hidden', isModuleView);
   if (csvCard) csvCard.classList.toggle('hidden', isModuleView);
   if (adminTableControls) adminTableControls.classList.toggle('hidden', isModuleView);
   if (adminTablesCard) adminTablesCard.classList.toggle('hidden', isModuleView);
