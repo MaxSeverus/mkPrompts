@@ -31,29 +31,32 @@
     <!-- Toolbar -->
     <section class="toolbar">
       <label class="field">
-        <span>Inhaltstyp</span>
-        <div class="view-switch" id="viewSwitch" role="tablist" aria-label="Inhaltstyp">
-          <button type="button" class="secondary is-active" data-view="prompt" role="tab" aria-selected="true">Prompts</button>
-          <button type="button" class="secondary" data-view="exercise" role="tab" aria-selected="false">Übungen</button>
-          <button type="button" class="secondary" data-view="link" role="tab" aria-selected="false">Links</button>
+        <span>Format</span>
+        <div class="view-switch" id="viewSwitch" role="tablist" aria-label="Format">
+          <button type="button" class="secondary is-active" data-view="prompt" role="tab" aria-selected="true">Prompt</button>
+          <button type="button" class="secondary" data-view="exercise" role="tab" aria-selected="false">Übung</button>
+          <button type="button" class="secondary" data-view="link" role="tab" aria-selected="false">Link</button>
         </div>
       </label>
-      <label class="field">
-        <span>Kategorie</span>
-        <div class="slicer-buttons" id="nrFilterButtons" role="group" aria-label="Kategorie-Filter"></div>
+      <label class="field" id="themeFilterField">
+        <span>Thema</span>
+        <div class="slicer-buttons" id="themeFilterButtons" role="group" aria-label="Thema-Filter"></div>
+      </label>
+      <label class="field" id="goalFilterField">
+        <span>Ziel</span>
+        <div class="slicer-buttons" id="goalFilterButtons" role="group" aria-label="Ziel-Filter"></div>
       </label>
       <label class="field">
         <span>Suche</span>
-        <input id="searchInput" type="search" placeholder="Kategorie, Bezeichnung oder Inhalt…">
+        <input id="searchInput" type="search" placeholder="Titel, Thema oder Inhalt durchsuchen">
       </label>
       <label class="field">
-        <span>Sortierung</span>
+        <span>Sortieren nach</span>
         <select id="sortSelect">
-          <option value="nr">Kategorie</option>
-          <option value="abbreviation">Bezeichnung</option>
-          <option value="prompt">Inhalt</option>
-          <option value="created_at">Datum</option>
-          <option value="action_count">Beliebtheit</option>
+          <option value="newest">Neueste</option>
+          <option value="relevance">Relevanz</option>
+          <option value="title">A-Z</option>
+          <option value="popular">Meistgenutzt</option>
         </select>
       </label>
       <label class="field">

@@ -4,9 +4,27 @@ class App {
   constructor() {
     this.prompts = [];
     this.links = [];
-    this.projects = new Set();
     this.currentView = 'prompt';
     this.loadingState = false;
+    this.goalOrder = [
+      'Erstellen',
+      'Analysieren',
+      'Korrigieren',
+      'Übersetzen',
+      'Prüfen',
+      'Erklären',
+      'Verdichten',
+      'Ohne Zuordnung',
+    ];
+    this.themeOrder = [
+      'Allgemein',
+      'Datenschutz',
+      'Microsoft 365',
+      'Excel',
+      'Kommunikation',
+      'Web',
+    ];
+    this.lastState = null;
   }
 
   async init() {
@@ -14,16 +32,17 @@ class App {
     this.setupEventListeners();
     this.loadTheme();
     await this.loadData();
+    this.updateViewSwitch();
+    this.updateFilterVisibility();
+    this.updateDirButton();
+    this.syncControls();
+    this.lastState = { ...router.state };
     this.recordPageView();
   }
 
   setupEventListeners() {
     // View change
-    router.on('state-change', (state) => {
-      this.currentView = state.view;
-      this.updateViewSwitch();
-      this.loadData();
-    });
+    router.on('state-change', (state) => this.handleStateChange(state));
 
     // View Switch
     document.querySelectorAll('.view-switch button').forEach(btn => {
@@ -65,16 +84,22 @@ class App {
     if (container) container.textContent = 'Lädt…';
 
     try {
-      const endpoint = this.currentView === 'link' 
-        ? `${API_BASE}/api.php`
-        : `${API_BASE}/api.php`;
-
+      const endpoint = `${API_BASE}/api.php`;
       const params = new URLSearchParams({
         type: this.currentView,
-        q: state.search,
-        sort: state.sort,
-        dir: state.direction,
       });
+
+      if (this.currentView === 'link') {
+        params.set('q', state.search || '');
+        params.set('sort', this.mapLinkSortToApi(state.sort));
+        params.set('dir', this.mapDirectionForApi(state.sort, state.direction));
+      } else {
+        // Prompt-Suche und Sortierung erfolgen clientseitig, damit interne Kürzel
+        // niemals als Filter-/Sortierbasis verwendet werden.
+        params.set('q', '');
+        params.set('sort', 'updated_at');
+        params.set('dir', 'desc');
+      }
 
       const response = await fetch(`${endpoint}?${params}`);
       const data = await response.json();
@@ -84,9 +109,10 @@ class App {
           this.links = data.data || [];
           this.renderLinks();
         } else {
-          this.prompts = data.data || [];
+          this.prompts = (data.data || []).map((prompt) => this.normalizePrompt(prompt));
           this.renderPrompts();
         }
+        this.lastState = { ...router.state };
       }
     } catch (err) {
       console.error('Fehler beim Laden der Daten:', err);
@@ -113,7 +139,8 @@ class App {
     const container = document.getElementById('promptList');
     if (!container) return;
 
-    this.updateNrFilter();
+    this.updateThemeFilter();
+    this.updateGoalFilter();
 
     const filtered = this.filterPrompts();
 
@@ -202,15 +229,27 @@ class App {
     card.className = 'prompt-card';
 
     const text = prompt.prompt || '';
-    const abbrev = prompt.abbreviation || '';
-    const nr = prompt.nr || '';
+    const title = prompt.title || 'Ohne Titel';
 
     const headerDiv = document.createElement('div');
     headerDiv.className = 'row between align-center';
     const titleDiv = document.createElement('div');
     const h4 = document.createElement('h4');
-    h4.textContent = nr + ' – ' + abbrev;
+    h4.textContent = title;
     titleDiv.appendChild(h4);
+
+    const metaDiv = document.createElement('div');
+    metaDiv.className = 'prompt-meta';
+    metaDiv.textContent = `${prompt.theme} · ${prompt.goal}`;
+    titleDiv.appendChild(metaDiv);
+
+    if (prompt.internalTag) {
+      const codeBadge = document.createElement('div');
+      codeBadge.className = 'internal-tag';
+      codeBadge.textContent = `Kürzel: ${prompt.internalTag}`;
+      titleDiv.appendChild(codeBadge);
+    }
+
     const btn = document.createElement('button');
     btn.className = 'copy-btn';
     btn.type = 'button';
@@ -245,61 +284,109 @@ class App {
     return div.innerHTML;
   }
 
-  updateNrFilter() {
-    const container = document.getElementById('nrFilterButtons');
+  updateThemeFilter() {
+    const container = document.getElementById('themeFilterButtons');
     if (!container) return;
 
-    const nrs = new Set();
+    const themes = new Set();
     this.prompts.forEach(p => {
-      if (p.nr) nrs.add(p.nr);
+      if (p.theme) themes.add(p.theme);
     });
 
-    const sortedNrs = Array.from(nrs).sort((a, b) => {
-      const aNum = parseInt(a) || 0;
-      const bNum = parseInt(b) || 0;
-      if (aNum !== bNum) return aNum - bNum;
-      return a.localeCompare(b);
-    });
+    const sortedThemes = this.sortByPreferredOrder(Array.from(themes), this.themeOrder);
 
     container.textContent = '';
     const allBtn = document.createElement('button');
     allBtn.textContent = 'Alle';
     allBtn.className = 'is-active';
-    allBtn.dataset.nr = '';
-    allBtn.addEventListener('click', () => this.setNrFilter(''));
+    allBtn.dataset.value = '';
+    allBtn.addEventListener('click', () => this.setThemeFilter(''));
     container.appendChild(allBtn);
 
-    sortedNrs.forEach(nr => {
+    sortedThemes.forEach(theme => {
       const btn = document.createElement('button');
-      btn.textContent = nr;
-      btn.dataset.nr = nr;
-      btn.addEventListener('click', () => this.setNrFilter(nr));
+      btn.textContent = theme;
+      btn.dataset.value = theme;
+      btn.addEventListener('click', () => this.setThemeFilter(theme));
       container.appendChild(btn);
     });
 
-    this.updateNrFilterButtons();
+    this.updateThemeFilterButtons();
   }
 
-  setNrFilter(nr) {
-    router.pushState({ nrFilter: nr });
+  updateGoalFilter() {
+    const container = document.getElementById('goalFilterButtons');
+    if (!container) return;
+
+    const goals = new Set();
+    this.prompts.forEach(p => {
+      if (p.goal) goals.add(p.goal);
+    });
+
+    const sortedGoals = this.sortByPreferredOrder(Array.from(goals), this.goalOrder);
+
+    container.textContent = '';
+    const allBtn = document.createElement('button');
+    allBtn.textContent = 'Alle';
+    allBtn.className = 'is-active';
+    allBtn.dataset.value = '';
+    allBtn.addEventListener('click', () => this.setGoalFilter(''));
+    container.appendChild(allBtn);
+
+    sortedGoals.forEach(goal => {
+      const btn = document.createElement('button');
+      btn.textContent = goal;
+      btn.dataset.value = goal;
+      btn.addEventListener('click', () => this.setGoalFilter(goal));
+      container.appendChild(btn);
+    });
+
+    this.updateGoalFilterButtons();
   }
 
-  updateNrFilterButtons() {
-    const nrFilter = router.state.nrFilter || '';
-    document.querySelectorAll('#nrFilterButtons button').forEach(btn => {
-      btn.classList.toggle('is-active', btn.dataset.nr === nrFilter);
+  setThemeFilter(theme) {
+    router.pushState({ themeFilter: theme });
+  }
+
+  setGoalFilter(goal) {
+    router.pushState({ goalFilter: goal });
+  }
+
+  updateThemeFilterButtons() {
+    const themeFilter = router.state.themeFilter || '';
+    document.querySelectorAll('#themeFilterButtons button').forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.value === themeFilter);
+    });
+  }
+
+  updateGoalFilterButtons() {
+    const goalFilter = router.state.goalFilter || '';
+    document.querySelectorAll('#goalFilterButtons button').forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.value === goalFilter);
     });
   }
 
   filterPrompts() {
-    let filtered = this.prompts;
-    const nrFilter = router.state.nrFilter || '';
+    const search = (router.state.search || '').trim().toLowerCase();
+    const themeFilter = router.state.themeFilter || '';
+    const goalFilter = router.state.goalFilter || '';
 
-    if (nrFilter) {
-      filtered = filtered.filter(p => p.nr === nrFilter);
-    }
+    const filtered = this.prompts.filter((prompt) => {
+      if (themeFilter && prompt.theme !== themeFilter) return false;
+      if (goalFilter && prompt.goal !== goalFilter) return false;
+      if (!search) return true;
 
-    return filtered;
+      const haystack = [
+        prompt.title,
+        prompt.theme,
+        prompt.goal,
+        prompt.prompt,
+      ].join(' ').toLowerCase();
+
+      return haystack.includes(search);
+    });
+
+    return this.sortPrompts(filtered, router.state.sort, router.state.direction);
   }
 
   updateDirButton() {
@@ -316,6 +403,175 @@ class App {
       btn.classList.toggle('is-active', isActive);
       btn.setAttribute('aria-selected', isActive);
     });
+  }
+
+  handleStateChange(state) {
+    this.currentView = state.view;
+    this.updateViewSwitch();
+    this.updateFilterVisibility();
+    this.updateDirButton();
+    this.syncControls();
+
+    const hadPreviousState = this.lastState !== null;
+    const viewChanged = !hadPreviousState || this.lastState.view !== state.view;
+    const linkView = state.view === 'link';
+
+    if (viewChanged) {
+      this.loadData();
+      return;
+    }
+
+    if (linkView) {
+      this.loadData();
+      return;
+    }
+
+    this.renderPrompts();
+    this.lastState = { ...state };
+  }
+
+  syncControls() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput && searchInput.value !== (router.state.search || '')) {
+      searchInput.value = router.state.search || '';
+    }
+
+    const sortSelect = document.getElementById('sortSelect');
+    if (sortSelect && sortSelect.value !== (router.state.sort || 'newest')) {
+      sortSelect.value = router.state.sort || 'newest';
+    }
+  }
+
+  updateFilterVisibility() {
+    const isLinkView = this.currentView === 'link';
+    const themeField = document.getElementById('themeFilterField');
+    const goalField = document.getElementById('goalFilterField');
+    if (themeField) themeField.classList.toggle('hidden', isLinkView);
+    if (goalField) goalField.classList.toggle('hidden', isLinkView);
+  }
+
+  mapDirectionForApi(sort, direction) {
+    if (sort === 'newest' && !direction) return 'desc';
+    return direction === 'asc' ? 'asc' : 'desc';
+  }
+
+  mapLinkSortToApi(sort) {
+    const sortMap = {
+      newest: 'created_at',
+      relevance: 'action_count',
+      title: 'description',
+      popular: 'action_count',
+    };
+    return sortMap[sort] || 'created_at';
+  }
+
+  sortByPreferredOrder(values, preferredOrder) {
+    const orderMap = new Map(preferredOrder.map((value, index) => [value, index]));
+    return values.sort((a, b) => {
+      const aOrder = orderMap.has(a) ? orderMap.get(a) : Number.MAX_SAFE_INTEGER;
+      const bOrder = orderMap.has(b) ? orderMap.get(b) : Number.MAX_SAFE_INTEGER;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return a.localeCompare(b, 'de', { sensitivity: 'base' });
+    });
+  }
+
+  sortPrompts(prompts, sort, direction) {
+    const dirFactor = direction === 'asc' ? 1 : -1;
+    const selectedSort = sort || 'newest';
+
+    const sorted = [...prompts].sort((a, b) => {
+      if (selectedSort === 'title') {
+        return a.title.localeCompare(b.title, 'de', { sensitivity: 'base' }) * dirFactor;
+      }
+
+      if (selectedSort === 'popular' || selectedSort === 'relevance') {
+        const popularityDelta = (a.action_count || 0) - (b.action_count || 0);
+        if (popularityDelta !== 0) return popularityDelta * dirFactor;
+        return a.title.localeCompare(b.title, 'de', { sensitivity: 'base' }) * dirFactor;
+      }
+
+      const aDate = Date.parse(a.created_at || '') || 0;
+      const bDate = Date.parse(b.created_at || '') || 0;
+      if (aDate !== bDate) return (aDate - bDate) * dirFactor;
+      return a.title.localeCompare(b.title, 'de', { sensitivity: 'base' }) * dirFactor;
+    });
+
+    return sorted;
+  }
+
+  looksLikeInternalTag(value) {
+    if (!value) return false;
+    if (value.includes(' ')) return false;
+    return /^[a-z][a-z0-9_-]{1,}$/i.test(value);
+  }
+
+  normalizePrompt(rawPrompt) {
+    const first = (rawPrompt.nr || '').trim();
+    const second = (rawPrompt.abbreviation || '').trim();
+    const firstIsTag = this.looksLikeInternalTag(first);
+    const secondIsTag = this.looksLikeInternalTag(second);
+
+    let internalTag = '';
+    let title = '';
+
+    if (firstIsTag && !secondIsTag) {
+      internalTag = first;
+      title = second;
+    } else if (!firstIsTag && secondIsTag) {
+      internalTag = second;
+      title = first;
+    } else {
+      internalTag = first;
+      title = second || first;
+    }
+
+    const promptText = rawPrompt.prompt || '';
+    const theme = this.detectTheme(rawPrompt.project || '', title, promptText);
+    const goal = this.detectGoal(title, promptText);
+
+    return {
+      ...rawPrompt,
+      internalTag,
+      title: title || 'Ohne Titel',
+      theme,
+      goal,
+    };
+  }
+
+  detectTheme(project, title, promptText) {
+    const cleanProject = (project || '').trim();
+    if (cleanProject && cleanProject.toLowerCase() !== 'alle') {
+      return this.humanizeLabel(cleanProject);
+    }
+
+    const text = `${title} ${promptText}`.toLowerCase();
+    if (/(dsgvo|datenschutz|verarbeitungstätigkeit|personenbezug|vvt)/.test(text)) return 'Datenschutz';
+    if (/(excel|xls|spreadsheet|arbeitsmappe)/.test(text)) return 'Excel';
+    if (/(url|website|wordpress|webseite|domain|link)/.test(text)) return 'Web';
+    if (/(m365|outlook|teams|copilot|sharepoint|onedrive)/.test(text)) return 'Microsoft 365';
+    if (/(telefon|mail|e-mail|kommunikation|meeting|protokoll|agenda|portrait)/.test(text)) return 'Kommunikation';
+    return 'Allgemein';
+  }
+
+  detectGoal(title, promptText) {
+    const text = `${title} ${promptText}`.toLowerCase();
+
+    if (/(übersetz|translate|englisch)/.test(text)) return 'Übersetzen';
+    if (/(korr|korrektur|fehlerfrei|rewrite|überarbeiten)/.test(text)) return 'Korrigieren';
+    if (/(prüf|check|validier|audit)/.test(text)) return 'Prüfen';
+    if (/(analys|kritik|review|bewert|klassifizier)/.test(text)) return 'Analysieren';
+    if (/(eli5|einfach erklärt|erklär|explain)/.test(text)) return 'Erklären';
+    if (/(zusammenfass|minuten|protokoll|verdicht|kurzfassung)/.test(text)) return 'Verdichten';
+    return 'Erstellen';
+  }
+
+  humanizeLabel(label) {
+    const normalized = label.trim().replace(/[_-]+/g, ' ');
+    if (!normalized) return 'Allgemein';
+    return normalized
+      .split(/\s+/)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(' ');
   }
 
   showToast(message) {

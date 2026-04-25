@@ -14,12 +14,23 @@ class Router {
 
   parseQueryParams() {
     const params = new URLSearchParams(window.location.search);
+    const legacySort = params.get('sort') || this.state.sort;
+    const sortMap = {
+      nr: 'title',
+      abbreviation: 'title',
+      prompt: 'relevance',
+      created_at: 'newest',
+      updated_at: 'newest',
+      action_count: 'popular',
+    };
+    const normalizedSort = sortMap[legacySort] || legacySort || this.state.sort;
+
     return {
       module: params.get('module') || this.state.module,
       project: params.get('project') || this.state.project,
       view: params.get('view') || this.state.view,
       search: params.get('search') || this.state.search,
-      sort: params.get('sort') || this.state.sort,
+      sort: normalizedSort,
       direction: params.get('direction') || this.state.direction,
       themeFilter: params.get('themeFilter') || this.state.themeFilter,
       goalFilter: params.get('goalFilter') || this.state.goalFilter,

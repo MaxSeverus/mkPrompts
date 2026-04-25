@@ -200,6 +200,25 @@ input:focus, select:focus, textarea:focus {
   word-break: break-word;
 }
 
+.prompt-meta {
+  margin-top: var(--spacing-4);
+  color: var(--text-light);
+  font-size: 0.825rem;
+  font-weight: 600;
+}
+
+.internal-tag {
+  display: inline-block;
+  margin-top: var(--spacing-8);
+  padding: var(--spacing-4) var(--spacing-8);
+  border-radius: 999px;
+  border: 1px solid var(--border-light);
+  background: var(--background);
+  color: var(--text-light);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
 .prompt-card code, .prompt-text {
   display: block;
   background: var(--border-light);
@@ -258,7 +277,7 @@ input:focus, select:focus, textarea:focus {
 
 .toolbar {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--spacing-12);
   margin-bottom: var(--spacing-16);
   padding: var(--spacing-16);
