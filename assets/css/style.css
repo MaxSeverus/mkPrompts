@@ -589,6 +589,148 @@ th { font-weight: 600; font-size: 0.875rem; color: var(--text-light); }
   border-color: var(--primary);
 }
 
+.stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.gap-20 { gap: 1.25rem; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--spacing-8);
+}
+
+.max-500 {
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.overflow-x {
+  overflow: auto;
+}
+
+.field-hint {
+  color: var(--text-light);
+  font-size: 0.8rem;
+  margin-top: calc(-1 * var(--spacing-4));
+}
+
+.stats-inline-card {
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: var(--spacing-8) var(--spacing-12);
+  min-width: 170px;
+  background: var(--background);
+}
+
+.stats-inline-card span {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.stats-inline-card strong {
+  display: block;
+  margin-top: var(--spacing-4);
+  color: var(--primary);
+}
+
+.admin-shell {
+  max-width: 1640px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-8);
+}
+
+.admin-shell .hero.compact {
+  padding: var(--spacing-16);
+}
+
+.admin-shell .hero.compact h1 {
+  font-size: 1.8rem;
+  margin: var(--spacing-8) 0;
+}
+
+.admin-shell .hero.compact p {
+  max-width: none;
+}
+
+.admin-shell .card,
+.admin-shell section {
+  padding: var(--spacing-12);
+  margin-bottom: var(--spacing-12);
+}
+
+.admin-shell .field span {
+  font-size: 0.8rem;
+}
+
+.admin-shell input,
+.admin-shell select,
+.admin-shell textarea {
+  padding: 0.45rem 0.6rem;
+  font-size: 0.92rem;
+}
+
+.admin-shell textarea {
+  min-height: 7rem;
+}
+
+.admin-shell button,
+.admin-shell .button {
+  padding: 0.45rem 0.7rem;
+  font-size: 0.9rem;
+}
+
+.admin-shell .view-switch button {
+  padding: 0.4rem 0.55rem;
+}
+
+.admin-shell .slicer-buttons {
+  gap: var(--spacing-4);
+}
+
+.admin-shell .slicer-buttons button {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.82rem;
+}
+
+.admin-shell .icon-button {
+  width: 28px;
+  height: 28px;
+}
+
+.admin-shell table {
+  font-size: 0.86rem;
+}
+
+.admin-shell th,
+.admin-shell td {
+  padding: 0.38rem 0.5rem;
+  line-height: 1.35;
+}
+
+.admin-shell .overflow-x {
+  max-height: 62vh;
+}
+
+.admin-shell #promptTable td:nth-child(6) {
+  max-width: 36rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-shell #linkTable td:nth-child(3) a {
+  display: inline-block;
+  max-width: 30rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @media (max-width: 768px) {
   h1 { font-size: 1.75rem; }
   h2 { font-size: 1.25rem; }
@@ -623,5 +765,18 @@ th { font-weight: 600; font-size: 0.875rem; color: var(--text-light); }
 
   .modules-container {
     padding: 0;
+  }
+
+  .admin-shell {
+    padding: 0;
+  }
+
+  .admin-shell .overflow-x {
+    max-height: none;
+  }
+
+  .admin-shell #promptTable td:nth-child(6),
+  .admin-shell #linkTable td:nth-child(3) a {
+    max-width: 100%;
   }
 }
