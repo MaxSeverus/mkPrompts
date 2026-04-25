@@ -179,20 +179,39 @@ class App {
     this.links.forEach(link => {
       const card = document.createElement('div');
       card.className = 'prompt-card';
-      const h4 = document.createElement('h4');
-      h4.textContent = link.description;
-      const p = document.createElement('p');
-      p.className = 'text-light';
-      p.textContent = link.category || 'Allgemein';
+      
+      // Link-Action oben
+      const linkAction = document.createElement('div');
+      linkAction.className = 'link-action';
       const a = document.createElement('a');
       a.href = link.url;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
       a.className = 'prompt-link-url';
-      a.textContent = '🔗 Link öffnen';
+      a.textContent = 'Link öffnen';
+      linkAction.appendChild(a);
+      
+      // Bereinigte URL anzeigen
+      const urlDisplay = document.createElement('p');
+      urlDisplay.className = 'link-url';
+      const cleanUrl = link.url
+        .replace(/^https?:\/\//, '')
+        .replace(/\/$/, '');
+      urlDisplay.textContent = cleanUrl;
+      
+      // Beschreibung/Titel
+      const h4 = document.createElement('h4');
+      h4.textContent = link.description;
+      
+      // Kategorie
+      const categoryBadge = document.createElement('span');
+      categoryBadge.className = 'category-badge';
+      categoryBadge.textContent = link.category || 'Allgemein';
+      
+      card.appendChild(linkAction);
+      card.appendChild(urlDisplay);
       card.appendChild(h4);
-      card.appendChild(p);
-      card.appendChild(a);
+      card.appendChild(categoryBadge);
       container.appendChild(card);
     });
   }

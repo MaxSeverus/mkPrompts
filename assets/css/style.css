@@ -570,6 +570,48 @@ th { font-weight: 600; font-size: 0.875rem; color: var(--text-light); }
   border-color: var(--primary);
 }
 
+/* Link Card Styles */
+.link-action {
+  margin-bottom: var(--spacing-8);
+}
+
+.prompt-link-url {
+  display: inline-block;
+  padding: var(--spacing-8) var(--spacing-12);
+  background: var(--primary);
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.prompt-link-url:hover {
+  background: var(--primary-dark, #0056b3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.link-url {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin: var(--spacing-8) 0;
+  font-family: 'Courier New', monospace;
+  word-break: break-all;
+}
+
+.category-badge {
+  display: inline-block;
+  padding: var(--spacing-4) var(--spacing-8);
+  background: var(--primary-light, #e8f4f8);
+  color: var(--primary);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: var(--spacing-12);
+}
+
+
 @media (max-width: 768px) {
   h1 { font-size: 1.75rem; }
   h2 { font-size: 1.25rem; }
