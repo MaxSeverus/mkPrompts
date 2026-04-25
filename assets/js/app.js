@@ -66,11 +66,11 @@ class App {
 
     try {
       const endpoint = this.currentView === 'link' 
-        ? `${API_BASE}/api/links.php`
-        : `${API_BASE}/api/prompts.php`;
+        ? `${API_BASE}/api.php`
+        : `${API_BASE}/api.php`;
 
       const params = new URLSearchParams({
-        ...(this.currentView !== 'link' && { type: this.currentView }),
+        type: this.currentView,
         q: state.search,
         sort: state.sort,
         dir: state.direction,
