@@ -4,8 +4,10 @@ class Router {
       project: '',
       view: 'prompt',
       search: '',
-      sort: 'nr',
-      direction: 'asc',
+      sort: 'newest',
+      direction: 'desc',
+      themeFilter: '',
+      goalFilter: '',
     };
     this.listeners = [];
   }
@@ -19,6 +21,8 @@ class Router {
       search: params.get('search') || this.state.search,
       sort: params.get('sort') || this.state.sort,
       direction: params.get('direction') || this.state.direction,
+      themeFilter: params.get('themeFilter') || this.state.themeFilter,
+      goalFilter: params.get('goalFilter') || this.state.goalFilter,
     };
   }
 
