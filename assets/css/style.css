@@ -731,6 +731,39 @@ th { font-weight: 600; font-size: 0.875rem; color: var(--text-light); }
   text-overflow: ellipsis;
 }
 
+.collapsible-panel {
+  width: 100%;
+}
+
+.collapsible-panel summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 700;
+  color: var(--text-dark);
+  padding: var(--spacing-4) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+
+.collapsible-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible-panel summary::before {
+  content: '▸';
+  color: var(--text-light);
+  transition: transform 0.2s ease;
+}
+
+.collapsible-panel[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.collapsible-content {
+  padding-top: var(--spacing-8);
+}
+
 @media (max-width: 768px) {
   h1 { font-size: 1.75rem; }
   h2 { font-size: 1.25rem; }
