@@ -13,8 +13,9 @@ function resolveContentType(mixed $value): string
 function normalizeCsvHeaderValue(string $value): string
 {
     $normalized = str_replace("\0", '', trim($value));
-    // Entfernt UTF-8 / UTF-16 BOM am Beginn des ersten Header-Felds.
-    $normalized = preg_replace('/^(\xEF\xBB\xBF|\xFF\xFE|\xFE\xFF)/u', '', $normalized) ?? $normalized;
+    // Entfernt Byte-Order-Marks (als Bytes und als Unicode-Zeichen U+FEFF).
+    $normalized = preg_replace('/^(\xEF\xBB\xBF|\xFF\xFE|\xFE\xFF)+/', '', $normalized) ?? $normalized;
+    $normalized = preg_replace('/^\x{FEFF}+/u', '', $normalized) ?? $normalized;
     return strtolower($normalized);
 }
 
