@@ -8,11 +8,6 @@
 </head>
 <body>
   <div class="app-shell admin-shell">
-    <header class="hero compact">
-      <p class="badge">Admin-Bereich</p>
-      <h1>Inhalte verwalten</h1>
-    </header>
-
     <section id="loginCard" class="card max-500">
       <h2>Anmeldung</h2>
       <p>Bitte Passwort eingeben, um den Admin-Bereich zu öffnen.</p>
