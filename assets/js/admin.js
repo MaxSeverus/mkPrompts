@@ -22,8 +22,10 @@ const csvTitle = document.getElementById('csvTitle');
 const csvDescription = document.getElementById('csvDescription');
 const csvHint = document.getElementById('csvHint');
 const toast = document.getElementById('toast');
-const adminNrFilterSection = document.getElementById('adminNrFilterSection');
-const adminNrFilterButtons = document.getElementById('adminNrFilterButtons');
+const adminThemeFilterSection = document.getElementById('adminThemeFilterSection');
+const adminThemeFilterButtons = document.getElementById('adminThemeFilterButtons');
+const adminGoalFilterSection = document.getElementById('adminGoalFilterSection');
+const adminGoalFilterButtons = document.getElementById('adminGoalFilterButtons');
 const adminCategoryFilterSection = document.getElementById('adminCategoryFilterSection');
 const adminCategoryFilterButtons = document.getElementById('adminCategoryFilterButtons');
 const adminSortSelect = document.getElementById('adminSortSelect');
@@ -52,9 +54,12 @@ const linkFields = {
 };
 
 let currentView = 'prompt';
-let selectedNr = '';
+let selectedTheme = '';
+let selectedGoal = '';
 let selectedCategory = '';
 let sortDir = 'asc';
+const goalOrder = ['Erstellen', 'Analysieren', 'Korrigieren', 'Übersetzen', 'Prüfen', 'Erklären', 'Verdichten', 'Ohne Zuordnung'];
+const themeOrder = ['Allgemein', 'Datenschutz', 'Microsoft 365', 'Excel', 'Kommunikation', 'Web'];
 
 function showToast(message) {
   toast.textContent = message;
@@ -109,10 +114,9 @@ function getSortOptions() {
   }
 
   return [
-    { value: 'nr', label: 'Kategorie' },
-    { value: 'abbreviation', label: 'Bezeichnung' },
+    { value: 'abbreviation', label: 'Titel' },
     { value: 'prompt', label: 'Inhalt' },
-    { value: 'project', label: 'Projekt' },
+    { value: 'project', label: 'Thema' },
     { value: 'action_count', label: 'Nutzungen' },
     { value: 'created_at', label: 'Erstellt am' },
     { value: 'updated_at', label: 'Geändert am' },
@@ -143,7 +147,7 @@ function updateViewTexts() {
 
   editorTitle.textContent = `${meta.singular} speichern`;
   if (nrLabel) {
-    nrLabel.textContent = 'Kategorie';
+    nrLabel.textContent = 'Kürzel (intern)';
   }
   contentLabel.textContent = isLinkView ? 'Link' : 'Inhalt';
   tableContentHeading.textContent = isLinkView ? 'Link' : 'Inhalt';
@@ -151,7 +155,7 @@ function updateViewTexts() {
   if (formattingHint) {
     formattingHint.textContent = isLinkView
       ? 'Formatierung in Beschreibung mit [B]...[/B], [I]...[/I] und [U]...[/U] möglich.'
-      : 'Formatierung in Prompt und Abkürzung mit [B]...[/B], [I]...[/I] und [U]...[/U] möglich.';
+      : 'Formatierung in Inhalt und Titel mit [B]...[/B], [I]...[/I] und [U]...[/U] möglich.';
   }
 
   formGroups.forEach((group) => {
@@ -171,15 +175,16 @@ function updateViewTexts() {
   linkTable?.classList.toggle('hidden', !isLinkView);
   csvCard?.classList.toggle('hidden', isLinkView);
 
-  adminNrFilterSection?.classList.toggle('hidden', isLinkView);
+  adminThemeFilterSection?.classList.toggle('hidden', isLinkView);
+  adminGoalFilterSection?.classList.toggle('hidden', isLinkView);
   adminCategoryFilterSection?.classList.toggle('hidden', !isLinkView);
 
   if (!isLinkView) {
     csvTitle.textContent = `CSV-Upload (${meta.plural})`;
     if (csvDescription) {
-      csvDescription.innerHTML = 'CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong>, <strong>project</strong> und <strong>prompt</strong> hochladen.';
+      csvDescription.innerHTML = 'CSV-Datei mit den Spalten <strong>nr</strong> (Kürzel intern), <strong>abbreviation</strong> (Titel), <strong>project</strong> (Thema) und <strong>prompt</strong> hochladen.';
     }
-    csvHint.textContent = 'Der Import ersetzt bestehende Einträge mit gleicher Nr oder Abkürzung.';
+    csvHint.textContent = 'Der Import ersetzt bestehende Einträge mit gleichem Kürzel und Titel.';
   }
 
   const buttons = viewSwitch?.querySelectorAll('button[data-view]') || [];
@@ -278,41 +283,157 @@ function downloadCsv(content) {
   URL.revokeObjectURL(url);
 }
 
-function renderNrFilterButtons(entries) {
-  if (!adminNrFilterSection || !adminNrFilterButtons || currentView === 'link') return;
+function looksLikeInternalTag(value) {
+  if (!value || value.includes(' ')) return false;
+  return /^[a-z][a-z0-9_-]{1,}$/i.test(value);
+}
 
-  const nrValues = [...new Set(entries
-    .map((entry) => String(entry.nr ?? '').trim())
-    .filter((value) => value !== ''))]
-    .sort((a, b) => a.localeCompare(b, 'de', { numeric: true, sensitivity: 'base' }));
+function humanizeLabel(label) {
+  const normalized = String(label ?? '').trim().replace(/[_-]+/g, ' ');
+  if (!normalized) return 'Allgemein';
 
-  if (selectedNr && !nrValues.includes(selectedNr)) {
-    selectedNr = '';
+  return normalized
+    .split(/\s+/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function detectTheme(project, title, promptText) {
+  const cleanProject = String(project ?? '').trim();
+  if (cleanProject && cleanProject.toLowerCase() !== 'alle') {
+    return humanizeLabel(cleanProject);
   }
 
-  adminNrFilterButtons.innerHTML = '';
+  const text = `${title} ${promptText}`.toLowerCase();
+  if (/(dsgvo|datenschutz|verarbeitungstätigkeit|personenbezug|vvt)/.test(text)) return 'Datenschutz';
+  if (/(excel|xls|spreadsheet|arbeitsmappe)/.test(text)) return 'Excel';
+  if (/(url|website|wordpress|webseite|domain|link)/.test(text)) return 'Web';
+  if (/(m365|outlook|teams|copilot|sharepoint|onedrive)/.test(text)) return 'Microsoft 365';
+  if (/(telefon|mail|e-mail|kommunikation|meeting|protokoll|agenda|portrait)/.test(text)) return 'Kommunikation';
+  return 'Allgemein';
+}
 
-  if (!nrValues.length) {
-    adminNrFilterSection.classList.add('hidden');
+function detectGoal(title, promptText) {
+  const text = `${title} ${promptText}`.toLowerCase();
+
+  if (/(übersetz|translate|englisch)/.test(text)) return 'Übersetzen';
+  if (/(korr|korrektur|fehlerfrei|rewrite|überarbeiten)/.test(text)) return 'Korrigieren';
+  if (/(prüf|check|validier|audit)/.test(text)) return 'Prüfen';
+  if (/(analys|kritik|review|bewert|klassifizier)/.test(text)) return 'Analysieren';
+  if (/(eli5|einfach erklärt|erklär|explain)/.test(text)) return 'Erklären';
+  if (/(zusammenfass|minuten|protokoll|verdicht|kurzfassung)/.test(text)) return 'Verdichten';
+  return 'Erstellen';
+}
+
+function normalizePromptEntry(entry) {
+  const first = String(entry.nr ?? '').trim();
+  const second = String(entry.abbreviation ?? '').trim();
+  const firstIsTag = looksLikeInternalTag(first);
+  const secondIsTag = looksLikeInternalTag(second);
+
+  let internalTag = '';
+  let title = '';
+  if (firstIsTag && !secondIsTag) {
+    internalTag = first;
+    title = second;
+  } else if (!firstIsTag && secondIsTag) {
+    internalTag = second;
+    title = first;
+  } else {
+    internalTag = first;
+    title = second || first;
+  }
+
+  return {
+    ...entry,
+    internalTag,
+    title: title || 'Ohne Titel',
+    theme: detectTheme(entry.project ?? '', title, entry.prompt ?? ''),
+    goal: detectGoal(title, entry.prompt ?? ''),
+  };
+}
+
+function sortByPreferredOrder(values, preferredOrder) {
+  const orderMap = new Map(preferredOrder.map((value, index) => [value, index]));
+  return values.sort((a, b) => {
+    const aOrder = orderMap.has(a) ? orderMap.get(a) : Number.MAX_SAFE_INTEGER;
+    const bOrder = orderMap.has(b) ? orderMap.get(b) : Number.MAX_SAFE_INTEGER;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    return a.localeCompare(b, 'de', { sensitivity: 'base' });
+  });
+}
+
+function renderThemeFilterButtons(entries) {
+  if (!adminThemeFilterSection || !adminThemeFilterButtons || currentView === 'link') return;
+
+  const themeValues = sortByPreferredOrder(
+    [...new Set(entries.map((entry) => String(entry.theme ?? '').trim()).filter(Boolean))],
+    themeOrder,
+  );
+
+  if (selectedTheme && !themeValues.includes(selectedTheme)) {
+    selectedTheme = '';
+  }
+
+  adminThemeFilterButtons.innerHTML = '';
+  if (!themeValues.length) {
+    adminThemeFilterSection.classList.add('hidden');
     return;
   }
 
-  adminNrFilterSection.classList.remove('hidden');
+  adminThemeFilterSection.classList.remove('hidden');
 
   const allButton = document.createElement('button');
   allButton.type = 'button';
-  allButton.className = `secondary ${selectedNr === '' ? 'is-active' : ''}`.trim();
+  allButton.className = `secondary ${selectedTheme === '' ? 'is-active' : ''}`.trim();
   allButton.textContent = 'Alle';
-  allButton.dataset.nr = '';
-  adminNrFilterButtons.appendChild(allButton);
+  allButton.dataset.theme = '';
+  adminThemeFilterButtons.appendChild(allButton);
 
-  nrValues.forEach((nr) => {
+  themeValues.forEach((theme) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = `secondary ${selectedNr === nr ? 'is-active' : ''}`.trim();
-    button.textContent = nr;
-    button.dataset.nr = nr;
-    adminNrFilterButtons.appendChild(button);
+    button.className = `secondary ${selectedTheme === theme ? 'is-active' : ''}`.trim();
+    button.textContent = theme;
+    button.dataset.theme = theme;
+    adminThemeFilterButtons.appendChild(button);
+  });
+}
+
+function renderGoalFilterButtons(entries) {
+  if (!adminGoalFilterSection || !adminGoalFilterButtons || currentView === 'link') return;
+
+  const goalValues = sortByPreferredOrder(
+    [...new Set(entries.map((entry) => String(entry.goal ?? '').trim()).filter(Boolean))],
+    goalOrder,
+  );
+
+  if (selectedGoal && !goalValues.includes(selectedGoal)) {
+    selectedGoal = '';
+  }
+
+  adminGoalFilterButtons.innerHTML = '';
+  if (!goalValues.length) {
+    adminGoalFilterSection.classList.add('hidden');
+    return;
+  }
+
+  adminGoalFilterSection.classList.remove('hidden');
+
+  const allButton = document.createElement('button');
+  allButton.type = 'button';
+  allButton.className = `secondary ${selectedGoal === '' ? 'is-active' : ''}`.trim();
+  allButton.textContent = 'Alle';
+  allButton.dataset.goal = '';
+  adminGoalFilterButtons.appendChild(allButton);
+
+  goalValues.forEach((goal) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `secondary ${selectedGoal === goal ? 'is-active' : ''}`.trim();
+    button.textContent = goal;
+    button.dataset.goal = goal;
+    adminGoalFilterButtons.appendChild(button);
   });
 }
 
@@ -364,9 +485,10 @@ function renderTable(entries) {
         <button class="icon-button edit-button" data-action="edit" data-id="${entry.id}" title="Bearbeiten" aria-label="Bearbeiten">${getAdminActionIcon('edit')}</button>
         <button class="icon-button delete-button" data-action="delete" data-id="${entry.id}" title="Löschen" aria-label="Löschen">${getAdminActionIcon('delete')}</button>
       </td>
-      <td>${escapeHtml(entry.nr)}</td>
-      <td>${escapeHtml(entry.abbreviation)}</td>
-      <td>${escapeHtml(entry.project)}</td>
+      <td>${escapeHtml(entry.internalTag)}</td>
+      <td>${escapeHtml(entry.title)}</td>
+      <td>${escapeHtml(entry.theme)}</td>
+      <td>${escapeHtml(entry.goal)}</td>
       <td>${escapeHtml(entry.prompt)}</td>
       <td>${escapeHtml(entry.action_count ?? 0)}</td>
       <td>${formatDateTime(entry.created_at)}</td>
@@ -454,12 +576,15 @@ async function loadEntries() {
   if (res.status === 401) return;
 
   const payload = await res.json();
-  const entries = Array.isArray(payload.data) ? payload.data : [];
+  const entries = (Array.isArray(payload.data) ? payload.data : []).map(normalizePromptEntry);
 
-  renderNrFilterButtons(entries);
-  const filteredEntries = selectedNr
-    ? entries.filter((entry) => String(entry.nr ?? '').trim() === selectedNr)
-    : entries;
+  renderThemeFilterButtons(entries);
+  renderGoalFilterButtons(entries);
+  const filteredEntries = entries.filter((entry) => {
+    if (selectedTheme && entry.theme !== selectedTheme) return false;
+    if (selectedGoal && entry.goal !== selectedGoal) return false;
+    return true;
+  });
 
   renderTable(filteredEntries);
 }
@@ -628,10 +753,17 @@ adminLinkTableBody.addEventListener('click', async (event) => {
   }
 });
 
-adminNrFilterButtons?.addEventListener('click', async (event) => {
-  const button = event.target.closest('button[data-nr]');
+adminThemeFilterButtons?.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-theme]');
   if (!button) return;
-  selectedNr = button.dataset.nr || '';
+  selectedTheme = button.dataset.theme || '';
+  await loadEntries();
+});
+
+adminGoalFilterButtons?.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-goal]');
+  if (!button) return;
+  selectedGoal = button.dataset.goal || '';
   await loadEntries();
 });
 
@@ -656,12 +788,14 @@ viewSwitch?.addEventListener('click', async (event) => {
   }
 
   currentView = button.dataset.view;
-  selectedNr = '';
+  selectedTheme = '';
+  selectedGoal = '';
   selectedCategory = '';
 
   const moduleSection = document.getElementById('moduleSection');
   const csvCard = document.getElementById('csvCard');
-  const adminNrFilterSection = document.getElementById('adminNrFilterSection');
+  const adminThemeFilterSection = document.getElementById('adminThemeFilterSection');
+  const adminGoalFilterSection = document.getElementById('adminGoalFilterSection');
   const adminCategoryFilterSection = document.getElementById('adminCategoryFilterSection');
   const adminTableControls = document.querySelector('.card:has(#adminSortSelect)');
   const adminTablesCard = document.querySelector('.card:has(#promptTable)');
@@ -673,7 +807,8 @@ viewSwitch?.addEventListener('click', async (event) => {
   if (csvCard) csvCard.classList.toggle('hidden', isModuleView);
   if (adminTableControls) adminTableControls.classList.toggle('hidden', isModuleView);
   if (adminTablesCard) adminTablesCard.classList.toggle('hidden', isModuleView);
-  if (adminNrFilterSection) adminNrFilterSection.classList.toggle('hidden', isModuleView || currentView === 'link');
+  if (adminThemeFilterSection) adminThemeFilterSection.classList.toggle('hidden', isModuleView || currentView === 'link');
+  if (adminGoalFilterSection) adminGoalFilterSection.classList.toggle('hidden', isModuleView || currentView === 'link');
   if (adminCategoryFilterSection) adminCategoryFilterSection.classList.toggle('hidden', isModuleView || currentView !== 'link');
 
   if (isModuleView) {

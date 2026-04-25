@@ -47,12 +47,12 @@
           <input type="hidden" id="promptId">
           <input type="hidden" id="linkOriginalUrl">
 
-          <label data-form-group="text"><span id="nrLabel">Nr</span><input type="text" id="nrInput" maxlength="15" placeholder="z. B. 1"></label>
-          <label data-form-group="text"><span>Abkürzung</span><input type="text" id="abbrInput" maxlength="50"></label>
+          <label data-form-group="text"><span id="nrLabel">Kürzel (intern)</span><input type="text" id="nrInput" maxlength="15" placeholder="z. B. gptdperson"></label>
+          <label data-form-group="text"><span>Titel</span><input type="text" id="abbrInput" maxlength="50"></label>
           <label data-form-group="text"><span>Modul</span><select id="moduleSelectInput"><option value="">-- Wählen --</option></select></label>
-          <label data-form-group="text"><span>Projekt</span><input type="text" id="projectInput" maxlength="80" placeholder="z. B. Website-Relaunch"></label>
+          <label data-form-group="text"><span>Thema</span><input type="text" id="projectInput" maxlength="80" placeholder="z. B. Datenschutz"></label>
           <label class="full" data-form-group="text"><span id="contentLabel">Prompt</span><textarea id="promptInput" rows="5"></textarea></label>
-          <small id="formattingHint" class="full field-hint">Formatierung in Prompt und Abkürzung mit [B]...[/B], [I]...[/I] und [U]...[/U] möglich.</small>
+          <small id="formattingHint" class="full field-hint">Formatierung in Inhalt und Titel mit [B]...[/B], [I]...[/I] und [U]...[/U] möglich.</small>
 
           <label class="full hidden" data-form-group="link"><span>Beschreibung</span><input type="text" id="linkDescriptionInput" maxlength="255"></label>
           <label class="hidden" data-form-group="link"><span>URL</span><input type="url" id="linkUrlInput" maxlength="500" placeholder="https://..."></label>
@@ -89,7 +89,7 @@
 
       <div id="csvCard" class="card">
         <h2 id="csvTitle">CSV-Upload</h2>
-        <p id="csvDescription">CSV-Datei mit den Spalten <strong>nr</strong>, <strong>abbreviation</strong>, <strong>project</strong> und <strong>prompt</strong> hochladen.</p>
+        <p id="csvDescription">CSV-Datei mit den Spalten <strong>nr</strong> (Kürzel intern), <strong>abbreviation</strong> (Titel), <strong>project</strong> (Thema) und <strong>prompt</strong> hochladen.</p>
         <form id="csvUploadForm" class="stack gap-12">
           <input type="file" id="csvFileInput" accept=",.csv,text/csv" required>
           <div class="row gap-12">
@@ -138,10 +138,17 @@
         </div>
       </div>
 
-      <div id="adminNrFilterSection" class="card hidden">
+      <div id="adminThemeFilterSection" class="card hidden">
         <div class="row gap-12 align-center wrap">
-          <strong>Kategorie-Filter:</strong>
-          <div id="adminNrFilterButtons" class="slicer-buttons"></div>
+          <strong>Thema:</strong>
+          <div id="adminThemeFilterButtons" class="slicer-buttons"></div>
+        </div>
+      </div>
+
+      <div id="adminGoalFilterSection" class="card hidden">
+        <div class="row gap-12 align-center wrap">
+          <strong>Ziel:</strong>
+          <div id="adminGoalFilterButtons" class="slicer-buttons"></div>
         </div>
       </div>
 
@@ -165,7 +172,7 @@
       <div class="card overflow-x">
         <table id="promptTable">
           <thead>
-            <tr><th>Aktionen</th><th>Kategorie</th><th>Bezeichnung</th><th>Projekt</th><th id="tableContentHeading">Prompt</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th></tr>
+            <tr><th>Aktionen</th><th>Kürzel (intern)</th><th>Titel</th><th>Thema</th><th>Ziel</th><th id="tableContentHeading">Inhalt</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th></tr>
           </thead>
           <tbody id="adminTableBody"></tbody>
         </table>
@@ -181,6 +188,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="assertive"></div>
-  <script src="../assets/js/admin.js?v=20260415-2"></script>
+  <script src="../assets/js/admin.js?v=20260425-1"></script>
 </body>
 </html>

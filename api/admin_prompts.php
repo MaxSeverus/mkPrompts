@@ -28,17 +28,17 @@ $data = requestData();
 $type = resolveContentType($data, $_GET);
 
 if ($method === 'GET') {
-    $sort = (string) ($_GET['sort'] ?? 'project');
+    $sort = (string) ($_GET['sort'] ?? 'abbreviation');
     $dir = strtolower((string) ($_GET['dir'] ?? 'asc')) === 'desc' ? 'DESC' : 'ASC';
     $sortMap = [
-        'nr' => 'nr',
         'abbreviation' => 'abbreviation',
         'project' => 'project',
+        'prompt' => 'prompt',
         'action_count' => 'action_count',
         'created_at' => 'created_at',
         'updated_at' => 'updated_at',
     ];
-    $orderBy = $sortMap[$sort] ?? 'project';
+    $orderBy = $sortMap[$sort] ?? 'abbreviation';
 
     $stmt = $pdo->prepare("SELECT id, nr, abbreviation, prompt, project, module_id, action_count, created_at, updated_at FROM prompts WHERE content_type = :type ORDER BY {$orderBy} {$dir}, project ASC, nr ASC");
     $stmt->execute(['type' => $type]);

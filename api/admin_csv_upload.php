@@ -47,7 +47,7 @@ $required = ['nr', 'abbreviation', 'prompt'];
 foreach ($required as $column) {
     if (!in_array($column, $header, true)) {
         fclose($handle);
-        jsonResponse(['ok' => false, 'message' => 'CSV benötigt die Spalten nr, abbreviation, prompt.'], 400);
+        jsonResponse(['ok' => false, 'message' => 'CSV benötigt die Spalten nr (Kürzel intern), abbreviation (Titel) und prompt.'], 400);
     }
 }
 
