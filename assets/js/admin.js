@@ -835,13 +835,14 @@ viewSwitch?.addEventListener('click', async (event) => {
   const adminThemeFilterSection = document.getElementById('adminThemeFilterSection');
   const adminGoalFilterSection = document.getElementById('adminGoalFilterSection');
   const adminCategoryFilterSection = document.getElementById('adminCategoryFilterSection');
-  const editorHeaderRow = document.getElementById('editorHeaderRow');
   const adminTableControls = document.querySelector('.card:has(#adminSortSelect)');
   const adminTablesCard = document.querySelector('.card:has(#promptTable)');
 
   const isModuleView = currentView === 'module';
   if (moduleSection) moduleSection.classList.toggle('hidden', !isModuleView);
-  if (editorHeaderRow) editorHeaderRow.classList.toggle('hidden', isModuleView);
+  if (editorTitle) {
+    editorTitle.textContent = isModuleView ? 'Module verwalten' : `${getViewMeta().singular} speichern`;
+  }
   if (adminEntryForm) adminEntryForm.classList.toggle('hidden', isModuleView);
   if (csvCard) csvCard.classList.toggle('hidden', isModuleView);
   if (adminTableControls) adminTableControls.classList.toggle('hidden', isModuleView);
@@ -850,6 +851,13 @@ viewSwitch?.addEventListener('click', async (event) => {
   if (adminGoalFilterSection) adminGoalFilterSection.classList.toggle('hidden', isModuleView || currentView === 'link');
   if (adminCategoryFilterSection) adminCategoryFilterSection.classList.toggle('hidden', isModuleView || currentView !== 'link');
   syncTopPanelAvailability(currentView === 'link', isModuleView);
+
+  const buttons = viewSwitch?.querySelectorAll('button[data-view]') || [];
+  buttons.forEach((viewButton) => {
+    const isActive = viewButton.dataset.view === currentView;
+    viewButton.classList.toggle('is-active', isActive);
+    viewButton.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
 
   if (isModuleView) {
     renderModuleTable();

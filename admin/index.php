@@ -70,7 +70,7 @@
       </div>
 
       <div class="card">
-        <div class="row between align-center" id="editorHeaderRow">
+        <div class="row between align-center">
           <h2 id="editorTitle">Prompt speichern</h2>
         </div>
 
@@ -92,7 +92,7 @@
           <label data-form-group="text"><span>Titel</span><input type="text" id="abbrInput" maxlength="50"></label>
           <label data-form-group="text"><span>Modul</span><select id="moduleSelectInput"><option value="">-- Wählen --</option></select></label>
           <label data-form-group="text"><span>Thema</span><input type="text" id="projectInput" maxlength="80" placeholder="z. B. Datenschutz"></label>
-          <label class="full" data-form-group="text"><span id="contentLabel">Prompt</span><textarea id="promptInput" rows="5"></textarea></label>
+          <label class="full" data-form-group="text"><span id="contentLabel">Prompt</span><textarea id="promptInput" rows="1"></textarea></label>
           <small id="formattingHint" class="full field-hint">Formatierung in Inhalt und Titel mit [B]...[/B], [I]...[/I] und [U]...[/U] möglich.</small>
 
           <label class="full hidden" data-form-group="link"><span>Beschreibung</span><input type="text" id="linkDescriptionInput" maxlength="255"></label>
@@ -106,7 +106,6 @@
         </form>
       </div>
       <div id="moduleSection" class="card hidden">
-        <h2>Module verwalten</h2>
         <p>Module sind Kategorien, unter denen Prompts und Übungen organisiert werden.</p>
 
         <div style="margin-bottom: 1.5rem;">
@@ -189,6 +188,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="assertive"></div>
-  <script src="../assets/js/admin.js?v=20260425-3"></script>
+  <script src="../assets/js/admin.js?v=20260425-4"></script>
 </body>
 </html>
