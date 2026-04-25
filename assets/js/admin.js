@@ -835,8 +835,14 @@ if (csvUploadForm) {
       return;
     }
 
+    const selectedFile = csvFileInput.files[0];
+    if (!selectedFile || selectedFile.size <= 0) {
+      showToast('Die ausgewählte CSV-Datei ist leer.');
+      return;
+    }
+
     const formData = new FormData();
-    formData.append('csv', csvFileInput.files[0]);
+    formData.append('csv', selectedFile);
     formData.append('type', currentView);
 
     const res = await fetch('../api/admin_csv_upload.php', {

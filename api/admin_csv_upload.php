@@ -12,9 +12,9 @@ function resolveContentType(mixed $value): string
 
 function normalizeCsvHeaderValue(string $value): string
 {
-    $normalized = trim($value);
-    // Entfernt UTF-8 BOM am Beginn des ersten Header-Felds.
-    $normalized = preg_replace('/^\xEF\xBB\xBF/u', '', $normalized) ?? $normalized;
+    $normalized = str_replace("\0", '', trim($value));
+    // Entfernt UTF-8 / UTF-16 BOM am Beginn des ersten Header-Felds.
+    $normalized = preg_replace('/^(\xEF\xBB\xBF|\xFF\xFE|\xFE\xFF)/u', '', $normalized) ?? $normalized;
     return strtolower($normalized);
 }
 
@@ -33,6 +33,18 @@ function detectCsvDelimiter(string $line): string
     }
 
     return $bestDelimiter;
+}
+
+function resolveHeaderIndex(array $header, array $aliases): ?int
+{
+    foreach ($aliases as $alias) {
+        $index = array_search($alias, $header, true);
+        if ($index !== false) {
+            return (int) $index;
+        }
+    }
+
+    return null;
 }
 
 requireAdminAuth();
@@ -67,6 +79,7 @@ if ($headerLine === false) {
     jsonResponse(['ok' => false, 'message' => 'CSV-Datei ist leer.'], 400);
 }
 
+$headerLine = str_replace("\0", '', $headerLine);
 $delimiter = detectCsvDelimiter($headerLine);
 $trimmedHeaderLine = trim($headerLine);
 if (str_starts_with(strtolower($trimmedHeaderLine), 'sep=')) {
@@ -80,19 +93,32 @@ if (str_starts_with(strtolower($trimmedHeaderLine), 'sep=')) {
         fclose($handle);
         jsonResponse(['ok' => false, 'message' => 'CSV-Datei enthält keinen Header.'], 400);
     }
+    $headerLine = str_replace("\0", '', $headerLine);
 }
 
-$header = str_getcsv($headerLine, $delimiter);
-$header = array_map(static fn($value) => normalizeCsvHeaderValue((string) $value), $header);
-$required = ['nr', 'abbreviation', 'prompt'];
-foreach ($required as $column) {
-    if (!in_array($column, $header, true)) {
+$maxHeaderSkips = 10;
+$headerSkips = 0;
+while (trim($headerLine) === '' && $headerSkips < $maxHeaderSkips) {
+    $nextLine = fgets($handle);
+    if ($nextLine === false) {
         fclose($handle);
-        jsonResponse(['ok' => false, 'message' => 'CSV benötigt die Spalten nr (Kürzel intern), abbreviation (Titel) und prompt.'], 400);
+        jsonResponse(['ok' => false, 'message' => 'CSV-Datei enthält keinen Header.'], 400);
     }
+    $headerLine = str_replace("\0", '', $nextLine);
+    $headerSkips++;
 }
 
-$indices = array_flip($header);
+$header = str_getcsv($headerLine, $delimiter) ?: [];
+$header = array_map(static fn($value) => normalizeCsvHeaderValue((string) $value), $header);
+$nrIndex = resolveHeaderIndex($header, ['nr', 'kuerzel', 'kürzel', 'code', 'interner code']);
+$abbrIndex = resolveHeaderIndex($header, ['abbreviation', 'titel', 'title', 'bezeichnung']);
+$promptIndex = resolveHeaderIndex($header, ['prompt', 'inhalt', 'text']);
+$projectIndex = resolveHeaderIndex($header, ['project', 'thema']);
+
+if ($nrIndex === null || $abbrIndex === null || $promptIndex === null) {
+    fclose($handle);
+    jsonResponse(['ok' => false, 'message' => 'CSV benötigt die Spalten nr (Kürzel intern), abbreviation (Titel) und prompt.'], 400);
+}
 $pdo = db();
 $inserted = 0;
 $updated = 0;
@@ -105,12 +131,13 @@ $pdo->beginTransaction();
 
 try {
     while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
-        $nrValue = substr(trim((string) ($row[$indices['nr']] ?? '')), 0, 15);
-        $abbrValue = trim((string) ($row[$indices['abbreviation']] ?? ''));
-        $promptValue = trim((string) ($row[$indices['prompt']] ?? ''));
+        $row = array_map(static fn($value) => str_replace("\0", '', (string) $value), $row);
+        $nrValue = substr(trim((string) ($row[$nrIndex] ?? '')), 0, 15);
+        $abbrValue = trim((string) ($row[$abbrIndex] ?? ''));
+        $promptValue = trim((string) ($row[$promptIndex] ?? ''));
         $projectValue = '';
-        if (array_key_exists('project', $indices)) {
-            $projectValue = substr(trim((string) ($row[$indices['project']] ?? '')), 0, 80);
+        if ($projectIndex !== null) {
+            $projectValue = substr(trim((string) ($row[$projectIndex] ?? '')), 0, 80);
         }
 
         if ($nrValue === '' || $abbrValue === '' || $promptValue === '') {
