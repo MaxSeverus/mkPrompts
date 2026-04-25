@@ -33,7 +33,7 @@ $sortMap = [
 ];
 $orderBy = $sortMap[$sort] ?? 'nr';
 
-$sql = 'SELECT id, nr, abbreviation, prompt, project, action_count, created_at, updated_at FROM prompts WHERE content_type = :type';
+$sql = 'SELECT id, abbreviation as nr, nr as abbreviation, prompt, project, action_count, created_at, updated_at FROM prompts WHERE content_type = :type';
 $params = ['type' => $type];
 
 if ($module !== '') {
@@ -65,7 +65,7 @@ if ($q !== '') {
     $params['query'] = '%' . $q . '%';
 }
 
-$sql .= " ORDER BY {$orderBy} {$dir}, nr ASC, abbreviation ASC";
+$sql .= " ORDER BY {$orderBy} {$dir}, abbreviation ASC, nr ASC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
