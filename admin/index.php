@@ -4,23 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin · Prompt-Bibliothek</title>
-  <link rel="stylesheet" href="../assets/css/style.css?v=20260425-compact-2">
+  <link rel="stylesheet" href="../assets/css/style.css?v=20260425-compact-3">
 </head>
 <body>
   <div class="app-shell admin-shell">
-    <section class="card">
-      <details class="collapsible-panel">
-        <summary>Admin-Bereich</summary>
-        <div class="collapsible-content">
-          <p class="badge">Admin-Bereich</p>
-          <h1>Inhalte verwalten</h1>
-          <p>Prompts, Übungsbeispiele und Links hinzufügen, bearbeiten und löschen.</p>
-          <div class="switch-link-row">
-            <a class="button-link" href="../">Zum Benutzerbereich</a>
-          </div>
-        </div>
-      </details>
-    </section>
+    <header class="hero compact">
+      <p class="badge">Admin-Bereich</p>
+      <h1>Inhalte verwalten</h1>
+    </header>
 
     <section id="loginCard" class="card max-500">
       <h2>Anmeldung</h2>
@@ -32,10 +23,60 @@
     </section>
 
     <section id="adminPanel" class="hidden stack gap-20">
+      <div class="card" id="adminTopPanelCard">
+        <div class="admin-top-tabs" id="adminTopTabs" role="tablist" aria-label="Admin-Bereich wählen">
+          <button type="button" class="secondary is-active" data-panel-target="adminInfoPanel" role="tab" aria-selected="true">Admin-Bereich</button>
+          <button type="button" class="secondary" data-panel-target="pageViewsPanel" role="tab" aria-selected="false">Seitenaufrufzähler</button>
+          <button type="button" class="secondary" data-panel-target="csvPanel" role="tab" aria-selected="false">CSV-Upload (Prompts)</button>
+        </div>
+
+        <section id="adminInfoPanel" class="admin-top-panel" data-admin-panel-content>
+          <p>Prompts, Übungsbeispiele und Links hinzufügen, bearbeiten und löschen.</p>
+          <div class="row gap-12 align-center wrap">
+            <a class="button-link" href="../">Zum Benutzerbereich</a>
+            <button id="logoutButton" class="secondary" type="button">Abmelden</button>
+          </div>
+        </section>
+
+        <section id="pageViewsPanel" class="admin-top-panel hidden" data-admin-panel-content>
+          <p>Gezählt werden eindeutige Besucher:innen pro Tag im Benutzerbereich.</p>
+          <form id="pageViewForm" class="row gap-12 align-center wrap">
+            <label class="field">
+              <span>Stand</span>
+              <input type="number" id="pageViewInput" min="0" step="1" value="0">
+            </label>
+            <div class="stats-inline-card">
+              <span>Summe aller Nutzungen</span>
+              <strong id="totalUsageCount">0</strong>
+            </div>
+            <button type="submit">Speichern</button>
+            <button type="button" id="pageViewResetButton" class="secondary">Auf 0 setzen</button>
+          </form>
+        </section>
+
+        <section id="csvPanel" class="admin-top-panel hidden" data-admin-panel-content>
+          <h2 id="csvTitle">CSV-Upload (Prompts)</h2>
+          <div id="csvCard">
+            <p id="csvDescription">CSV-Datei mit den Spalten <strong>nr</strong> (Kürzel intern), <strong>abbreviation</strong> (Titel), <strong>project</strong> (Thema) und <strong>prompt</strong> hochladen.</p>
+            <form id="csvUploadForm" class="stack gap-12">
+              <input type="file" id="csvFileInput" accept=",.csv,text/csv" required>
+              <div class="row gap-12">
+                <button type="submit">CSV importieren</button>
+                <small id="csvHint">Der Import ersetzt bestehende Einträge mit gleichem Kürzel und Titel.</small>
+              </div>
+            </form>
+            <hr>
+            <div class="row gap-12 align-center">
+              <button type="button" id="csvExportButton" class="secondary">CSV exportieren</button>
+              <small>Exportiert alle vorhandenen Einträge als CSV-Datei.</small>
+            </div>
+          </div>
+        </section>
+      </div>
+
       <div class="card">
         <div class="row between align-center">
           <h2 id="editorTitle">Prompt speichern</h2>
-          <button id="logoutButton" class="secondary">Abmelden</button>
         </div>
 
         <label class="field">
@@ -69,50 +110,6 @@
           </div>
         </form>
       </div>
-
-
-      <div class="card">
-        <details class="collapsible-panel">
-          <summary>Seitenaufrufzähler</summary>
-          <div class="collapsible-content">
-            <p>Gezählt werden eindeutige Besucher:innen pro Tag im Benutzerbereich.</p>
-            <form id="pageViewForm" class="row gap-12 align-center wrap">
-              <label class="field">
-                <span>Stand</span>
-                <input type="number" id="pageViewInput" min="0" step="1" value="0">
-              </label>
-              <div class="stats-inline-card">
-                <span>Summe aller Nutzungen</span>
-                <strong id="totalUsageCount">0</strong>
-              </div>
-              <button type="submit">Speichern</button>
-              <button type="button" id="pageViewResetButton" class="secondary">Auf 0 setzen</button>
-            </form>
-          </div>
-        </details>
-      </div>
-
-      <div id="csvCard" class="card">
-        <details class="collapsible-panel">
-          <summary id="csvTitle">CSV-Upload</summary>
-          <div class="collapsible-content">
-            <p id="csvDescription">CSV-Datei mit den Spalten <strong>nr</strong> (Kürzel intern), <strong>abbreviation</strong> (Titel), <strong>project</strong> (Thema) und <strong>prompt</strong> hochladen.</p>
-            <form id="csvUploadForm" class="stack gap-12">
-              <input type="file" id="csvFileInput" accept=",.csv,text/csv" required>
-              <div class="row gap-12">
-                <button type="submit">CSV importieren</button>
-                <small id="csvHint">Der Import ersetzt bestehende Einträge mit gleichem Kürzel und Titel.</small>
-              </div>
-            </form>
-            <hr>
-            <div class="row gap-12 align-center">
-              <button type="button" id="csvExportButton" class="secondary">CSV exportieren</button>
-              <small>Exportiert alle vorhandenen Einträge als CSV-Datei.</small>
-            </div>
-          </div>
-        </details>
-      </div>
-
       <div id="moduleSection" class="card hidden">
         <h2>Module verwalten</h2>
         <p>Module sind Kategorien, unter denen Prompts und Übungen organisiert werden.</p>
@@ -197,6 +194,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="assertive"></div>
-  <script src="../assets/js/admin.js?v=20260425-2"></script>
+  <script src="../assets/js/admin.js?v=20260425-3"></script>
 </body>
 </html>

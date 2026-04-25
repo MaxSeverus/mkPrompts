@@ -22,6 +22,8 @@ const csvTitle = document.getElementById('csvTitle');
 const csvDescription = document.getElementById('csvDescription');
 const csvHint = document.getElementById('csvHint');
 const toast = document.getElementById('toast');
+const adminTopTabs = document.getElementById('adminTopTabs');
+const topPanelContents = document.querySelectorAll('[data-admin-panel-content]');
 const adminThemeFilterSection = document.getElementById('adminThemeFilterSection');
 const adminThemeFilterButtons = document.getElementById('adminThemeFilterButtons');
 const adminGoalFilterSection = document.getElementById('adminGoalFilterSection');
@@ -58,8 +60,37 @@ let selectedTheme = '';
 let selectedGoal = '';
 let selectedCategory = '';
 let sortDir = 'asc';
+let activeTopPanel = 'adminInfoPanel';
 const goalOrder = ['Erstellen', 'Analysieren', 'Korrigieren', 'Übersetzen', 'Prüfen', 'Erklären', 'Verdichten', 'Ohne Zuordnung'];
 const themeOrder = ['Allgemein', 'Datenschutz', 'Microsoft 365', 'Excel', 'Kommunikation', 'Web'];
+
+function setActiveTopPanel(panelId) {
+  activeTopPanel = panelId;
+
+  topPanelContents.forEach((panel) => {
+    panel.classList.toggle('hidden', panel.id !== panelId);
+  });
+
+  adminTopTabs?.querySelectorAll('button[data-panel-target]').forEach((button) => {
+    const isActive = button.dataset.panelTarget === panelId;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+}
+
+function syncTopPanelAvailability(isLinkView = false, isModuleView = false) {
+  if (!adminTopTabs) return;
+
+  const csvTabButton = adminTopTabs.querySelector('button[data-panel-target="csvPanel"]');
+  const disableCsv = isLinkView || isModuleView;
+  if (csvTabButton) {
+    csvTabButton.classList.toggle('hidden', disableCsv);
+  }
+
+  if (disableCsv && activeTopPanel === 'csvPanel') {
+    setActiveTopPanel('adminInfoPanel');
+  }
+}
 
 function showToast(message) {
   toast.textContent = message;
@@ -178,6 +209,7 @@ function updateViewTexts() {
   adminThemeFilterSection?.classList.toggle('hidden', isLinkView);
   adminGoalFilterSection?.classList.toggle('hidden', isLinkView);
   adminCategoryFilterSection?.classList.toggle('hidden', !isLinkView);
+  syncTopPanelAvailability(isLinkView, false);
 
   if (!isLinkView) {
     csvTitle.textContent = `CSV-Upload (${meta.plural})`;
@@ -781,6 +813,12 @@ adminDirButton?.addEventListener('click', async () => {
   await loadEntries();
 });
 
+adminTopTabs?.addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-panel-target]');
+  if (!button || button.classList.contains('hidden')) return;
+  setActiveTopPanel(button.dataset.panelTarget || 'adminInfoPanel');
+});
+
 viewSwitch?.addEventListener('click', async (event) => {
   const button = event.target.closest('button[data-view]');
   if (!button || button.dataset.view === currentView) {
@@ -810,6 +848,7 @@ viewSwitch?.addEventListener('click', async (event) => {
   if (adminThemeFilterSection) adminThemeFilterSection.classList.toggle('hidden', isModuleView || currentView === 'link');
   if (adminGoalFilterSection) adminGoalFilterSection.classList.toggle('hidden', isModuleView || currentView === 'link');
   if (adminCategoryFilterSection) adminCategoryFilterSection.classList.toggle('hidden', isModuleView || currentView !== 'link');
+  syncTopPanelAvailability(currentView === 'link', isModuleView);
 
   if (isModuleView) {
     renderModuleTable();
@@ -1052,5 +1091,8 @@ if (moduleTableBody) {
 (async () => {
   await loadModules();
 })();
+
+setActiveTopPanel('adminInfoPanel');
+syncTopPanelAvailability(false, false);
 
 checkSession();
