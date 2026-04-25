@@ -65,14 +65,18 @@ class App {
     if (container) container.textContent = 'Lädt…';
 
     try {
+      const endpoint = this.currentView === 'link' 
+        ? `${API_BASE}/api/links.php`
+        : `${API_BASE}/api/prompts.php`;
+
       const params = new URLSearchParams({
-        type: view,
+        ...(this.currentView !== 'link' && { type: this.currentView }),
         q: state.search,
         sort: state.sort,
         dir: state.direction,
       });
 
-      const response = await fetch(`${API_BASE}/api/prompts.php?${params}`);
+      const response = await fetch(`${endpoint}?${params}`);
       const data = await response.json();
 
       if (data.ok) {
