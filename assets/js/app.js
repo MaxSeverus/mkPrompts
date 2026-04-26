@@ -218,7 +218,7 @@ class App {
       a.textContent = `🔗 ${this.toClearUrl(link.url)}`;
 
       const h4 = document.createElement('h4');
-      h4.textContent = link.description;
+      h4.innerHTML = this.formatText(link.description || '');
       const p = document.createElement('p');
       p.className = 'text-light';
       p.textContent = link.category || 'Allgemein';
@@ -226,7 +226,8 @@ class App {
       dateMeta.className = 'link-meta';
       const createdAt = this.formatDateTime(link.created_at);
       const updatedAt = this.formatDateTime(link.updated_at);
-      dateMeta.textContent = `Erstellt: ${createdAt} · Geändert: ${updatedAt}`;
+      const views = Number(link.action_count || 0);
+      dateMeta.textContent = `Erstellt: ${createdAt} · Geändert: ${updatedAt} · Aufrufe: ${views}`;
 
       card.appendChild(a);
       card.appendChild(h4);
