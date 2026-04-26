@@ -8,12 +8,13 @@ const promptTable = document.getElementById('promptTable');
 const linkTable = document.getElementById('linkTable');
 const resetButton = document.getElementById('resetButton');
 const logoutButton = document.getElementById('logoutButton');
-const csvCard = document.getElementById('csvCard');
+const csvDetails = document.getElementById('csvDetails');
 const csvUploadForm = document.getElementById('csvUploadForm');
 const csvFileInput = document.getElementById('csvFileInput');
 const csvExportButton = document.getElementById('csvExportButton');
 const viewSwitch = document.getElementById('viewSwitch');
 const editorTitle = document.getElementById('editorTitle');
+const editorDetails = document.getElementById('editorDetails');
 const nrLabel = document.getElementById('nrLabel')
   || document.querySelector('#adminEntryForm label[data-form-group="text"] > span');
 const contentLabel = document.getElementById('contentLabel');
@@ -22,8 +23,6 @@ const csvTitle = document.getElementById('csvTitle');
 const csvDescription = document.getElementById('csvDescription');
 const csvHint = document.getElementById('csvHint');
 const toast = document.getElementById('toast');
-const adminTopTabs = document.getElementById('adminTopTabs');
-const topPanelContents = document.querySelectorAll('[data-admin-panel-content]');
 const adminThemeFilterSection = document.getElementById('adminThemeFilterSection');
 const adminThemeFilterButtons = document.getElementById('adminThemeFilterButtons');
 const adminGoalFilterSection = document.getElementById('adminGoalFilterSection');
@@ -60,35 +59,14 @@ let selectedTheme = '';
 let selectedGoal = '';
 let selectedCategory = '';
 let sortDir = 'asc';
-let activeTopPanel = 'adminInfoPanel';
 const goalOrder = ['Erstellen', 'Analysieren', 'Korrigieren', 'Übersetzen', 'Prüfen', 'Erklären', 'Verdichten', 'Ohne Zuordnung'];
 const themeOrder = ['Allgemein', 'Datenschutz', 'Microsoft 365', 'Excel', 'Kommunikation', 'Web'];
 
-function setActiveTopPanel(panelId) {
-  activeTopPanel = panelId;
-
-  topPanelContents.forEach((panel) => {
-    panel.classList.toggle('hidden', panel.id !== panelId);
-  });
-
-  adminTopTabs?.querySelectorAll('button[data-panel-target]').forEach((button) => {
-    const isActive = button.dataset.panelTarget === panelId;
-    button.classList.toggle('is-active', isActive);
-    button.setAttribute('aria-selected', isActive ? 'true' : 'false');
-  });
-}
-
-function syncTopPanelAvailability(isLinkView = false, isModuleView = false) {
-  if (!adminTopTabs) return;
-
-  const csvTabButton = adminTopTabs.querySelector('button[data-panel-target="csvPanel"]');
-  const disableCsv = isLinkView || isModuleView;
-  if (csvTabButton) {
-    csvTabButton.classList.toggle('hidden', disableCsv);
-  }
-
-  if (disableCsv && activeTopPanel === 'csvPanel') {
-    setActiveTopPanel('adminInfoPanel');
+function expandEditorPanel(scroll = false) {
+  if (!editorDetails) return;
+  editorDetails.open = true;
+  if (scroll) {
+    editorDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 
@@ -204,19 +182,18 @@ function updateViewTexts() {
 
   promptTable?.classList.toggle('hidden', isLinkView);
   linkTable?.classList.toggle('hidden', !isLinkView);
-  csvCard?.classList.toggle('hidden', isLinkView);
+  csvDetails?.classList.toggle('hidden', isLinkView);
 
   adminThemeFilterSection?.classList.toggle('hidden', isLinkView);
   adminGoalFilterSection?.classList.toggle('hidden', isLinkView);
   adminCategoryFilterSection?.classList.toggle('hidden', !isLinkView);
-  syncTopPanelAvailability(isLinkView, false);
 
   if (!isLinkView) {
-    csvTitle.textContent = `CSV-Upload (${meta.plural})`;
+    if (csvTitle) csvTitle.textContent = `CSV-Upload (${meta.plural})`;
     if (csvDescription) {
       csvDescription.innerHTML = 'CSV-Datei mit den Spalten <strong>nr</strong> (Kürzel intern), <strong>abbreviation</strong> (Titel), <strong>project</strong> (Thema) und <strong>prompt</strong> hochladen.';
     }
-    csvHint.textContent = 'Der Import ersetzt bestehende Einträge mit gleichem Kürzel und Titel.';
+    if (csvHint) csvHint.textContent = 'Der Import ersetzt bestehende Einträge mit gleichem Kürzel und Titel.';
   }
 
   const buttons = viewSwitch?.querySelectorAll('button[data-view]') || [];
@@ -743,6 +720,7 @@ adminTableBody.addEventListener('click', async (event) => {
     if (moduleSelectInput) {
       moduleSelectInput.value = entry.module_id || '';
     }
+    expandEditorPanel(true);
     return;
   }
 
@@ -770,6 +748,7 @@ adminLinkTableBody.addEventListener('click', async (event) => {
     linkFields.description.value = entry.description;
     linkFields.url.value = entry.url;
     linkFields.category.value = entry.category;
+    expandEditorPanel(true);
     return;
   }
 
@@ -813,12 +792,6 @@ adminDirButton?.addEventListener('click', async () => {
   await loadEntries();
 });
 
-adminTopTabs?.addEventListener('click', (event) => {
-  const button = event.target.closest('button[data-panel-target]');
-  if (!button || button.classList.contains('hidden')) return;
-  setActiveTopPanel(button.dataset.panelTarget || 'adminInfoPanel');
-});
-
 viewSwitch?.addEventListener('click', async (event) => {
   const button = event.target.closest('button[data-view]');
   if (!button || button.dataset.view === currentView) {
@@ -831,7 +804,7 @@ viewSwitch?.addEventListener('click', async (event) => {
   selectedCategory = '';
 
   const moduleSection = document.getElementById('moduleSection');
-  const csvCard = document.getElementById('csvCard');
+  const csvDetails = document.getElementById('csvDetails');
   const adminThemeFilterSection = document.getElementById('adminThemeFilterSection');
   const adminGoalFilterSection = document.getElementById('adminGoalFilterSection');
   const adminCategoryFilterSection = document.getElementById('adminCategoryFilterSection');
@@ -844,13 +817,12 @@ viewSwitch?.addEventListener('click', async (event) => {
     editorTitle.textContent = isModuleView ? 'Module verwalten' : `${getViewMeta().singular} speichern`;
   }
   if (adminEntryForm) adminEntryForm.classList.toggle('hidden', isModuleView);
-  if (csvCard) csvCard.classList.toggle('hidden', isModuleView);
+  if (csvDetails) csvDetails.classList.toggle('hidden', isModuleView);
   if (adminTableControls) adminTableControls.classList.toggle('hidden', isModuleView);
   if (adminTablesCard) adminTablesCard.classList.toggle('hidden', isModuleView);
   if (adminThemeFilterSection) adminThemeFilterSection.classList.toggle('hidden', isModuleView || currentView === 'link');
   if (adminGoalFilterSection) adminGoalFilterSection.classList.toggle('hidden', isModuleView || currentView === 'link');
   if (adminCategoryFilterSection) adminCategoryFilterSection.classList.toggle('hidden', isModuleView || currentView !== 'link');
-  syncTopPanelAvailability(currentView === 'link', isModuleView);
 
   const buttons = viewSwitch?.querySelectorAll('button[data-view]') || [];
   buttons.forEach((viewButton) => {
@@ -1100,8 +1072,5 @@ if (moduleTableBody) {
 (async () => {
   await loadModules();
 })();
-
-setActiveTopPanel('adminInfoPanel');
-syncTopPanelAvailability(false, false);
 
 checkSession();

@@ -19,39 +19,39 @@
 
     <section id="adminPanel" class="hidden stack gap-20">
       <div class="card" id="adminTopPanelCard">
-        <div class="admin-top-tabs" id="adminTopTabs" role="tablist" aria-label="Admin-Bereich wählen">
-          <button type="button" class="secondary is-active" data-panel-target="adminInfoPanel" role="tab" aria-selected="true">Admin-Bereich</button>
-          <button type="button" class="secondary" data-panel-target="pageViewsPanel" role="tab" aria-selected="false">Seitenaufrufzähler</button>
-          <button type="button" class="secondary" data-panel-target="csvPanel" role="tab" aria-selected="false">CSV-Upload (Prompts)</button>
-        </div>
-
-        <section id="adminInfoPanel" class="admin-top-panel" data-admin-panel-content>
-          <p>Prompts, Übungsbeispiele und Links hinzufügen, bearbeiten und löschen.</p>
-          <div class="row gap-12 align-center wrap">
-            <a class="button-link" href="../">Zum Benutzerbereich</a>
-            <button id="logoutButton" class="secondary" type="button">Abmelden</button>
-          </div>
-        </section>
-
-        <section id="pageViewsPanel" class="admin-top-panel hidden" data-admin-panel-content>
-          <p>Gezählt werden eindeutige Besucher:innen pro Tag im Benutzerbereich.</p>
-          <form id="pageViewForm" class="row gap-12 align-center wrap">
-            <label class="field">
-              <span>Stand</span>
-              <input type="number" id="pageViewInput" min="0" step="1" value="0">
-            </label>
-            <div class="stats-inline-card">
-              <span>Summe aller Nutzungen</span>
-              <strong id="totalUsageCount">0</strong>
+        <details id="adminInfoDetails" class="collapsible-panel">
+          <summary>Admin-Bereich</summary>
+          <div class="collapsible-content">
+            <p>Prompts, Übungsbeispiele und Links hinzufügen, bearbeiten und löschen.</p>
+            <div class="row gap-12 align-center wrap">
+              <a class="button-link" href="../">Zum Benutzerbereich</a>
+              <button id="logoutButton" class="secondary" type="button">Abmelden</button>
             </div>
-            <button type="submit">Speichern</button>
-            <button type="button" id="pageViewResetButton" class="secondary">Auf 0 setzen</button>
-          </form>
-        </section>
+          </div>
+        </details>
 
-        <section id="csvPanel" class="admin-top-panel hidden" data-admin-panel-content>
-          <h2 id="csvTitle">CSV-Upload (Prompts)</h2>
-          <div id="csvCard">
+        <details id="pageViewsDetails" class="collapsible-panel">
+          <summary>Seitenaufrufzähler</summary>
+          <div class="collapsible-content">
+            <p>Gezählt werden eindeutige Besucher:innen pro Tag im Benutzerbereich.</p>
+            <form id="pageViewForm" class="row gap-12 align-center wrap">
+              <label class="field">
+                <span>Stand</span>
+                <input type="number" id="pageViewInput" min="0" step="1" value="0">
+              </label>
+              <div class="stats-inline-card">
+                <span>Summe aller Nutzungen</span>
+                <strong id="totalUsageCount">0</strong>
+              </div>
+              <button type="submit">Speichern</button>
+              <button type="button" id="pageViewResetButton" class="secondary">Auf 0 setzen</button>
+            </form>
+          </div>
+        </details>
+
+        <details id="csvDetails" class="collapsible-panel">
+          <summary id="csvTitle">CSV-Upload (Prompts)</summary>
+          <div class="collapsible-content" id="csvCard">
             <p id="csvDescription">CSV-Datei mit den Spalten <strong>nr</strong> (Kürzel intern), <strong>abbreviation</strong> (Titel), <strong>project</strong> (Thema) und <strong>prompt</strong> hochladen.</p>
             <form id="csvUploadForm" class="stack gap-12">
               <input type="file" id="csvFileInput" accept=",.csv,text/csv" required>
@@ -66,44 +66,45 @@
               <small>Exportiert alle vorhandenen Einträge als CSV-Datei.</small>
             </div>
           </div>
-        </section>
+        </details>
       </div>
 
       <div class="card">
-        <div class="row between align-center">
-          <h2 id="editorTitle">Prompt speichern</h2>
-        </div>
+        <details id="editorDetails" class="collapsible-panel">
+          <summary id="editorTitle">Prompt speichern</summary>
+          <div class="collapsible-content">
+            <label class="field">
+              <span>Bereich</span>
+              <div class="view-switch" id="viewSwitch" role="tablist" aria-label="Inhalte auswählen">
+                <button type="button" class="secondary is-active" data-view="prompt" role="tab" aria-selected="true">Prompts</button>
+                <button type="button" class="secondary" data-view="exercise" role="tab" aria-selected="false">Übungen</button>
+                <button type="button" class="secondary" data-view="link" role="tab" aria-selected="false">Links</button>
+                <button type="button" class="secondary" data-view="module" role="tab" aria-selected="false">Module</button>
+              </div>
+            </label>
 
-        <label class="field">
-          <span>Bereich</span>
-          <div class="view-switch" id="viewSwitch" role="tablist" aria-label="Inhalte auswählen">
-            <button type="button" class="secondary is-active" data-view="prompt" role="tab" aria-selected="true">Prompts</button>
-            <button type="button" class="secondary" data-view="exercise" role="tab" aria-selected="false">Übungen</button>
-            <button type="button" class="secondary" data-view="link" role="tab" aria-selected="false">Links</button>
-            <button type="button" class="secondary" data-view="module" role="tab" aria-selected="false">Module</button>
+            <form id="adminEntryForm" class="form-grid">
+              <input type="hidden" id="promptId">
+              <input type="hidden" id="linkOriginalUrl">
+
+              <label data-form-group="text"><span id="nrLabel">Kürzel (intern)</span><input type="text" id="nrInput" maxlength="15" placeholder="z. B. gptdperson"></label>
+              <label data-form-group="text"><span>Titel</span><input type="text" id="abbrInput" maxlength="50"></label>
+              <label data-form-group="text"><span>Modul</span><select id="moduleSelectInput"><option value="">-- Wählen --</option></select></label>
+              <label data-form-group="text"><span>Thema</span><input type="text" id="projectInput" maxlength="80" placeholder="z. B. Datenschutz"></label>
+              <label class="full" data-form-group="text"><span id="contentLabel">Prompt</span><textarea id="promptInput" rows="1"></textarea></label>
+              <small id="formattingHint" class="full field-hint">Formatierung in Inhalt und Titel mit [B]...[/B], [I]...[/I] und [U]...[/U] möglich.</small>
+
+              <label class="full hidden" data-form-group="link"><span>Beschreibung</span><input type="text" id="linkDescriptionInput" maxlength="255"></label>
+              <label class="hidden" data-form-group="link"><span>URL</span><input type="url" id="linkUrlInput" maxlength="500" placeholder="https://..."></label>
+              <label class="hidden" data-form-group="link"><span>Kategorie</span><input type="text" id="linkCategoryInput" maxlength="80"></label>
+
+              <div class="full row gap-12">
+                <button type="submit">Speichern</button>
+                <button type="button" id="resetButton" class="secondary">Zurücksetzen</button>
+              </div>
+            </form>
           </div>
-        </label>
-
-        <form id="adminEntryForm" class="form-grid">
-          <input type="hidden" id="promptId">
-          <input type="hidden" id="linkOriginalUrl">
-
-          <label data-form-group="text"><span id="nrLabel">Kürzel (intern)</span><input type="text" id="nrInput" maxlength="15" placeholder="z. B. gptdperson"></label>
-          <label data-form-group="text"><span>Titel</span><input type="text" id="abbrInput" maxlength="50"></label>
-          <label data-form-group="text"><span>Modul</span><select id="moduleSelectInput"><option value="">-- Wählen --</option></select></label>
-          <label data-form-group="text"><span>Thema</span><input type="text" id="projectInput" maxlength="80" placeholder="z. B. Datenschutz"></label>
-          <label class="full" data-form-group="text"><span id="contentLabel">Prompt</span><textarea id="promptInput" rows="1"></textarea></label>
-          <small id="formattingHint" class="full field-hint">Formatierung in Inhalt und Titel mit [B]...[/B], [I]...[/I] und [U]...[/U] möglich.</small>
-
-          <label class="full hidden" data-form-group="link"><span>Beschreibung</span><input type="text" id="linkDescriptionInput" maxlength="255"></label>
-          <label class="hidden" data-form-group="link"><span>URL</span><input type="url" id="linkUrlInput" maxlength="500" placeholder="https://..."></label>
-          <label class="hidden" data-form-group="link"><span>Kategorie</span><input type="text" id="linkCategoryInput" maxlength="80"></label>
-
-          <div class="full row gap-12">
-            <button type="submit">Speichern</button>
-            <button type="button" id="resetButton" class="secondary">Zurücksetzen</button>
-          </div>
-        </form>
+        </details>
       </div>
       <div id="moduleSection" class="card hidden">
         <p>Module sind Kategorien, unter denen Prompts und Übungen organisiert werden.</p>
@@ -188,6 +189,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="assertive"></div>
-  <script src="../assets/js/admin.js?v=20260425-4"></script>
+  <script src="../assets/js/admin.js?v=20260426-1"></script>
 </body>
 </html>
