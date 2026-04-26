@@ -212,11 +212,7 @@ class App {
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
       a.className = 'prompt-link-open';
-      a.textContent = 'Link öffnen';
-
-      const clearUrl = document.createElement('div');
-      clearUrl.className = 'prompt-link-url-clear';
-      clearUrl.textContent = this.toClearUrl(link.url);
+      a.textContent = `🔗 ${this.toClearUrl(link.url)}`;
 
       const h4 = document.createElement('h4');
       h4.textContent = link.description;
@@ -225,7 +221,6 @@ class App {
       p.textContent = link.category || 'Allgemein';
 
       card.appendChild(a);
-      card.appendChild(clearUrl);
       card.appendChild(h4);
       card.appendChild(p);
       container.appendChild(card);
