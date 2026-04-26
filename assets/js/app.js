@@ -216,6 +216,7 @@ class App {
       a.rel = 'noopener noreferrer';
       a.className = 'prompt-link-open';
       a.textContent = `🔗 ${this.toClearUrl(link.url)}`;
+      a.addEventListener('click', () => this.trackLinkAction(link.url));
 
       const h4 = document.createElement('h4');
       h4.innerHTML = this.formatText(link.description || '');
@@ -708,6 +709,33 @@ class App {
     } catch (err) {
       console.error('Fehler beim Tracking:', err);
     }
+  }
+
+  trackLinkAction(url) {
+    const endpoint = `${API_BASE}/api/track.php`;
+    const payload = JSON.stringify({
+      event: 'link_action',
+      url: String(url || ''),
+    });
+
+    try {
+      if (navigator.sendBeacon) {
+        const blob = new Blob([payload], { type: 'application/json' });
+        navigator.sendBeacon(endpoint, blob);
+        return;
+      }
+    } catch (err) {
+      console.error('sendBeacon fehlgeschlagen:', err);
+    }
+
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+      keepalive: true,
+    }).catch((err) => {
+      console.error('Link-Tracking fehlgeschlagen:', err);
+    });
   }
 
   getOrCreateVisitorHash() {
