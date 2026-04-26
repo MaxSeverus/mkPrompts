@@ -219,6 +219,19 @@ input:focus, select:focus, textarea:focus {
   font-family: var(--font-mono);
 }
 
+.prompt-link-open {
+  display: inline-block;
+  margin-bottom: var(--spacing-4);
+  font-weight: 600;
+}
+
+.prompt-link-url-clear {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin-bottom: var(--spacing-8);
+  word-break: break-all;
+}
+
 .prompt-card code, .prompt-text {
   display: block;
   background: var(--border-light);

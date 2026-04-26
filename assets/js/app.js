@@ -206,22 +206,42 @@ class App {
     this.links.forEach(link => {
       const card = document.createElement('div');
       card.className = 'prompt-card';
+
+      const a = document.createElement('a');
+      a.href = link.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.className = 'prompt-link-open';
+      a.textContent = 'Link öffnen';
+
+      const clearUrl = document.createElement('div');
+      clearUrl.className = 'prompt-link-url-clear';
+      clearUrl.textContent = this.toClearUrl(link.url);
+
       const h4 = document.createElement('h4');
       h4.textContent = link.description;
       const p = document.createElement('p');
       p.className = 'text-light';
       p.textContent = link.category || 'Allgemein';
-      const a = document.createElement('a');
-      a.href = link.url;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.className = 'prompt-link-url';
-      a.textContent = '🔗 Link öffnen';
+
+      card.appendChild(a);
+      card.appendChild(clearUrl);
       card.appendChild(h4);
       card.appendChild(p);
-      card.appendChild(a);
       container.appendChild(card);
     });
+  }
+
+  toClearUrl(urlValue) {
+    const raw = String(urlValue || '').trim();
+    if (!raw) return '';
+
+    try {
+      const parsed = new URL(raw);
+      return `${parsed.host}${parsed.pathname}${parsed.search}${parsed.hash}`.replace(/\/$/, '');
+    } catch {
+      return raw.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+    }
   }
 
   createPromptCard(prompt) {
