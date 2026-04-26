@@ -46,6 +46,10 @@
         <span>Ziel</span>
         <div class="slicer-buttons" id="goalFilterButtons" role="group" aria-label="Ziel-Filter"></div>
       </label>
+      <label class="field hidden" id="linkCategoryFilterField">
+        <span>Kategorie</span>
+        <div class="slicer-buttons" id="linkCategoryFilterButtons" role="group" aria-label="Kategorie-Filter"></div>
+      </label>
       <label class="field">
         <span>Suche</span>
         <input id="searchInput" type="search" placeholder="Titel, Thema oder Inhalt durchsuchen">
@@ -57,6 +61,8 @@
           <option value="relevance">Relevanz</option>
           <option value="title">A-Z</option>
           <option value="popular">Meistgenutzt</option>
+          <option value="description">Beschreibung</option>
+          <option value="action_count">Nutzungen</option>
         </select>
       </label>
       <label class="field">

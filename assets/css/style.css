@@ -231,6 +231,12 @@ input:focus, select:focus, textarea:focus {
   color: #084a99;
 }
 
+.link-meta {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: var(--spacing-4);
+}
+
 .prompt-card code, .prompt-text {
   display: block;
   background: var(--border-light);

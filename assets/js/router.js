@@ -8,6 +8,7 @@ class Router {
       direction: 'desc',
       themeFilter: '',
       goalFilter: '',
+      linkCategoryFilter: '',
     };
     this.listeners = [];
   }
@@ -34,6 +35,7 @@ class Router {
       direction: params.get('direction') || this.state.direction,
       themeFilter: params.get('themeFilter') || this.state.themeFilter,
       goalFilter: params.get('goalFilter') || this.state.goalFilter,
+      linkCategoryFilter: params.get('linkCategoryFilter') || this.state.linkCategoryFilter,
     };
   }
 

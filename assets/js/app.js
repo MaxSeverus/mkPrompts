@@ -188,7 +188,10 @@ class App {
     const container = document.getElementById('promptList');
     if (!container) return;
 
-    if (this.links.length === 0) {
+    this.updateLinkCategoryFilter();
+    const filteredLinks = this.filterLinks();
+
+    if (filteredLinks.length === 0) {
       container.textContent = '';
       const emptyDiv = document.createElement('div');
       emptyDiv.className = 'empty-state';
@@ -203,7 +206,7 @@ class App {
     }
 
     container.textContent = '';
-    this.links.forEach(link => {
+    filteredLinks.forEach(link => {
       const card = document.createElement('div');
       card.className = 'prompt-card';
 
@@ -219,10 +222,16 @@ class App {
       const p = document.createElement('p');
       p.className = 'text-light';
       p.textContent = link.category || 'Allgemein';
+      const dateMeta = document.createElement('div');
+      dateMeta.className = 'link-meta';
+      const createdAt = this.formatDateTime(link.created_at);
+      const updatedAt = this.formatDateTime(link.updated_at);
+      dateMeta.textContent = `Erstellt: ${createdAt} · Geändert: ${updatedAt}`;
 
       card.appendChild(a);
       card.appendChild(h4);
       card.appendChild(p);
+      card.appendChild(dateMeta);
       container.appendChild(card);
     });
   }
@@ -461,8 +470,10 @@ class App {
     const isLinkView = this.currentView === 'link';
     const themeField = document.getElementById('themeFilterField');
     const goalField = document.getElementById('goalFilterField');
+    const linkCategoryField = document.getElementById('linkCategoryFilterField');
     if (themeField) themeField.classList.toggle('hidden', isLinkView);
     if (goalField) goalField.classList.toggle('hidden', isLinkView);
+    if (linkCategoryField) linkCategoryField.classList.toggle('hidden', !isLinkView);
   }
 
   mapDirectionForApi(sort, direction) {
@@ -476,6 +487,8 @@ class App {
       relevance: 'action_count',
       title: 'description',
       popular: 'action_count',
+      description: 'description',
+      action_count: 'action_count',
     };
     return sortMap[sort] || 'created_at';
   }
@@ -495,11 +508,11 @@ class App {
     const selectedSort = sort || 'newest';
 
     const sorted = [...prompts].sort((a, b) => {
-      if (selectedSort === 'title') {
+      if (selectedSort === 'title' || selectedSort === 'description') {
         return a.title.localeCompare(b.title, 'de', { sensitivity: 'base' }) * dirFactor;
       }
 
-      if (selectedSort === 'popular' || selectedSort === 'relevance') {
+      if (selectedSort === 'popular' || selectedSort === 'relevance' || selectedSort === 'action_count') {
         const popularityDelta = (a.action_count || 0) - (b.action_count || 0);
         if (popularityDelta !== 0) return popularityDelta * dirFactor;
         return a.title.localeCompare(b.title, 'de', { sensitivity: 'base' }) * dirFactor;
@@ -587,6 +600,64 @@ class App {
       .split(/\s+/)
       .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join(' ');
+  }
+
+  updateLinkCategoryFilter() {
+    const container = document.getElementById('linkCategoryFilterButtons');
+    if (!container || this.currentView !== 'link') return;
+
+    const categories = Array.from(new Set(
+      this.links
+        .map(link => String(link.category || '').trim())
+        .filter(Boolean),
+    )).sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
+
+    container.textContent = '';
+
+    const allBtn = document.createElement('button');
+    allBtn.textContent = 'Alle';
+    allBtn.dataset.value = '';
+    allBtn.className = 'is-active';
+    allBtn.addEventListener('click', () => this.setLinkCategoryFilter(''));
+    container.appendChild(allBtn);
+
+    categories.forEach((category) => {
+      const btn = document.createElement('button');
+      btn.textContent = category;
+      btn.dataset.value = category;
+      btn.addEventListener('click', () => this.setLinkCategoryFilter(category));
+      container.appendChild(btn);
+    });
+
+    this.updateLinkCategoryButtons();
+  }
+
+  setLinkCategoryFilter(category) {
+    router.pushState({ linkCategoryFilter: category });
+  }
+
+  updateLinkCategoryButtons() {
+    const categoryFilter = router.state.linkCategoryFilter || '';
+    document.querySelectorAll('#linkCategoryFilterButtons button').forEach((btn) => {
+      btn.classList.toggle('is-active', btn.dataset.value === categoryFilter);
+    });
+  }
+
+  filterLinks() {
+    const categoryFilter = router.state.linkCategoryFilter || '';
+    if (!categoryFilter) return this.links;
+    return this.links.filter(link => String(link.category || '').trim() === categoryFilter);
+  }
+
+  formatDateTime(value) {
+    if (!value) return '–';
+    const normalized = String(value).replace(' ', 'T');
+    const date = new Date(normalized);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return new Intl.DateTimeFormat('de-DE', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(date);
   }
 
   showToast(message) {
