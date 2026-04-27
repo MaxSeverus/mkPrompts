@@ -5,4 +5,8 @@ DirectoryIndex index.php
 </FilesMatch>
 
 RewriteEngine On
+RewriteCond %{HTTP_HOST} ^(www\.)?ki-kompakt\.at$ [NC]
+RewriteCond %{QUERY_STRING} !(^|&)brand= [NC]
+RewriteRule ^ https://ki-stammtisch.at%{REQUEST_URI}?brand=kompakt [R=302,L,QSA,NE]
+
 RewriteRule ^admin$ /admin/ [R=301,L]

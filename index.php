@@ -1,7 +1,12 @@
 <?php
   $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
   $host = preg_replace('/:\d+$/', '', $host);
-  $isKiKompaktHost = strpos($host, 'ki-kompakt.at') !== false;
+
+  $forwardedHostRaw = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? ''));
+  $forwardedHost = trim(explode(',', $forwardedHostRaw)[0] ?? '');
+  $forwardedHost = preg_replace('/:\d+$/', '', $forwardedHost);
+
+  $isKiKompaktHost = strpos($host, 'ki-kompakt.at') !== false || strpos($forwardedHost, 'ki-kompakt.at') !== false;
 
   if ($isKiKompaktHost && !headers_sent()) {
     $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
