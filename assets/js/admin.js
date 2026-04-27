@@ -662,7 +662,7 @@ adminEntryForm.addEventListener('submit', async (event) => {
 
   const payload = {
     id: Number(formFields.id.value || 0),
-    nr: formFields.nr.value.trim().slice(0, 15),
+    nr: formFields.nr.value.trim().slice(0, 50),
     abbreviation: formFields.abbreviation.value.trim(),
     prompt: formFields.prompt.value.trim(),
     project: formFields.project.value.trim().slice(0, 80),

@@ -7,7 +7,7 @@ require_once __DIR__ . '/../src/http.php';
 
 function normalizeNr(mixed $value): string
 {
-    return substr(trim((string) $value), 0, 15);
+    return substr(trim((string) $value), 0, 50);
 }
 
 function normalizeProject(mixed $value): string

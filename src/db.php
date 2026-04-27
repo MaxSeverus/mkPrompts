@@ -46,7 +46,7 @@ function initializeDatabase(PDO $pdo, string $driver): void
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS prompts (
         id {$idColumn},
-        nr VARCHAR(15) NOT NULL,
+        nr VARCHAR(50) NOT NULL,
         abbreviation VARCHAR(50) NOT NULL,
         prompt TEXT NOT NULL,
         project VARCHAR(80) NOT NULL DEFAULT '',
@@ -240,7 +240,7 @@ function ensurePromptTimestampColumns(PDO $pdo, string $driver): void
             $pdo->exec('DROP TABLE IF EXISTS prompts_new');
             $pdo->exec("CREATE TABLE prompts_new (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nr VARCHAR(15) NOT NULL,
+                nr VARCHAR(50) NOT NULL,
                 abbreviation VARCHAR(50) NOT NULL,
                 prompt TEXT NOT NULL,
                 project VARCHAR(80) NOT NULL DEFAULT '',
@@ -378,8 +378,12 @@ function ensureNrColumnSupportsText(PDO $pdo, string $driver): void
     if (in_array($driver, ['mysql', 'mariadb'], true)) {
         $column = $pdo->query("SHOW COLUMNS FROM prompts LIKE 'nr'")->fetch();
         $columnType = strtolower((string) ($column['Type'] ?? ''));
-        if (strpos($columnType, 'varchar') !== 0) {
-            $pdo->exec('ALTER TABLE prompts MODIFY nr VARCHAR(15) NOT NULL');
+        $length = 0;
+        if (preg_match('/^varchar\((\d+)\)/', $columnType, $matches) === 1) {
+            $length = (int) ($matches[1] ?? 0);
+        }
+        if ($length < 50) {
+            $pdo->exec('ALTER TABLE prompts MODIFY nr VARCHAR(50) NOT NULL');
         }
         return;
     }
@@ -391,7 +395,7 @@ function ensureNrColumnSupportsText(PDO $pdo, string $driver): void
                 continue;
             }
             $type = strtoupper((string) ($column['type'] ?? ''));
-            if ($type !== '' && strpos($type, 'VARCHAR(15)') === 0) {
+            if ($type !== '' && strpos($type, 'VARCHAR(50)') === 0) {
                 return;
             }
             break;
