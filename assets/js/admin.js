@@ -180,8 +180,7 @@ function updateViewTexts() {
   linkTable?.classList.toggle('hidden', !isLinkView);
   csvDetails?.classList.toggle('hidden', isLinkView);
 
-  adminThemeFilterSection?.classList.toggle('hidden', isLinkView);
-  adminGoalFilterSection?.classList.toggle('hidden', isLinkView);
+  adminTitleFilterSection?.classList.toggle('hidden', isLinkView);
   adminCategoryFilterSection?.classList.toggle('hidden', !isLinkView);
 
   if (!isLinkView) {
@@ -368,77 +367,41 @@ function sortByPreferredOrder(values, preferredOrder) {
   });
 }
 
-function renderThemeFilterButtons(entries) {
-  if (!adminThemeFilterSection || !adminThemeFilterButtons || currentView === 'link') return;
+function renderTitleFilterButtons(entries) {
+  if (!adminTitleFilterSection || !adminTitleFilterButtons || currentView === 'link') return;
 
-  const themeValues = sortByPreferredOrder(
-    [...new Set(entries.map((entry) => String(entry.theme ?? '').trim()).filter(Boolean))],
-    themeOrder,
-  );
+  const titleValues = [...new Set(
+    entries
+      .map((entry) => String(entry.title ?? '').trim())
+      .filter((value) => value !== ''),
+  )].sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
 
-  if (selectedTheme && !themeValues.includes(selectedTheme)) {
-    selectedTheme = '';
+  if (selectedTitle && !titleValues.includes(selectedTitle)) {
+    selectedTitle = '';
   }
 
-  adminThemeFilterButtons.innerHTML = '';
-  if (!themeValues.length) {
-    adminThemeFilterSection.classList.add('hidden');
+  adminTitleFilterButtons.innerHTML = '';
+  if (!titleValues.length) {
+    adminTitleFilterSection.classList.add('hidden');
     return;
   }
 
-  adminThemeFilterSection.classList.remove('hidden');
+  adminTitleFilterSection.classList.remove('hidden');
 
   const allButton = document.createElement('button');
   allButton.type = 'button';
-  allButton.className = `secondary ${selectedTheme === '' ? 'is-active' : ''}`.trim();
+  allButton.className = `secondary ${selectedTitle === '' ? 'is-active' : ''}`.trim();
   allButton.textContent = 'Alle';
-  allButton.dataset.theme = '';
-  adminThemeFilterButtons.appendChild(allButton);
+  allButton.dataset.title = '';
+  adminTitleFilterButtons.appendChild(allButton);
 
-  themeValues.forEach((theme) => {
+  titleValues.forEach((title) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = `secondary ${selectedTheme === theme ? 'is-active' : ''}`.trim();
-    button.textContent = theme;
-    button.dataset.theme = theme;
-    adminThemeFilterButtons.appendChild(button);
-  });
-}
-
-function renderGoalFilterButtons(entries) {
-  if (!adminGoalFilterSection || !adminGoalFilterButtons || currentView === 'link') return;
-
-  const goalValues = sortByPreferredOrder(
-    [...new Set(entries.map((entry) => String(entry.goal ?? '').trim()).filter(Boolean))],
-    goalOrder,
-  );
-
-  if (selectedGoal && !goalValues.includes(selectedGoal)) {
-    selectedGoal = '';
-  }
-
-  adminGoalFilterButtons.innerHTML = '';
-  if (!goalValues.length) {
-    adminGoalFilterSection.classList.add('hidden');
-    return;
-  }
-
-  adminGoalFilterSection.classList.remove('hidden');
-
-  const allButton = document.createElement('button');
-  allButton.type = 'button';
-  allButton.className = `secondary ${selectedGoal === '' ? 'is-active' : ''}`.trim();
-  allButton.textContent = 'Alle';
-  allButton.dataset.goal = '';
-  adminGoalFilterButtons.appendChild(allButton);
-
-  goalValues.forEach((goal) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `secondary ${selectedGoal === goal ? 'is-active' : ''}`.trim();
-    button.textContent = goal;
-    button.dataset.goal = goal;
-    adminGoalFilterButtons.appendChild(button);
+    button.className = `secondary ${selectedTitle === title ? 'is-active' : ''}`.trim();
+    button.textContent = title;
+    button.dataset.title = title;
+    adminTitleFilterButtons.appendChild(button);
   });
 }
 
@@ -490,10 +453,9 @@ function renderTable(entries) {
         <button class="icon-button edit-button" data-action="edit" data-id="${entry.id}" title="Bearbeiten" aria-label="Bearbeiten">${getAdminActionIcon('edit')}</button>
         <button class="icon-button delete-button" data-action="delete" data-id="${entry.id}" title="Löschen" aria-label="Löschen">${getAdminActionIcon('delete')}</button>
       </td>
-      <td>${escapeHtml(entry.internalTag)}</td>
       <td>${escapeHtml(entry.title)}</td>
+      <td>${escapeHtml(entry.internalTag)}</td>
       <td>${escapeHtml(entry.theme)}</td>
-      <td>${escapeHtml(entry.goal)}</td>
       <td>${escapeHtml(entry.prompt)}</td>
       <td>${escapeHtml(entry.action_count ?? 0)}</td>
       <td>${formatDateTime(entry.created_at)}</td>
@@ -594,11 +556,9 @@ async function loadEntries() {
   const payload = await res.json();
   const entries = (Array.isArray(payload.data) ? payload.data : []).map(normalizePromptEntry);
 
-  renderThemeFilterButtons(entries);
-  renderGoalFilterButtons(entries);
+  renderTitleFilterButtons(entries);
   const filteredEntries = entries.filter((entry) => {
-    if (selectedTheme && entry.theme !== selectedTheme) return false;
-    if (selectedGoal && entry.goal !== selectedGoal) return false;
+    if (selectedTitle && entry.title !== selectedTitle) return false;
     if (!searchTerm) return true;
 
     const haystack = [
@@ -787,17 +747,10 @@ adminLinkTableBody.addEventListener('click', async (event) => {
   }
 });
 
-adminThemeFilterButtons?.addEventListener('click', async (event) => {
-  const button = event.target.closest('button[data-theme]');
+adminTitleFilterButtons?.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-title]');
   if (!button) return;
-  selectedTheme = button.dataset.theme || '';
-  await loadEntries();
-});
-
-adminGoalFilterButtons?.addEventListener('click', async (event) => {
-  const button = event.target.closest('button[data-goal]');
-  if (!button) return;
-  selectedGoal = button.dataset.goal || '';
+  selectedTitle = button.dataset.title || '';
   await loadEntries();
 });
 
@@ -822,14 +775,12 @@ viewSwitch?.addEventListener('click', async (event) => {
   }
 
   currentView = button.dataset.view;
-  selectedTheme = '';
-  selectedGoal = '';
+  selectedTitle = '';
   selectedCategory = '';
 
   const moduleSection = document.getElementById('moduleSection');
   const csvDetails = document.getElementById('csvDetails');
-  const adminThemeFilterSection = document.getElementById('adminThemeFilterSection');
-  const adminGoalFilterSection = document.getElementById('adminGoalFilterSection');
+  const adminTitleFilterSection = document.getElementById('adminTitleFilterSection');
   const adminCategoryFilterSection = document.getElementById('adminCategoryFilterSection');
   const adminTableControls = document.querySelector('.card:has(#adminSortSelect)');
   const adminTablesCard = document.querySelector('.card:has(#promptTable)');
@@ -843,8 +794,7 @@ viewSwitch?.addEventListener('click', async (event) => {
   if (csvDetails) csvDetails.classList.toggle('hidden', isModuleView);
   if (adminTableControls) adminTableControls.classList.toggle('hidden', isModuleView);
   if (adminTablesCard) adminTablesCard.classList.toggle('hidden', isModuleView);
-  if (adminThemeFilterSection) adminThemeFilterSection.classList.toggle('hidden', isModuleView || currentView === 'link');
-  if (adminGoalFilterSection) adminGoalFilterSection.classList.toggle('hidden', isModuleView || currentView === 'link');
+  if (adminTitleFilterSection) adminTitleFilterSection.classList.toggle('hidden', isModuleView || currentView === 'link');
   if (adminCategoryFilterSection) adminCategoryFilterSection.classList.toggle('hidden', isModuleView || currentView !== 'link');
 
   const buttons = viewSwitch?.querySelectorAll('button[data-view]') || [];

@@ -170,7 +170,7 @@
       <div class="card overflow-x">
         <table id="promptTable">
           <thead>
-            <tr><th>Aktionen</th><th>Titel</th><th>mkAbk</th><th>Thema</th><th>Ziel</th><th id="tableContentHeading">Inhalt</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th></tr>
+            <tr><th>Aktionen</th><th>Titel</th><th>mkAbk</th><th>Thema</th><th id="tableContentHeading">Inhalt</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th></tr>
           </thead>
           <tbody id="adminTableBody"></tbody>
         </table>
@@ -186,6 +186,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="assertive"></div>
-  <script src="../assets/js/admin.js?v=20260427-2"></script>
+  <script src="../assets/js/admin.js?v=20260427-4"></script>
 </body>
 </html>
