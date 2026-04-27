@@ -163,7 +163,11 @@
       <div class="card">
         <div class="row gap-12 align-center wrap">
           <label class="field">
-            <span>Sortieren nach</span>
+            <span>Suchen/Sortieren</span>
+            <input id="adminSearchInput" type="search" placeholder="Suchbegriff im Inhalt">
+          </label>
+          <label class="field">
+            <span>Sortieren</span>
             <select id="adminSortSelect"></select>
           </label>
           <button type="button" id="adminDirButton" class="secondary">Aufsteigend</button>
@@ -189,6 +193,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="assertive"></div>
-  <script src="../assets/js/admin.js?v=20260426-1"></script>
+  <script src="../assets/js/admin.js?v=20260427-1"></script>
 </body>
 </html>

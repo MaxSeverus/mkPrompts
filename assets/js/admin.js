@@ -30,6 +30,7 @@ const adminGoalFilterButtons = document.getElementById('adminGoalFilterButtons')
 const adminCategoryFilterSection = document.getElementById('adminCategoryFilterSection');
 const adminCategoryFilterButtons = document.getElementById('adminCategoryFilterButtons');
 const adminSortSelect = document.getElementById('adminSortSelect');
+const adminSearchInput = document.getElementById('adminSearchInput');
 const adminDirButton = document.getElementById('adminDirButton');
 const formattingHint = document.getElementById('formattingHint');
 const pageViewForm = document.getElementById('pageViewForm');
@@ -558,6 +559,8 @@ async function checkSession() {
 }
 
 async function loadEntries() {
+  const searchTerm = (adminSearchInput?.value || '').trim().toLowerCase();
+
   if (currentView === 'link') {
     const params = new URLSearchParams({
       sort: adminSortSelect.value,
@@ -569,9 +572,18 @@ async function loadEntries() {
     const payload = await res.json();
     const entries = Array.isArray(payload.data) ? payload.data : [];
     renderCategoryFilterButtons(entries);
-    const filteredEntries = selectedCategory
-      ? entries.filter((entry) => String(entry.category ?? '').trim() === selectedCategory)
-      : entries;
+    const filteredEntries = entries.filter((entry) => {
+      if (selectedCategory && String(entry.category ?? '').trim() !== selectedCategory) return false;
+      if (!searchTerm) return true;
+
+      const haystack = [
+        entry.description,
+        entry.url,
+        entry.category,
+      ].join(' ').toLowerCase();
+
+      return haystack.includes(searchTerm);
+    });
     renderLinkTable(filteredEntries);
     return;
   }
@@ -592,11 +604,27 @@ async function loadEntries() {
   const filteredEntries = entries.filter((entry) => {
     if (selectedTheme && entry.theme !== selectedTheme) return false;
     if (selectedGoal && entry.goal !== selectedGoal) return false;
-    return true;
+    if (!searchTerm) return true;
+
+    const haystack = [
+      entry.prompt,
+      entry.title,
+      entry.internalTag,
+      entry.project,
+      entry.theme,
+      entry.goal,
+    ].join(' ').toLowerCase();
+
+    return haystack.includes(searchTerm);
+
   });
 
   renderTable(filteredEntries);
 }
+
+adminSearchInput?.addEventListener('input', async () => {
+  await loadEntries();
+});
 
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
