@@ -56,7 +56,6 @@
           <option value="newest">Neueste</option>
           <option value="title">A-Z</option>
           <option value="content">Inhalt</option>
-          <option value="popular">Meistgenutzt</option>
           <option value="action_count">Nutzungen</option>
         </select>
       </label>

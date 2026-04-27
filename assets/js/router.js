@@ -20,10 +20,11 @@ class Router {
       abbreviation: 'title',
       prompt: 'content',
       description: 'content',
-      relevance: 'popular',
+      relevance: 'action_count',
+      popular: 'action_count',
       created_at: 'newest',
       updated_at: 'newest',
-      action_count: 'popular',
+      action_count: 'action_count',
     };
     const normalizedSort = sortMap[legacySort] || legacySort || this.state.sort;
 
