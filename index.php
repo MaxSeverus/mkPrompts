@@ -1,3 +1,42 @@
+<?php
+  $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
+  $host = preg_replace('/:\d+$/', '', $host);
+
+  $refererHost = strtolower((string) parse_url($_SERVER['HTTP_REFERER'] ?? '', PHP_URL_HOST));
+  $refererHost = preg_replace('/:\d+$/', '', $refererHost);
+
+  $requestedBrand = strtolower((string) ($_GET['brand'] ?? ''));
+  $cookieBrand = strtolower((string) ($_COOKIE['mkprompts_brand'] ?? ''));
+
+  $isKiKompaktHost = strpos($host, 'ki-kompakt.at') !== false;
+  $isKiKompaktReferer = strpos($refererHost, 'ki-kompakt.at') !== false;
+
+  $brand = 'stammtisch';
+  if ($requestedBrand === 'kompakt' || $requestedBrand === 'stammtisch') {
+    $brand = $requestedBrand;
+  } elseif ($isKiKompaktHost || $isKiKompaktReferer) {
+    $brand = 'kompakt';
+  } elseif ($cookieBrand === 'kompakt' || $cookieBrand === 'stammtisch') {
+    $brand = $cookieBrand;
+  }
+
+  if (($cookieBrand !== $brand) && !headers_sent()) {
+    setcookie(
+      'mkprompts_brand',
+      $brand,
+      [
+        'expires' => time() + 60 * 60 * 24 * 30,
+        'path' => '/',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax',
+      ]
+    );
+  }
+
+  $communityUrl = $brand === 'kompakt' ? 'https://ki-kompakt.at/' : 'https://ki-stammtisch.at/';
+  $communityLabel = $brand === 'kompakt' ? 'KI-Kompakt' : 'KI-Stammtisch';
+?>
 <!doctype html>
 <html lang="de">
 <head>
@@ -10,14 +49,6 @@
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-  <?php
-    $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
-    $host = preg_replace('/:\d+$/', '', $host);
-
-    $isKiKompaktHost = strpos($host, 'ki-kompakt.at') !== false;
-    $communityUrl = $isKiKompaktHost ? 'https://ki-kompakt.at/' : 'https://ki-stammtisch.at/';
-    $communityLabel = $isKiKompaktHost ? 'KI-Kompakt' : 'KI-Stammtisch';
-  ?>
   <div class="app-shell">
     <!-- Sticky Header -->
     <header class="sticky-header">
