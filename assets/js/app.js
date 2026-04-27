@@ -485,7 +485,7 @@ class App {
   looksLikeInternalTag(value) {
     if (!value) return false;
     if (value.includes(' ')) return false;
-    return /^[a-z][a-z0-9_-]{1,}$/i.test(value);
+    return /^[a-z][a-z0-9_-]{1,24}$/.test(value);
   }
 
   normalizePrompt(rawPrompt) {
@@ -497,15 +497,14 @@ class App {
     let internalTag = '';
     let title = '';
 
-    if (firstIsTag && !secondIsTag) {
+    // Legacy-Fallback: alte Datensätze hatten nr=Kürzel und abbreviation=Titel.
+    // Neue Struktur: nr=Titel und abbreviation=mkAbk.
+    if (firstIsTag && second && second !== '-' && !secondIsTag) {
       internalTag = first;
       title = second;
-    } else if (!firstIsTag && secondIsTag) {
-      internalTag = second;
-      title = first;
     } else {
-      internalTag = first;
-      title = second || first;
+      title = first || second;
+      internalTag = second;
     }
 
     const promptText = rawPrompt.prompt || '';

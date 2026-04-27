@@ -289,7 +289,7 @@ function downloadCsv(content) {
 
 function looksLikeInternalTag(value) {
   if (!value || value.includes(' ')) return false;
-  return /^[a-z][a-z0-9_-]{1,}$/i.test(value);
+  return /^[a-z][a-z0-9_-]{1,24}$/.test(value);
 }
 
 function humanizeLabel(label) {
@@ -337,15 +337,14 @@ function normalizePromptEntry(entry) {
 
   let internalTag = '';
   let title = '';
-  if (firstIsTag && !secondIsTag) {
+  // Legacy-Fallback: alte Datensätze hatten nr=Kürzel und abbreviation=Titel.
+  // Neue Struktur: nr=Titel und abbreviation=mkAbk.
+  if (firstIsTag && second && second !== '-' && !secondIsTag) {
     internalTag = first;
     title = second;
-  } else if (!firstIsTag && secondIsTag) {
-    internalTag = second;
-    title = first;
   } else {
-    internalTag = first;
-    title = second || first;
+    title = first || second;
+    internalTag = second;
   }
 
   return {
@@ -453,8 +452,8 @@ function renderTable(entries) {
         <button class="icon-button edit-button" data-action="edit" data-id="${entry.id}" title="Bearbeiten" aria-label="Bearbeiten">${getAdminActionIcon('edit')}</button>
         <button class="icon-button delete-button" data-action="delete" data-id="${entry.id}" title="Löschen" aria-label="Löschen">${getAdminActionIcon('delete')}</button>
       </td>
-      <td>${escapeHtml(entry.title)}</td>
       <td>${escapeHtml(entry.internalTag)}</td>
+      <td>${escapeHtml(entry.title)}</td>
       <td>${escapeHtml(entry.theme)}</td>
       <td>${escapeHtml(entry.prompt)}</td>
       <td>${escapeHtml(entry.action_count ?? 0)}</td>
