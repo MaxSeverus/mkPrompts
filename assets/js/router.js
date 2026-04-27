@@ -18,7 +18,9 @@ class Router {
     const sortMap = {
       nr: 'title',
       abbreviation: 'title',
-      prompt: 'relevance',
+      prompt: 'content',
+      description: 'content',
+      relevance: 'popular',
       created_at: 'newest',
       updated_at: 'newest',
       action_count: 'popular',

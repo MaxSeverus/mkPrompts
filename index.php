@@ -54,10 +54,9 @@
         <span>Sortieren nach</span>
         <select id="sortSelect">
           <option value="newest">Neueste</option>
-          <option value="relevance">Relevanz</option>
           <option value="title">A-Z</option>
+          <option value="content">Inhalt</option>
           <option value="popular">Meistgenutzt</option>
-          <option value="description">Beschreibung</option>
           <option value="action_count">Nutzungen</option>
         </select>
       </label>

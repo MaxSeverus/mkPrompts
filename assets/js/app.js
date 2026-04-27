@@ -72,9 +72,11 @@ class App {
       });
 
       if (this.currentView === 'link') {
-        params.set('q', state.search || '');
-        params.set('sort', this.mapLinkSortToApi(state.sort));
-        params.set('dir', this.mapDirectionForApi(state.sort, state.direction));
+        // Links werden clientseitig gefiltert/sortiert, damit alle Optionen
+        // in allen Bereichen identisch und verlässlich funktionieren.
+        params.set('q', '');
+        params.set('sort', 'created_at');
+        params.set('dir', 'desc');
       } else {
         // Prompt-Suche und Sortierung erfolgen clientseitig, damit interne Kürzel
         // niemals als Filter-/Sortierbasis verwendet werden.
@@ -257,6 +259,14 @@ class App {
       titleDiv.appendChild(codeBadge);
     }
 
+    const infoLine = document.createElement('div');
+    infoLine.className = 'prompt-stats';
+    const createdAt = this.formatDateTime(prompt.created_at);
+    const updatedAt = this.formatDateTime(prompt.updated_at);
+    const usages = Number(prompt.action_count || 0);
+    infoLine.textContent = `Erstellt: ${createdAt} · Geändert: ${updatedAt} · Nutzungen: ${usages}`;
+    titleDiv.appendChild(infoLine);
+
     const btn = document.createElement('button');
     btn.className = 'copy-btn';
     btn.type = 'button';
@@ -388,7 +398,8 @@ class App {
     }
 
     if (linkView) {
-      this.loadData();
+      this.renderLinks();
+      this.lastState = { ...state };
       return;
     }
 
@@ -426,10 +437,9 @@ class App {
   mapLinkSortToApi(sort) {
     const sortMap = {
       newest: 'created_at',
-      relevance: 'action_count',
       title: 'description',
       popular: 'action_count',
-      description: 'description',
+      content: 'description',
       action_count: 'action_count',
     };
     return sortMap[sort] || 'created_at';
@@ -450,11 +460,19 @@ class App {
     const selectedSort = sort || 'newest';
 
     const sorted = [...prompts].sort((a, b) => {
-      if (selectedSort === 'title' || selectedSort === 'description') {
+      if (selectedSort === 'title') {
         return a.title.localeCompare(b.title, 'de', { sensitivity: 'base' }) * dirFactor;
       }
 
-      if (selectedSort === 'popular' || selectedSort === 'relevance' || selectedSort === 'action_count') {
+      if (selectedSort === 'content') {
+        const aContent = String(a.prompt || '').toLowerCase();
+        const bContent = String(b.prompt || '').toLowerCase();
+        const contentDelta = aContent.localeCompare(bContent, 'de', { sensitivity: 'base' });
+        if (contentDelta !== 0) return contentDelta * dirFactor;
+        return a.title.localeCompare(b.title, 'de', { sensitivity: 'base' }) * dirFactor;
+      }
+
+      if (selectedSort === 'popular' || selectedSort === 'action_count') {
         const popularityDelta = (a.action_count || 0) - (b.action_count || 0);
         if (popularityDelta !== 0) return popularityDelta * dirFactor;
         return a.title.localeCompare(b.title, 'de', { sensitivity: 'base' }) * dirFactor;
@@ -586,9 +604,58 @@ class App {
   }
 
   filterLinks() {
+    const search = (router.state.search || '').trim().toLowerCase();
     const categoryFilter = router.state.linkCategoryFilter || '';
-    if (!categoryFilter) return this.links;
-    return this.links.filter(link => String(link.category || '').trim() === categoryFilter);
+    const filtered = this.links.filter((link) => {
+      if (categoryFilter && String(link.category || '').trim() !== categoryFilter) return false;
+      if (!search) return true;
+      const haystack = [
+        link.description,
+        this.toClearUrl(link.url),
+        link.category,
+      ].join(' ').toLowerCase();
+      return haystack.includes(search);
+    });
+
+    return this.sortLinks(filtered, router.state.sort, router.state.direction);
+  }
+
+  sortLinks(links, sort, direction) {
+    const dirFactor = direction === 'asc' ? 1 : -1;
+    const selectedSort = sort || 'newest';
+
+    return [...links].sort((a, b) => {
+      if (selectedSort === 'title') {
+        const aTitle = this.toClearUrl(a.url || '');
+        const bTitle = this.toClearUrl(b.url || '');
+        return aTitle.localeCompare(bTitle, 'de', { sensitivity: 'base' }) * dirFactor;
+      }
+
+      if (selectedSort === 'content') {
+        const aDescription = String(a.description || '');
+        const bDescription = String(b.description || '');
+        const descriptionDelta = aDescription.localeCompare(bDescription, 'de', { sensitivity: 'base' });
+        if (descriptionDelta !== 0) return descriptionDelta * dirFactor;
+        const aTitle = this.toClearUrl(a.url || '');
+        const bTitle = this.toClearUrl(b.url || '');
+        return aTitle.localeCompare(bTitle, 'de', { sensitivity: 'base' }) * dirFactor;
+      }
+
+      if (selectedSort === 'popular' || selectedSort === 'action_count') {
+        const popularityDelta = (a.action_count || 0) - (b.action_count || 0);
+        if (popularityDelta !== 0) return popularityDelta * dirFactor;
+        const aTitle = this.toClearUrl(a.url || '');
+        const bTitle = this.toClearUrl(b.url || '');
+        return aTitle.localeCompare(bTitle, 'de', { sensitivity: 'base' }) * dirFactor;
+      }
+
+      const aDate = Date.parse(a.created_at || '') || 0;
+      const bDate = Date.parse(b.created_at || '') || 0;
+      if (aDate !== bDate) return (aDate - bDate) * dirFactor;
+      const aTitle = this.toClearUrl(a.url || '');
+      const bTitle = this.toClearUrl(b.url || '');
+      return aTitle.localeCompare(bTitle, 'de', { sensitivity: 'base' }) * dirFactor;
+    });
   }
 
   formatDateTime(value) {

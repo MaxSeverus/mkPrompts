@@ -219,6 +219,12 @@ input:focus, select:focus, textarea:focus {
   font-family: var(--font-mono);
 }
 
+.prompt-stats {
+  margin-top: var(--spacing-4);
+  color: var(--text-light);
+  font-size: 0.75rem;
+}
+
 .prompt-link-open {
   display: inline-block;
   margin-bottom: var(--spacing-4);
