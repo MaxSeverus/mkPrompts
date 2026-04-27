@@ -247,11 +247,6 @@ class App {
     h4.textContent = title;
     titleDiv.appendChild(h4);
 
-    const metaDiv = document.createElement('div');
-    metaDiv.className = 'prompt-meta';
-    metaDiv.textContent = `${prompt.theme} · ${prompt.goal}`;
-    titleDiv.appendChild(metaDiv);
-
     if (prompt.internalTag) {
       const codeBadge = document.createElement('div');
       codeBadge.className = 'internal-tag';
