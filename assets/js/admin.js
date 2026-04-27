@@ -308,13 +308,13 @@ function humanizeLabel(label) {
     .join(' ');
 }
 
-function detectTheme(project, title, promptText) {
+function detectTheme(project, title, promptText, internalTag = '') {
   const cleanProject = String(project ?? '').trim();
   if (cleanProject && cleanProject.toLowerCase() !== 'alle') {
     return humanizeLabel(cleanProject);
   }
 
-  const text = `${title} ${promptText}`.toLowerCase();
+  const text = `${internalTag} ${title} ${promptText}`.toLowerCase();
   if (/(dsgvo|datenschutz|verarbeitungstätigkeit|personenbezug|vvt)/.test(text)) return 'Datenschutz';
   if (/(excel|xls|spreadsheet|arbeitsmappe)/.test(text)) return 'Excel';
   if (/(url|website|wordpress|webseite|domain|link)/.test(text)) return 'Web';
@@ -358,7 +358,7 @@ function normalizePromptEntry(entry) {
     ...entry,
     internalTag,
     title: title || 'Ohne Titel',
-    theme: detectTheme(entry.project ?? '', title, entry.prompt ?? ''),
+    theme: detectTheme(entry.project ?? '', title, entry.prompt ?? '', internalTag),
     goal: detectGoal(title, entry.prompt ?? ''),
   };
 }

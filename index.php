@@ -50,7 +50,7 @@
         <span>Kategorie</span>
         <div class="slicer-buttons" id="linkCategoryFilterButtons" role="group" aria-label="Kategorie-Filter"></div>
       </label>
-      <label class="field">
+      <label class="field" id="searchField">
         <span>Suche</span>
         <input id="searchInput" type="search" placeholder="Titel, Thema oder Inhalt durchsuchen">
       </label>

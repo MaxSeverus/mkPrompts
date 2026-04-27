@@ -473,9 +473,11 @@ class App {
     const themeField = document.getElementById('themeFilterField');
     const goalField = document.getElementById('goalFilterField');
     const linkCategoryField = document.getElementById('linkCategoryFilterField');
+    const searchField = document.getElementById('searchField');
     if (themeField) themeField.classList.toggle('hidden', isLinkView);
     if (goalField) goalField.classList.toggle('hidden', isLinkView);
     if (linkCategoryField) linkCategoryField.classList.toggle('hidden', !isLinkView);
+    if (searchField) searchField.classList.remove('hidden');
   }
 
   mapDirectionForApi(sort, direction) {
@@ -556,7 +558,7 @@ class App {
     }
 
     const promptText = rawPrompt.prompt || '';
-    const theme = this.detectTheme(rawPrompt.project || '', title, promptText);
+    const theme = this.detectTheme(rawPrompt.project || '', title, promptText, internalTag);
     const goal = this.detectGoal(title, promptText);
 
     return {
@@ -568,13 +570,13 @@ class App {
     };
   }
 
-  detectTheme(project, title, promptText) {
+  detectTheme(project, title, promptText, internalTag = '') {
     const cleanProject = (project || '').trim();
     if (cleanProject && cleanProject.toLowerCase() !== 'alle') {
       return this.humanizeLabel(cleanProject);
     }
 
-    const text = `${title} ${promptText}`.toLowerCase();
+    const text = `${internalTag} ${title} ${promptText}`.toLowerCase();
     if (/(dsgvo|datenschutz|verarbeitungstätigkeit|personenbezug|vvt)/.test(text)) return 'Datenschutz';
     if (/(excel|xls|spreadsheet|arbeitsmappe)/.test(text)) return 'Excel';
     if (/(url|website|wordpress|webseite|domain|link)/.test(text)) return 'Web';
