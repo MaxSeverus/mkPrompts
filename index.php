@@ -21,15 +21,6 @@
       <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
     </header>
 
-    <!-- Hero/Intro -->
-    <section class="hero hero-compact">
-      <div class="hero-line">
-        <p class="badge">Prompt-Sammlung</p>
-        <h1>mkprompts</h1>
-      </div>
-      <p class="hero-subline">Prompts, Übungen und Links durchsuchen, mit einem Klick kopieren und direkt nutzen.</p>
-    </section>
-
     <!-- Toolbar -->
     <section class="toolbar">
       <label class="field">
