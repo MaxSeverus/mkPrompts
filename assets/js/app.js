@@ -342,6 +342,8 @@ class App {
 
       const haystack = [
         prompt.title,
+        prompt.internalTag,
+        prompt.nr,
         prompt.theme,
         prompt.goal,
         prompt.prompt,
