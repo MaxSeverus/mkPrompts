@@ -292,6 +292,11 @@ function looksLikeInternalTag(value) {
   return /^[a-z][a-z0-9_-]{1,24}$/.test(value);
 }
 
+function isPlaceholderValue(value) {
+  const normalized = String(value ?? '').trim();
+  return normalized === '' || normalized === '-' || normalized === '–' || normalized === '—';
+}
+
 function humanizeLabel(label) {
   const normalized = String(label ?? '').trim().replace(/[_-]+/g, ' ');
   if (!normalized) return 'Allgemein';
@@ -337,9 +342,15 @@ function normalizePromptEntry(entry) {
 
   let internalTag = '';
   let title = '';
-  // Legacy-Fallback: alte Datensätze hatten nr=Kürzel und abbreviation=Titel.
-  // Neue Struktur: nr=Titel und abbreviation=mkAbk.
-  if (firstIsTag && second && second !== '-' && !secondIsTag) {
+  // Placeholder-Regel: wenn eine Seite nur "-" ist, ist die andere Seite der Titel.
+  if (isPlaceholderValue(first) && !isPlaceholderValue(second)) {
+    title = second;
+    internalTag = '-';
+  } else if (!isPlaceholderValue(first) && isPlaceholderValue(second)) {
+    title = first;
+    internalTag = '-';
+  } else if (firstIsTag && second && !isPlaceholderValue(second) && !secondIsTag) {
+    // Legacy-Fallback: alte Datensätze hatten nr=Kürzel und abbreviation=Titel.
     internalTag = first;
     title = second;
   } else {

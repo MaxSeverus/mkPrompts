@@ -488,6 +488,11 @@ class App {
     return /^[a-z][a-z0-9_-]{1,24}$/.test(value);
   }
 
+  isPlaceholderValue(value) {
+    const normalized = String(value || '').trim();
+    return normalized === '' || normalized === '-' || normalized === '–' || normalized === '—';
+  }
+
   normalizePrompt(rawPrompt) {
     const first = (rawPrompt.nr || '').trim();
     const second = (rawPrompt.abbreviation || '').trim();
@@ -497,9 +502,15 @@ class App {
     let internalTag = '';
     let title = '';
 
-    // Legacy-Fallback: alte Datensätze hatten nr=Kürzel und abbreviation=Titel.
-    // Neue Struktur: nr=Titel und abbreviation=mkAbk.
-    if (firstIsTag && second && second !== '-' && !secondIsTag) {
+    // Placeholder-Regel: wenn eine Seite nur "-" ist, ist die andere Seite der Titel.
+    if (this.isPlaceholderValue(first) && !this.isPlaceholderValue(second)) {
+      title = second;
+      internalTag = '-';
+    } else if (!this.isPlaceholderValue(first) && this.isPlaceholderValue(second)) {
+      title = first;
+      internalTag = '-';
+    } else if (firstIsTag && second && !this.isPlaceholderValue(second) && !secondIsTag) {
+      // Legacy-Fallback: alte Datensätze hatten nr=Kürzel und abbreviation=Titel.
       internalTag = first;
       title = second;
     } else {
