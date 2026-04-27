@@ -372,7 +372,7 @@ function renderTitleFilterButtons(entries) {
 
   const titleValues = [...new Set(
     entries
-      .map((entry) => String(entry.title ?? '').trim())
+      .map((entry) => String(entry.theme ?? '').trim())
       .filter((value) => value !== ''),
   )].sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
 
@@ -558,7 +558,7 @@ async function loadEntries() {
 
   renderTitleFilterButtons(entries);
   const filteredEntries = entries.filter((entry) => {
-    if (selectedTitle && entry.title !== selectedTitle) return false;
+    if (selectedTitle && entry.theme !== selectedTitle) return false;
     if (!searchTerm) return true;
 
     const haystack = [

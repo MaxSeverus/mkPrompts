@@ -39,8 +39,8 @@
         </div>
       </label>
       <label class="field" id="titleFilterField">
-        <span>Titel</span>
-        <div class="slicer-buttons" id="titleFilterButtons" role="group" aria-label="Titel-Filter"></div>
+        <span>Thema</span>
+        <div class="slicer-buttons" id="titleFilterButtons" role="group" aria-label="Thema-Filter"></div>
       </label>
       <label class="field hidden" id="linkCategoryFilterField">
         <span>Kategorie</span>

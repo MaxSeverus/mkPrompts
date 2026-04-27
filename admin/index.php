@@ -141,7 +141,7 @@
 
       <div id="adminTitleFilterSection" class="card hidden">
         <div class="row gap-12 align-center wrap">
-          <strong>Titel:</strong>
+          <strong>Thema:</strong>
           <div id="adminTitleFilterButtons" class="slicer-buttons"></div>
         </div>
       </div>

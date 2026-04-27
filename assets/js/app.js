@@ -302,7 +302,7 @@ class App {
 
     const titles = new Set();
     this.prompts.forEach(p => {
-      if (p.title) titles.add(p.title);
+      if (p.theme) titles.add(p.theme);
     });
 
     const sortedTitles = Array.from(titles).sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
@@ -342,7 +342,7 @@ class App {
     const titleFilter = router.state.titleFilter || '';
 
     const filtered = this.prompts.filter((prompt) => {
-      if (titleFilter && prompt.title !== titleFilter) return false;
+      if (titleFilter && prompt.theme !== titleFilter) return false;
       if (!search) return true;
 
       const haystack = [
