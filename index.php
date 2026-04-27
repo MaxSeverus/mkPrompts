@@ -10,12 +10,20 @@
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
+  <?php
+    $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
+    $host = preg_replace('/:\d+$/', '', $host);
+
+    $isKiKompaktHost = strpos($host, 'ki-kompakt.at') !== false;
+    $communityUrl = $isKiKompaktHost ? 'https://ki-kompakt.at/' : 'https://ki-stammtisch.at/';
+    $communityLabel = $isKiKompaktHost ? 'KI-Kompakt' : 'KI-Stammtisch';
+  ?>
   <div class="app-shell">
     <!-- Sticky Header -->
     <header class="sticky-header">
       <div class="logo">mkprompts</div>
       <nav id="headerNav">
-        <a href="https://ki-stammtisch.at/" target="_blank" rel="noopener">KI-Stammtisch</a>
+        <a href="<?= htmlspecialchars($communityUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener"><?= htmlspecialchars($communityLabel, ENT_QUOTES, 'UTF-8') ?></a>
         <a href="admin/" target="_blank" rel="noopener">Admin</a>
       </nav>
       <button class="theme-toggle" id="themeToggle" title="Design wechseln">🌙</button>
