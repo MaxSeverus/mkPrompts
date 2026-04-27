@@ -38,13 +38,9 @@
           <button type="button" class="secondary" data-view="link" role="tab" aria-selected="false">Link</button>
         </div>
       </label>
-      <label class="field" id="themeFilterField">
-        <span>Thema</span>
-        <div class="slicer-buttons" id="themeFilterButtons" role="group" aria-label="Thema-Filter"></div>
-      </label>
-      <label class="field" id="goalFilterField">
-        <span>Ziel</span>
-        <div class="slicer-buttons" id="goalFilterButtons" role="group" aria-label="Ziel-Filter"></div>
+      <label class="field" id="titleFilterField">
+        <span>Titel</span>
+        <div class="slicer-buttons" id="titleFilterButtons" role="group" aria-label="Titel-Filter"></div>
       </label>
       <label class="field hidden" id="linkCategoryFilterField">
         <span>Kategorie</span>

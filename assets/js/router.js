@@ -6,8 +6,7 @@ class Router {
       search: '',
       sort: 'newest',
       direction: 'desc',
-      themeFilter: '',
-      goalFilter: '',
+      titleFilter: '',
       linkCategoryFilter: '',
     };
     this.listeners = [];
@@ -33,8 +32,7 @@ class Router {
       search: params.get('search') || this.state.search,
       sort: normalizedSort,
       direction: params.get('direction') || this.state.direction,
-      themeFilter: params.get('themeFilter') || this.state.themeFilter,
-      goalFilter: params.get('goalFilter') || this.state.goalFilter,
+      titleFilter: params.get('titleFilter') || params.get('themeFilter') || this.state.titleFilter,
       linkCategoryFilter: params.get('linkCategoryFilter') || this.state.linkCategoryFilter,
     };
   }

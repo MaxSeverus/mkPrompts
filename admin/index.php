@@ -139,17 +139,10 @@
         </div>
       </div>
 
-      <div id="adminThemeFilterSection" class="card hidden">
+      <div id="adminTitleFilterSection" class="card hidden">
         <div class="row gap-12 align-center wrap">
-          <strong>Thema:</strong>
-          <div id="adminThemeFilterButtons" class="slicer-buttons"></div>
-        </div>
-      </div>
-
-      <div id="adminGoalFilterSection" class="card hidden">
-        <div class="row gap-12 align-center wrap">
-          <strong>Ziel:</strong>
-          <div id="adminGoalFilterButtons" class="slicer-buttons"></div>
+          <strong>Titel:</strong>
+          <div id="adminTitleFilterButtons" class="slicer-buttons"></div>
         </div>
       </div>
 

@@ -6,24 +6,6 @@ class App {
     this.links = [];
     this.currentView = 'prompt';
     this.loadingState = false;
-    this.goalOrder = [
-      'Erstellen',
-      'Analysieren',
-      'Korrigieren',
-      'Übersetzen',
-      'Prüfen',
-      'Erklären',
-      'Verdichten',
-      'Ohne Zuordnung',
-    ];
-    this.themeOrder = [
-      'Allgemein',
-      'Datenschutz',
-      'Microsoft 365',
-      'Excel',
-      'Kommunikation',
-      'Web',
-    ];
     this.lastState = null;
   }
 
@@ -139,8 +121,7 @@ class App {
     const container = document.getElementById('promptList');
     if (!container) return;
 
-    this.updateThemeFilter();
-    this.updateGoalFilter();
+    this.updateTitleFilter();
 
     const filtered = this.filterPrompts();
 
@@ -310,96 +291,53 @@ class App {
     return div.innerHTML;
   }
 
-  updateThemeFilter() {
-    const container = document.getElementById('themeFilterButtons');
+  updateTitleFilter() {
+    const container = document.getElementById('titleFilterButtons');
     if (!container) return;
 
-    const themes = new Set();
+    const titles = new Set();
     this.prompts.forEach(p => {
-      if (p.theme) themes.add(p.theme);
+      if (p.internalTag) titles.add(p.internalTag);
     });
 
-    const sortedThemes = this.sortByPreferredOrder(Array.from(themes), this.themeOrder);
+    const sortedTitles = Array.from(titles).sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
 
     container.textContent = '';
     const allBtn = document.createElement('button');
     allBtn.textContent = 'Alle';
     allBtn.className = 'is-active';
     allBtn.dataset.value = '';
-    allBtn.addEventListener('click', () => this.setThemeFilter(''));
+    allBtn.addEventListener('click', () => this.setTitleFilter(''));
     container.appendChild(allBtn);
 
-    sortedThemes.forEach(theme => {
+    sortedTitles.forEach(title => {
       const btn = document.createElement('button');
-      btn.textContent = theme;
-      btn.dataset.value = theme;
-      btn.addEventListener('click', () => this.setThemeFilter(theme));
+      btn.textContent = title;
+      btn.dataset.value = title;
+      btn.addEventListener('click', () => this.setTitleFilter(title));
       container.appendChild(btn);
     });
 
-    this.updateThemeFilterButtons();
+    this.updateTitleFilterButtons();
   }
 
-  updateGoalFilter() {
-    const container = document.getElementById('goalFilterButtons');
-    if (!container) return;
-
-    const goals = new Set();
-    this.prompts.forEach(p => {
-      if (p.goal) goals.add(p.goal);
-    });
-
-    const sortedGoals = this.sortByPreferredOrder(Array.from(goals), this.goalOrder);
-
-    container.textContent = '';
-    const allBtn = document.createElement('button');
-    allBtn.textContent = 'Alle';
-    allBtn.className = 'is-active';
-    allBtn.dataset.value = '';
-    allBtn.addEventListener('click', () => this.setGoalFilter(''));
-    container.appendChild(allBtn);
-
-    sortedGoals.forEach(goal => {
-      const btn = document.createElement('button');
-      btn.textContent = goal;
-      btn.dataset.value = goal;
-      btn.addEventListener('click', () => this.setGoalFilter(goal));
-      container.appendChild(btn);
-    });
-
-    this.updateGoalFilterButtons();
+  setTitleFilter(title) {
+    router.pushState({ titleFilter: title });
   }
 
-  setThemeFilter(theme) {
-    router.pushState({ themeFilter: theme });
-  }
-
-  setGoalFilter(goal) {
-    router.pushState({ goalFilter: goal });
-  }
-
-  updateThemeFilterButtons() {
-    const themeFilter = router.state.themeFilter || '';
-    document.querySelectorAll('#themeFilterButtons button').forEach(btn => {
-      btn.classList.toggle('is-active', btn.dataset.value === themeFilter);
-    });
-  }
-
-  updateGoalFilterButtons() {
-    const goalFilter = router.state.goalFilter || '';
-    document.querySelectorAll('#goalFilterButtons button').forEach(btn => {
-      btn.classList.toggle('is-active', btn.dataset.value === goalFilter);
+  updateTitleFilterButtons() {
+    const titleFilter = router.state.titleFilter || '';
+    document.querySelectorAll('#titleFilterButtons button').forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.value === titleFilter);
     });
   }
 
   filterPrompts() {
     const search = (router.state.search || '').trim().toLowerCase();
-    const themeFilter = router.state.themeFilter || '';
-    const goalFilter = router.state.goalFilter || '';
+    const titleFilter = router.state.titleFilter || '';
 
     const filtered = this.prompts.filter((prompt) => {
-      if (themeFilter && prompt.theme !== themeFilter) return false;
-      if (goalFilter && prompt.goal !== goalFilter) return false;
+      if (titleFilter && prompt.internalTag !== titleFilter) return false;
       if (!search) return true;
 
       const haystack = [
@@ -470,12 +408,10 @@ class App {
 
   updateFilterVisibility() {
     const isLinkView = this.currentView === 'link';
-    const themeField = document.getElementById('themeFilterField');
-    const goalField = document.getElementById('goalFilterField');
+    const titleField = document.getElementById('titleFilterField');
     const linkCategoryField = document.getElementById('linkCategoryFilterField');
     const searchField = document.getElementById('searchField');
-    if (themeField) themeField.classList.toggle('hidden', isLinkView);
-    if (goalField) goalField.classList.toggle('hidden', isLinkView);
+    if (titleField) titleField.classList.toggle('hidden', isLinkView);
     if (linkCategoryField) linkCategoryField.classList.toggle('hidden', !isLinkView);
     if (searchField) searchField.classList.remove('hidden');
   }

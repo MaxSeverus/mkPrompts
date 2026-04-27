@@ -23,10 +23,8 @@ const csvTitle = document.getElementById('csvTitle');
 const csvDescription = document.getElementById('csvDescription');
 const csvHint = document.getElementById('csvHint');
 const toast = document.getElementById('toast');
-const adminThemeFilterSection = document.getElementById('adminThemeFilterSection');
-const adminThemeFilterButtons = document.getElementById('adminThemeFilterButtons');
-const adminGoalFilterSection = document.getElementById('adminGoalFilterSection');
-const adminGoalFilterButtons = document.getElementById('adminGoalFilterButtons');
+const adminTitleFilterSection = document.getElementById('adminTitleFilterSection');
+const adminTitleFilterButtons = document.getElementById('adminTitleFilterButtons');
 const adminCategoryFilterSection = document.getElementById('adminCategoryFilterSection');
 const adminCategoryFilterButtons = document.getElementById('adminCategoryFilterButtons');
 const adminSortSelect = document.getElementById('adminSortSelect');
@@ -56,12 +54,9 @@ const linkFields = {
 };
 
 let currentView = 'prompt';
-let selectedTheme = '';
-let selectedGoal = '';
+let selectedTitle = '';
 let selectedCategory = '';
 let sortDir = 'asc';
-const goalOrder = ['Erstellen', 'Analysieren', 'Korrigieren', 'Übersetzen', 'Prüfen', 'Erklären', 'Verdichten', 'Ohne Zuordnung'];
-const themeOrder = ['Allgemein', 'Datenschutz', 'Microsoft 365', 'Excel', 'Kommunikation', 'Web'];
 
 function expandEditorPanel(scroll = false) {
   if (!editorDetails) return;
