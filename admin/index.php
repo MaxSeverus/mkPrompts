@@ -170,7 +170,7 @@
       <div class="card overflow-x">
         <table id="promptTable">
           <thead>
-            <tr><th>Aktionen</th><th>Titel</th><th>mkAbk</th><th>Thema</th><th id="tableContentHeading">Inhalt</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th></tr>
+            <tr><th>Aktionen</th><th>mkAbk</th><th>Titel</th><th>Thema</th><th id="tableContentHeading">Inhalt</th><th>Nutzungen</th><th>Erstellt am</th><th>Geändert am</th></tr>
           </thead>
           <tbody id="adminTableBody"></tbody>
         </table>
