@@ -87,9 +87,8 @@
               <input type="hidden" id="promptId">
               <input type="hidden" id="linkOriginalUrl">
 
-              <label data-form-group="text"><span id="nrLabel">Kürzel (intern)</span><input type="text" id="nrInput" maxlength="15" placeholder="z. B. gptdperson"></label>
-              <label data-form-group="text"><span>Titel</span><input type="text" id="abbrInput" maxlength="50"></label>
-              <label data-form-group="text"><span>Modul</span><select id="moduleSelectInput"><option value="">-- Wählen --</option></select></label>
+              <label data-form-group="text"><span id="nrLabel">Titel</span><input type="text" id="nrInput" maxlength="15" placeholder="z. B. DSGVO"></label>
+              <label data-form-group="text"><span>mkAbk</span><input type="text" id="abbrInput" maxlength="50"></label>
               <label data-form-group="text"><span>Thema</span><input type="text" id="projectInput" maxlength="80" placeholder="z. B. Datenschutz"></label>
               <label class="full" data-form-group="text"><span id="contentLabel">Prompt</span><textarea id="promptInput" rows="1"></textarea></label>
               <small id="formattingHint" class="full field-hint">Formatierung in Inhalt und Titel mit [B]...[/B], [I]...[/I] und [U]...[/U] möglich.</small>
@@ -186,6 +185,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="assertive"></div>
-  <script src="../assets/js/admin.js?v=20260427-4"></script>
+  <script src="../assets/js/admin.js?v=20260427-5"></script>
 </body>
 </html>

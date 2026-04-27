@@ -152,7 +152,7 @@ function updateViewTexts() {
 
   editorTitle.textContent = `${meta.singular} speichern`;
   if (nrLabel) {
-    nrLabel.textContent = 'Kürzel (intern)';
+    nrLabel.textContent = 'Titel';
   }
   contentLabel.textContent = isLinkView ? 'Link' : 'Inhalt';
   tableContentHeading.textContent = isLinkView ? 'Link' : 'Inhalt';
