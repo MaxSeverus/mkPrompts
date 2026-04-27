@@ -1,6 +1,25 @@
 <?php
   $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
   $host = preg_replace('/:\d+$/', '', $host);
+  $isKiKompaktHost = strpos($host, 'ki-kompakt.at') !== false;
+
+  if ($isKiKompaktHost && !headers_sent()) {
+    $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+    $uriParts = parse_url($requestUri);
+    $path = $uriParts['path'] ?? '/';
+    $queryParams = [];
+
+    if (!empty($uriParts['query'])) {
+      parse_str($uriParts['query'], $queryParams);
+    }
+
+    $queryParams['brand'] = 'kompakt';
+    $targetQuery = http_build_query($queryParams);
+    $targetUrl = 'https://ki-stammtisch.at' . $path . ($targetQuery !== '' ? '?' . $targetQuery : '');
+
+    header('Location: ' . $targetUrl, true, 302);
+    exit;
+  }
 
   $refererHost = strtolower((string) parse_url($_SERVER['HTTP_REFERER'] ?? '', PHP_URL_HOST));
   $refererHost = preg_replace('/:\d+$/', '', $refererHost);
@@ -8,7 +27,6 @@
   $requestedBrand = strtolower((string) ($_GET['brand'] ?? ''));
   $cookieBrand = strtolower((string) ($_COOKIE['mkprompts_brand'] ?? ''));
 
-  $isKiKompaktHost = strpos($host, 'ki-kompakt.at') !== false;
   $isKiKompaktReferer = strpos($refererHost, 'ki-kompakt.at') !== false;
 
   $brand = 'stammtisch';
